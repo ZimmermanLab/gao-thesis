@@ -17,25 +17,17 @@ daily_rainfall_3m$days_since_rain <- unlist(mapply(
   rle(daily_rainfall_3m$Precipitation)$values
 ))
 
-# Create dataframe with days since last rainfall and year only
-days_since_rain_all <- daily_rainfall_3m %>%
-  select(days_since_rain, Year)
+# Create dataframe with count since last rainfall and year only
+days_since_rain <- daily_rainfall_3m %>%
+  select(days_since_rain, Year) %>%
+  mutate(days_elapsed = abs(days_since_rain - lag(days_since_rain, default = 0))) %>%
+  filter(days_elapsed > 1) %>%
+  select(days_elapsed, Year)
 
-# Setup empty list with column name
-max_days_since_rain <- data.frame()
+# Find averages and maximums per year
+mean_days_since_rain <- days_since_rain %>%
+  filter(days_since_rain > 0) %>%
+  group_by(Year) %>%
 
-day_count <- 0
-for (day in days_since_rain_all$days_since_rain) {
-  day_count <- day_count + 1
-  if (day == 0) {
-    max_days_since_rain <- rbind(
-      max_days_since_rain, days_since_rain_all$days_since_rain[day_count-1])
-  }
-}
-
-# Label column and filter out the 0's
-max_days_since_rain <- max_days_since_rain %>%
-  rename("max_days_since_rain" = 1) %>%
-  filter(max_days_since_rain > 0)
 
 # Make a plot showing max and average number of days per year
