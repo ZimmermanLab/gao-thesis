@@ -101,6 +101,23 @@ no_soil_controls <- subset(total_jars,
   rename(no_soil_controls = total_jars) %>%
   arrange(no_soil_controls)
 
+# Save out all lists
+write.csv(w_cc, file = "output/w_cc.csv")
+write.csv(w_cc_cw, file = "output/w_cc_cw.csv")
+write.csv(w_cc_1wk, file = "output/w_cc_1wk.csv")
+write.csv(w_cc_2wk, file = "output/w_cc_2wk.csv")
+write.csv(w_cc_4wk, file = "output/w_cc_4wk.csv")
+write.csv(w_cc_wt, file = "output/w_cc_wt.csv")
+
+write.csv(no_cc, file = "output/no_cc.csv")
+write.csv(no_cc_cw, file = "output/no_cc_cw.csv")
+write.csv(no_cc_1wk, file = "output/no_cc_1wk.csv")
+write.csv(no_cc_2wk, file = "output/no_cc_2wk.csv")
+write.csv(no_cc_4wk, file = "output/no_cc_4wk.csv")
+write.csv(no_cc_wt, file = "output/no_cc_wt.csv")
+
+write.csv(no_soil_controls, file = "output/no_soil_controls.csv")
+
 # Create lists by watering regiment
 
 # By consistent watering
