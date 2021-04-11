@@ -126,8 +126,10 @@ w_cc_cw_blind <- w_cc_cw %>%
 no_cc_cw_blind <- no_cc_cw %>%
   rename(jars_cw = jar_no_cc_cw)
 
-water_consistent <- rbind(w_cc_cw_blind, no_cc_cw_blind) %>%
+cw_all <- rbind(w_cc_cw_blind, no_cc_cw_blind) %>%
   arrange(jars_cw)
+
+write.csv(cw_all, file = "output/jar_assignments/cw_all.csv")
 
 # By 1 week watering
 w_cc_1wk_blind <- w_cc_1wk %>%
@@ -138,6 +140,8 @@ no_cc_1wk_blind <- no_cc_1wk %>%
 water_1wk <- rbind(w_cc_1wk_blind, no_cc_1wk_blind) %>%
   arrange(jars_1wk)
 
+write.csv(water_1wk, file = "output/jar_assignments/water_1wk.csv")
+
 # By 2 weeks watering
 w_cc_2wk_blind <- w_cc_2wk %>%
   rename(jars_2wk = jar_w_cc_2wk)
@@ -147,6 +151,8 @@ no_cc_2wk_blind <- no_cc_2wk %>%
 water_2wk <- rbind(w_cc_2wk_blind, no_cc_2wk_blind) %>%
   arrange(jars_2wk)
 
+write.csv(water_2wk, file = "output/jar_assignments/water_2wk.csv")
+
 # By 4 weeks watering
 w_cc_4wk_blind <- w_cc_4wk %>%
   rename(jars_4wk = jar_w_cc_4wk)
@@ -155,6 +161,8 @@ no_cc_4wk_blind <- no_cc_4wk %>%
 
 water_4wk <- rbind(w_cc_4wk_blind, no_cc_4wk_blind) %>%
   arrange(jars_4wk)
+
+write.csv(water_4wk, file = "output/jar_assignments/water_4wk.csv")
 
 # Create master list of watering schedule
 water_1wk[nrow(water_consistent), ] <- NA
