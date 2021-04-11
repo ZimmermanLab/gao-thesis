@@ -82,7 +82,7 @@ w_cc_wt <- sample_n(subset(w_cc,
                                 (jar_w_cc %in% w_cc_2wk$jar_w_cc_2wk) |
                                 (jar_w_cc %in% w_cc_4wk$jar_w_cc_4wk))),
                                 10, replace = FALSE) %>%
-  rename(jar_w_cc_wt = jar_w_cc) %>%
+  rename(jar_no = jar_w_cc) %>%
   arrange(jar_w_cc_wt)
 
 no_cc_wt <- sample_n(subset(no_cc,
@@ -91,7 +91,7 @@ no_cc_wt <- sample_n(subset(no_cc,
                                 (jar_no_cc %in% no_cc_2wk$jar_no_cc_2wk) |
                                 (jar_no_cc %in% no_cc_4wk$jar_no_cc_4wk))),
                                 10, replace = FALSE) %>%
-  rename(jar_no_cc_wt = jar_no_cc) %>%
+  rename(jar_no = jar_no_cc) %>%
   arrange(jar_no_cc_wt)
 
 # Choose jars for 5 controls of no soil, only water
@@ -102,19 +102,19 @@ no_soil_controls <- subset(total_jars,
   arrange(no_soil_controls)
 
 # Save out all lists
-write.csv(w_cc, file = "output/w_cc.csv")
-write.csv(w_cc_cw, file = "output/w_cc_cw.csv")
-write.csv(w_cc_1wk, file = "output/w_cc_1wk.csv")
-write.csv(w_cc_2wk, file = "output/w_cc_2wk.csv")
-write.csv(w_cc_4wk, file = "output/w_cc_4wk.csv")
-write.csv(w_cc_wt, file = "output/w_cc_wt.csv")
+write.csv(w_cc, file = "output/jar_assignments/w_cc.csv")
+write.csv(w_cc_cw, file = "output/jar_assignments/w_cc_cw.csv")
+write.csv(w_cc_1wk, file = "output/jar_assignments/w_cc_1wk.csv")
+write.csv(w_cc_2wk, file = "output/jar_assignments/w_cc_2wk.csv")
+write.csv(w_cc_4wk, file = "output/jar_assignments/w_cc_4wk.csv")
+write.csv(w_cc_wt, file = "output/jar_assignments/w_cc_wt.csv")
 
-write.csv(no_cc, file = "output/no_cc.csv")
-write.csv(no_cc_cw, file = "output/no_cc_cw.csv")
-write.csv(no_cc_1wk, file = "output/no_cc_1wk.csv")
-write.csv(no_cc_2wk, file = "output/no_cc_2wk.csv")
-write.csv(no_cc_4wk, file = "output/no_cc_4wk.csv")
-write.csv(no_cc_wt, file = "output/no_cc_wt.csv")
+write.csv(no_cc, file = "output/jar_assignments/no_cc.csv")
+write.csv(no_cc_cw, file = "output/jar_assignments/no_cc_cw.csv")
+write.csv(no_cc_1wk, file = "output/jar_assignments/no_cc_1wk.csv")
+write.csv(no_cc_2wk, file = "output/jar_assignments/no_cc_2wk.csv")
+write.csv(no_cc_4wk, file = "output/jar_assignments/no_cc_4wk.csv")
+write.csv(no_cc_wt, file = "output/jar_assignments/no_cc_wt.csv")
 
 write.csv(no_soil_controls, file = "output/no_soil_controls.csv")
 
