@@ -165,9 +165,9 @@ water_4wk <- rbind(w_cc_4wk_blind, no_cc_4wk_blind) %>%
 write.csv(water_4wk, file = "output/jar_assignments/water_4wk.csv")
 
 # Create master list of watering schedule
-water_1wk[nrow(water_consistent), ] <- NA
-water_2wk[nrow(water_consistent), ] <- NA
-water_4wk[nrow(water_consistent), ] <- NA
-water_schedule <- cbind(water_consistent, water_1wk, water_2wk, water_4wk)
+water_1wk[nrow(cw_all), ] <- NA
+water_2wk[nrow(cw_all), ] <- NA
+water_4wk[nrow(cw_all), ] <- NA
+water_schedule <- cbind(cw_all, water_1wk, water_2wk, water_4wk)
 
 write.csv(water_schedule, file = "output/watering_schedule.csv")
