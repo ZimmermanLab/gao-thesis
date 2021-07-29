@@ -13,6 +13,7 @@ This project will take data collected from an experiment run on soils from Star 
 ***
 
 ## Change Log:
+* 2021-07-28: Started a script to take in EA data and start to process it. Initial steps include taking in the raw data, organizing and cleaning it up, and then examining SRM data for accuracy and precision.
 * 2021-04-10: Finalized script to organize jars by sampling schedules and saved outputs. Had to manually input already sampled first batch of jars which should be removed before running the script next time. Also updated the sampling schedule script to save out all jar assignment lists.
 * 2021-04-06: Wrote a script to organize jars by sampling schedules for easier reading / printout.
 * 2021-04-04: Wrote a script to for randomized jar placement in growth chambers.
