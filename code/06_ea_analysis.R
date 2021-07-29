@@ -38,9 +38,9 @@ rsd_srm_c <- sd(all_srms$c_per)*100 / mean_srm_c
 srm_n <- ggplot(all_srms,
                 aes(x = pos,
                     y = n_per)) +
-  geom_line()
+  geom_point()
 
 srm_c <- ggplot(all_srms,
                 aes(x = pos,
                     y = c_per)) +
-  geom_line()
+  geom_point()
