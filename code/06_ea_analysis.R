@@ -38,9 +38,16 @@ rsd_srm_c <- sd(all_srms$c_per)*100 / mean_srm_c
 srm_n <- ggplot(all_srms,
                 aes(x = pos,
                     y = n_per)) +
-  geom_point()
+  geom_point() +
+  labs(title = "Standard Reference Material Nitrogen Content",
+       x = "Position", y = "N percentage")
 
 srm_c <- ggplot(all_srms,
                 aes(x = pos,
                     y = c_per)) +
-  geom_point()
+  geom_point() +
+  labs(title = "Standard Reference Material Carbon Content",
+       x = "Position", y = "C percentage")
+
+ggsave(filename = "output/ea_plots/srm_n.png", srm_n)
+ggsave(filename = "output/ea_plots/srm_c.png", srm_c)
