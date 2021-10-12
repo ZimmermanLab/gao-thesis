@@ -13,41 +13,30 @@ library("scales")
 # over the run and to determine if we need any correcting factors.
 
 # Read in and clean up EA data
-ea_results_raw <- readr::read_csv("data/raw_data/EA_CN/20210727/210727_Run.csv")
-ea_results_clean <- ea_results_raw %>%
-  select("X2", "X4", "X6", "X7", "X12", "X13")
-
-ea_results_clean <- ea_results_clean[rowSums(
-  is.na(ea_results_clean)) != ncol(ea_results_clean),] %>%
-  rename("sample" = "X2", "date" = "X4", "type" = "X6", "weight" = "X7",
-         "n_per" = "X12", "c_per" = "X13") %>%
-  mutate(pos = row_number())
-
-ea_results_clean <- ea_results_clean[colnames(ea_results_clean)[c(7,1:6)]]
+source("code/functions/clean_ea_data.R")
+ea_results_clean <- clean_ea_data("data/raw_data/EA_CN/20210727/210727_Run.csv")
 
 # Calculate means and RSDs for both nitrogen and carbon
 # for all SRM samples
-all_srms <- ea_results_clean %>%
-  filter(sample == "SRM")
-mean_srm_n <- mean(all_srms$n_per)
-rsd_srm_n <- sd(all_srms$n_per)*100 / mean_srm_n
+source("code/functions/calculate_srm_stats.R")
+srm_stats <- calculate_srm_stats(ea_results_clean)
 
-mean_srm_c <- mean(all_srms$c_per)
-rsd_srm_c <- sd(all_srms$c_per)*100 / mean_srm_c
-
-srm_n <- ggplot(all_srms,
-                aes(x = pos,
-                    y = n_per)) +
+# Plot the SRM values
+srm_n_plot <- ea_results_clean %>%
+  filter(sample == "SRM") %>%
+  ggplot(aes(x = pos, y = n_per)) +
   geom_point() +
   labs(title = "Standard Reference Material Nitrogen Content",
        x = "Position", y = "N percentage")
 
-srm_c <- ggplot(all_srms,
-                aes(x = pos,
-                    y = c_per)) +
+srm_c_plot <- ea_results_clean %>%
+  filter(sample == "SRM") %>%
+  ggplot(aes(x = pos, y = c_per)) +
   geom_point() +
   labs(title = "Standard Reference Material Carbon Content",
        x = "Position", y = "C percentage")
 
-ggsave(filename = "output/ea_plots/srm_n.png", srm_n)
-ggsave(filename = "output/ea_plots/srm_c.png", srm_c)
+ggsave(filename = "output/ea_plots/srm_n_plot.png", srm_n_plot)
+ggsave(filename = "output/ea_plots/srm_c_plot.png", srm_c_plot)
+
+# Calculate means and RSDs for each sample
