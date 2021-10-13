@@ -2,7 +2,7 @@
 # October 12, 2021
 
 # This function reads in EA data and finds the
-# means and RSDs of all inputted samples.
+# means and RSDs of all SRMs.
 
 # Calculate means and RSDs for both nitrogen and carbon
 # for all SRM samples

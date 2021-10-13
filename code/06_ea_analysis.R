@@ -40,3 +40,5 @@ ggsave(filename = "output/ea_plots/srm_n_plot.png", srm_n_plot)
 ggsave(filename = "output/ea_plots/srm_c_plot.png", srm_c_plot)
 
 # Calculate means and RSDs for each sample
+source("code/functions/calculate_sample_stats.R")
+sample_stats <- calculate_sample_stats(ea_results_clean)
