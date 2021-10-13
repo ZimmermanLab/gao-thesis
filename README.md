@@ -13,6 +13,8 @@ This project will take data collected from an experiment run on soils from Star 
 ***
 
 ## Change Log:
+* 2021-10-12: Refactored so that cleaning the EA results and calculating the SRM stats are now separate functions.
+  * Also wrote a new function that finds the means and RSDs for each soil sample based on a 2-sample, 20 soil sample run.
 * 2021-09-02: Updated EA script to add more descriptive labels to the plots and save them out.
 * 2021-07-28: Started a script to take in EA data and start to process it. Initial steps include taking in the raw data, organizing and cleaning it up, and then examining SRM data for accuracy and precision.
 * 2021-04-10: Finalized script to organize jars by sampling schedules and saved outputs. Had to manually input already sampled first batch of jars which should be removed before running the script next time. Also updated the sampling schedule script to save out all jar assignment lists.
