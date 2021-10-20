@@ -26,12 +26,13 @@ calculate_sample_stats <- function(cleaned_ea_data) {
   # Run a for loop that calculates the mean %C and C RSD for each sample
   mean_c <- c()
   rsd_c <- c()
-  for (sample_no in 1:nrow(all_samples)) {
-    if(all_samples$name_match[sample_no] == 0){
+  for (sample_no in seq_len(all_samples)) {
+    if (all_samples$name_match[sample_no] == 0) {
       sample_group_c <- c(all_samples$c_per[sample_no],
                           all_samples$c_per[sample_no + 1])
       sample_mean_c <- mean(sample_group_c)
-      sample_rsd_c <- sd(sample_group_c)*100 / sample_mean_c}
+      sample_rsd_c <- sd(sample_group_c) * 100 / sample_mean_c
+      }
     else{
       sample_mean_c <- NA
       sample_rsd_c <- NA
@@ -45,12 +46,13 @@ calculate_sample_stats <- function(cleaned_ea_data) {
   # Run a for loop that calculates the mean %N and N RSD for each sample
   mean_n <- c()
   rsd_n <- c()
-  for (sample_no in 1:nrow(all_samples)) {
-    if(all_samples$name_match[sample_no] == 0){
+  for (sample_no in seq_len(all_samples)) {
+    if (all_samples$name_match[sample_no] == 0) {
       sample_group_n <- c(all_samples$n_per[sample_no],
                         all_samples$n_per[sample_no + 1])
       sample_mean_n <- mean(sample_group_n)
-      sample_rsd_n <- sd(sample_group_n)*100 / sample_mean_n}
+      sample_rsd_n <- sd(sample_group_n) * 100 / sample_mean_n
+      }
     else{
       sample_mean_n <- NA
       sample_rsd_n <- NA

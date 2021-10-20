@@ -13,10 +13,10 @@ calculate_srm_stats <- function(cleaned_ea_data) {
   all_srms <- cleaned_ea_data %>%
     filter(sample == "SRM")
   mean_srm_n <- mean(all_srms$n_per)
-  rsd_srm_n <- sd(all_srms$n_per)*100 / mean_srm_n
+  rsd_srm_n <- sd(all_srms$n_per) * 100 / mean_srm_n
 
   mean_srm_c <- mean(all_srms$c_per)
-  rsd_srm_c <- sd(all_srms$c_per)*100 / mean_srm_c
+  rsd_srm_c <- sd(all_srms$c_per) * 100 / mean_srm_c
 
   print(paste("SRM Mean %N:", mean_srm_n))
   print(paste("SRM N RSD:", rsd_srm_n))
