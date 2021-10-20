@@ -9,6 +9,10 @@ library("dplyr")
 library("ggplot2")
 library("scales")
 
+############
+
+# SRM
+
 # First, we will examine the SRM data to see if there was any drift / trend
 # over the run and to determine if we need any correcting factors.
 
@@ -20,6 +24,10 @@ ea_results_clean <- clean_ea_data("data/raw_data/EA_CN/20210727/210727_Run.csv")
 # for all SRM samples
 source("code/functions/calculate_srm_stats.R")
 srm_stats <- calculate_srm_stats(ea_results_clean)
+
+############
+
+# SRM PLOTS
 
 # Plot the SRM values
 srm_n_plot <- ea_results_clean %>%
@@ -39,6 +47,21 @@ srm_c_plot <- ea_results_clean %>%
 ggsave(filename = "output/ea_plots/srm_n_plot.png", srm_n_plot)
 ggsave(filename = "output/ea_plots/srm_c_plot.png", srm_c_plot)
 
+############
+
+# SAMPLES
+
 # Calculate means and RSDs for each sample
 source("code/functions/calculate_sample_stats.R")
 sample_stats <- calculate_sample_stats(ea_results_clean)
+
+# Calculate the mean and median RSD across all samples
+sample_rsd <- sample_stats %>%
+  filter(is.na(rsd_c) == FALSE) %>%
+  select(rsd_c, rsd_n)
+
+median_sample_rsd_c <- median(sample_rsd$rsd_c)
+mean_sample_rsd_c <- mean(sample_rsd$rsd_c)
+
+median_sample_rsd_n <- median(sample_rsd$rsd_n)
+mean_sample_rsd_n <- mean(sample_rsd$rsd_n)
