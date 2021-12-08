@@ -10,7 +10,7 @@ clean_ea_data <- function(input_file_name) {
   # Read in and clean up EA data
   # Note that reading in the csv will auto name the columns
   # and warn you about it, hence the suppressWarnings()
-  ea_results_raw <- suppressWarnings(readr::read_csv(input_file_name))
+  ea_results_raw <- suppressWarnings(readr::read_csv(input_file_name, col_names = FALSE))
   ea_results_clean <- ea_results_raw %>%
     select("X2", "X4", "X6", "X7", "X12", "X13")
 

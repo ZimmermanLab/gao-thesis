@@ -1,8 +1,9 @@
-# Sarah Gao
-# October 12, 2021
-
 # This function reads in EA data and finds the
 # mean and RSD of each sample.
+
+# Sarah Gao
+# October 12, 2021
+# hellosarahgao@gmail.com
 
 # Note that this script assumes that each sample is run 2 times.
 
@@ -26,7 +27,7 @@ calculate_sample_stats <- function(cleaned_ea_data) {
   # Run a for loop that calculates the mean %C and C RSD for each sample
   mean_c <- c()
   rsd_c <- c()
-  for (sample_no in seq_len(all_samples)) {
+  for (sample_no in 1:length(all_samples$sample_no)) {
     if (all_samples$name_match[sample_no] == 0) {
       sample_group_c <- c(all_samples$c_per[sample_no],
                           all_samples$c_per[sample_no + 1])
@@ -46,7 +47,7 @@ calculate_sample_stats <- function(cleaned_ea_data) {
   # Run a for loop that calculates the mean %N and N RSD for each sample
   mean_n <- c()
   rsd_n <- c()
-  for (sample_no in seq_len(all_samples)) {
+  for (sample_no in 1:length(all_samples$sample_no)) {
     if (all_samples$name_match[sample_no] == 0) {
       sample_group_n <- c(all_samples$n_per[sample_no],
                         all_samples$n_per[sample_no + 1])
