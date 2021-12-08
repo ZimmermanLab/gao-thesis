@@ -13,7 +13,8 @@ This project will take data collected from an experiment run on soils from Star 
 ***
 
 ## Change Log:
-* 2021-10-19: Added mean and median RSD assignments to samples to determine overall sample variability.
+* 2021-12-08: Added N data from first SmartChem run. Wrote scripts + functions to analyze N data.
+* 2021-10-19: Added mean and median RSD assignments to EA samples to determine overall sample variability.
 * 2021-10-12: Refactored so that cleaning the EA results and calculating the SRM stats are now separate functions.
   * Also wrote a new function that finds the means and RSDs for each soil sample based on a 2-sample, 20 soil sample run.
 * 2021-09-02: Updated EA script to add more descriptive labels to the plots and save them out.
