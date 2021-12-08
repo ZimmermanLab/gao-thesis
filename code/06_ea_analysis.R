@@ -1,13 +1,16 @@
-# Sarah Gao
-# July 28, 2021
 # This script takes in EA data and evaluates the accuracy
 # and precision of the standards.
+
+# Sarah Gao
+# July 28, 2021
+# hellosarahgao@gmail.com
 
 library("readr")
 library("tidyr")
 library("dplyr")
 library("ggplot2")
 library("scales")
+library("readxl")
 
 ############
 
@@ -17,12 +20,13 @@ library("scales")
 # over the run and to determine if we need any correcting factors.
 
 # Read in and clean up EA data
-source("code/functions/clean_ea_data.R")
+source("code/functions/ea_functions/clean_ea_data.R")
 ea_results_clean <- clean_ea_data("data/raw_data/EA_CN/20210727/210727_Run.csv")
+test <- readr::read_csv("data/raw_data/EA_CN/20210727/210727_Run.csv", col_names = FALSE)
 
 # Calculate means and RSDs for both nitrogen and carbon
 # for all SRM samples
-source("code/functions/calculate_srm_stats.R")
+source("code/functions/ea_functions/ea_calculate_srm_stats.R")
 srm_stats <- calculate_srm_stats(ea_results_clean)
 
 ############
@@ -52,7 +56,7 @@ ggsave(filename = "output/ea_plots/srm_c_plot.png", srm_c_plot)
 # SAMPLES
 
 # Calculate means and RSDs for each sample
-source("code/functions/calculate_sample_stats.R")
+source("code/functions/ea_functions/ea_calculate_sample_stats.R")
 sample_stats <- calculate_sample_stats(ea_results_clean)
 
 # Calculate the mean and median RSD across all samples
