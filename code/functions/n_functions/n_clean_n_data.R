@@ -9,6 +9,7 @@ library("readr")
 library("dplyr")
 library("tidyr")
 library("stringi")
+library("stringr")
 
 clean_n_data <- function(input_file_name) {
 

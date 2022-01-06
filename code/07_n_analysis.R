@@ -5,10 +5,6 @@
 # December 2, 2021
 # hellosarahgao@gmail.com
 
-# Load in libraries
-
-library("stringr")
-
 # Source and run function to clean N data
 source("code/functions/n_functions/n_clean_n_data.R")
 n_data_clean <- clean_n_data(
@@ -18,85 +14,118 @@ n_data_clean <- clean_n_data(
 source("code/functions/n_functions/n_calculate_sample_stats.R")
 n_sample_stats <- n_calculate_sample_stats(n_data_clean)
 
-
-# Source function that compiles all the bad jar assignment csvs from Spring 2021
+# Source and run function that compiles all the bad jar assignment
+# csvs from Spring 2021
 source("code/functions/compile_sample_assignments.R")
 all_treatments <- compile_sample_assignments()
 
-# Aggregate statistical data by treatment group
-n_sample_stats <- n_sample_stats %>%
-  mutate(drying_treatment = NA, pre_post_wet = NA)
-
-wk4_w_cc_pre <- data.frame()
-wk4_no_cc_pre <- data.frame()
-wk4_w_cc_post <- data.frame()
-wk4_no_cc_post <- data.frame()
-wk4_w_cc_cw <- data.frame()
-wk4_no_cc_cw <- data.frame()
-
-for (row in 1:length(n_sample_stats$sample_no)) {
-  sample_cc <- all_treatments$cc_treatment[which(
-    grepl((n_sample_stats$sample_no[row]), all_treatments$sample_no))]
-  sample_pre_post_wet <- all_treatments$pre_post_wet[which(
-    grepl((n_sample_stats$sample_no[row]), all_treatments$sample_no))]
-  sample_drying_treatment <- all_treatments$drying_treatment[which(
-    grepl((n_sample_stats$sample_no[row]), all_treatments$sample_no))]
-
-  if (sample_cc == "no_cc" && sample_pre_post_wet == "pre" &&
-      sample_drying_treatment == "four_wk") {
-    wk4_no_cc_pre <- rbind(wk4_no_cc_pre, n_sample_stats[row, ])
-  }
-
-  if (sample_cc == "w_cc" && sample_pre_post_wet == "pre" &&
-      sample_drying_treatment == "four_wk") {
-    wk4_w_cc_pre <- rbind(wk4_w_cc_pre, n_sample_stats[row, ])
-  }
-
-  if (sample_cc == "no_cc" && sample_pre_post_wet == "post"
-      && sample_drying_treatment == "four_wk") {
-    wk4_no_cc_post <- rbind(wk4_no_cc_post, n_sample_stats[row, ])
-  }
-
-  if (sample_cc == "w_cc" && sample_pre_post_wet == "post"
-      && sample_drying_treatment == "four_wk") {
-    wk4_w_cc_post <- rbind(wk4_w_cc_post, n_sample_stats[row, ])
-  }
-
-  if (sample_cc == "no_cc" && sample_pre_post_wet == "pre"
-      && sample_drying_treatment == "four_wk_cw") {
-    wk4_no_cc_cw <- rbind(wk4_no_cc_cw, n_sample_stats[row, ])
-  }
-
-  if (sample_cc == "w_cc" && sample_pre_post_wet == "pre"
-      && sample_drying_treatment == "four_wk_cw") {
-    wk4_w_cc_cw <- rbind(wk4_w_cc_cw, n_sample_stats[row, ])
-  }
-}
+# Source  and run function that organizes and aggregates n results to
+# master list of treatments
+source("code/functions/n_functions/n_aggregate_results.R")
+all_treatments_n <- add_n_results(all_treatments, n_sample_stats)
 
 # Store means of specific drying treatment x cc treatment intersections
-mean_wk4_no_cc_cw_nh3 <- mean(wk4_no_cc_cw$mean_nh3)
-mean_wk4_no_cc_cw_no2 <- mean(wk4_no_cc_cw$mean_no2)
-mean_wk4_no_cc_cw_no2_no3 <- mean(wk4_no_cc_cw$mean_no2_no3)
+mean_wk4_no_cc_cw_nh3 <- all_treatments_n %>%
+  filter(drying_treatment == "four_wk_cw" && cc_treatment == "no_cc") %>%
+  pull(mean_nh3) %>%
+  mean()
 
-mean_wk4_w_cc_cw_nh3 <- mean(wk4_w_cc_cw$mean_nh3)
-mean_wk4_w_cc_cw_no2 <- mean(wk4_w_cc_cw$mean_no2)
-mean_wk4_w_cc_cw_no2_no3 <- mean(wk4_w_cc_cw$mean_no2_no3)
+mean_wk4_no_cc_cw_no2 <- all_treatments_n %>%
+  filter(drying_treatment == "four_wk_cw" && cc_treatment == "no_cc") %>%
+  pull(mean_no2) %>%
+  mean()
 
-mean_wk4_no_cc_post_nh3 <- mean(wk4_no_cc_post$mean_nh3)
-mean_wk4_no_cc_post_no2 <- mean(wk4_no_cc_post$mean_no2)
-mean_wk4_no_cc_post_no2_no3 <- mean(wk4_no_cc_post$mean_no2_no3)
+mean_wk4_no_cc_cw_no2_no3 <- all_treatments_n %>%
+  filter(drying_treatment == "four_wk_cw" && cc_treatment == "no_cc") %>%
+  pull(mean_no2_no3) %>%
+  mean()
 
-mean_wk4_w_cc_post_nh3 <- mean(wk4_w_cc_post$mean_nh3)
-mean_wk4_w_cc_post_no2 <- mean(wk4_w_cc_post$mean_no2)
-mean_wk4_w_cc_post_no2_no3 <- mean(wk4_w_cc_post$mean_no2_no3)
+mean_wk4_w_cc_cw_nh3 <- all_treatments_n %>%
+  filter(drying_treatment == "four_wk_cw" && cc_treatment == "w_cc") %>%
+  pull(mean_nh3) %>%
+  mean()
 
-mean_wk4_no_cc_pre_nh3 <- mean(wk4_no_cc_pre$mean_nh3)
-mean_wk4_no_cc_pre_no2 <- mean(wk4_no_cc_pre$mean_no2)
-mean_wk4_no_cc_pre_no2_no3 <- mean(wk4_no_cc_pre$mean_no2_no3)
+mean_wk4_w_cc_cw_no2 <- all_treatments_n %>%
+  filter(drying_treatment == "four_wk_cw" && cc_treatment == "no_cc") %>%
+  pull(mean_no2) %>%
+  mean()
 
-mean_wk4_w_cc_pre_nh3 <- mean(wk4_w_cc_pre$mean_nh3)
-mean_wk4_w_cc_pre_no2 <- mean(wk4_w_cc_pre$mean_no2)
-mean_wk4_w_cc_pre_no2_no3 <- mean(wk4_w_cc_pre$mean_no2_no3)
+mean_wk4_w_cc_cw_no2_no3 <- all_treatments_n %>%
+  filter(drying_treatment == "four_wk_cw" && cc_treatment == "no_cc") %>%
+  pull(mean_no2_no3) %>%
+  mean()
+
+mean_wk4_no_cc_post_nh3 <- all_treatments_n %>%
+  filter(drying_treatment == "four_wk" &&
+           pre_post_wet == "post" && cc_treatment == "no_cc") %>%
+  pull(mean_nh3) %>%
+  mean()
+
+mean_wk4_no_cc_post_no2 <- all_treatments_n %>%
+  filter(drying_treatment == "four_wk" &&
+           pre_post_wet == "post" && cc_treatment == "no_cc") %>%
+  pull(mean_no2) %>%
+  mean()
+
+mean_wk4_no_cc_post_no2_no3 <- all_treatments_n %>%
+  filter(drying_treatment == "four_wk" &&
+           pre_post_wet == "post" && cc_treatment == "no_cc") %>%
+  pull(mean_no2_no3) %>%
+  mean()
+
+mean_wk4_w_cc_post_nh3 <- all_treatments_n %>%
+  filter(drying_treatment == "four_wk" &&
+           pre_post_wet == "post" && cc_treatment == "w_cc") %>%
+  pull(mean_nh3) %>%
+  mean()
+
+mean_wk4_w_cc_post_no2 <- all_treatments_n %>%
+  filter(drying_treatment == "four_wk" &&
+           pre_post_wet == "post" && cc_treatment == "w_cc") %>%
+  pull(mean_no2) %>%
+  mean()
+
+mean_wk4_w_cc_post_no2_no3 <- all_treatments_n %>%
+  filter(drying_treatment == "four_wk" &&
+           pre_post_wet == "post" && cc_treatment == "w_cc") %>%
+  pull(mean_no2_no3) %>%
+  mean()
+
+mean_wk4_no_cc_pre_nh3 <- all_treatments_n %>%
+  filter(drying_treatment == "four_wk" &&
+           pre_post_wet == "pre" && cc_treatment == "no_cc") %>%
+  pull(mean_nh3) %>%
+  mean()
+
+mean_wk4_no_cc_pre_no2 <- all_treatments_n %>%
+  filter(drying_treatment == "four_wk" &&
+           pre_post_wet == "pre" && cc_treatment == "no_cc") %>%
+  pull(mean_no2) %>%
+  mean()
+
+mean_wk4_no_cc_pre_no2_no3 <- all_treatments_n %>%
+  filter(drying_treatment == "four_wk" &&
+           pre_post_wet == "pre" && cc_treatment == "no_cc") %>%
+  pull(mean_no2_no3) %>%
+  mean()
+
+mean_wk4_w_cc_pre_nh3 <- all_treatments_n %>%
+  filter(drying_treatment == "four_wk" &&
+           pre_post_wet == "pre" && cc_treatment == "w_cc") %>%
+  pull(mean_nh3) %>%
+  mean()
+
+mean_wk4_w_cc_pre_no2 <- all_treatments_n %>%
+  filter(drying_treatment == "four_wk" &&
+           pre_post_wet == "pre" && cc_treatment == "w_cc") %>%
+  pull(mean_no2) %>%
+  mean()
+
+mean_wk4_w_cc_pre_no2_no3 <- all_treatments_n %>%
+  filter(drying_treatment == "four_wk" &&
+           pre_post_wet == "pre" && cc_treatment == "w_cc") %>%
+  pull(mean_no2_no3) %>%
+  mean()
 
 # Create a plot comparing NO2-NO3 levels with cover crop at 4 weeks
 means_w_cc_no2_no3 <- data.frame(
