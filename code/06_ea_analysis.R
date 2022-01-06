@@ -72,4 +72,7 @@ mean_sample_rsd_c <- mean(sample_rsd$rsd_c)
 median_sample_rsd_n <- median(sample_rsd$rsd_n)
 mean_sample_rsd_n <- mean(sample_rsd$rsd_n)
 
-#
+# Remove RSDs and clean up sample names
+samples_only <- sample_stats %>%
+  select(sample_no, mean_n, mean_c)
+samples_only$sample_no <- str_sub(samples_only$sample_no, -3)

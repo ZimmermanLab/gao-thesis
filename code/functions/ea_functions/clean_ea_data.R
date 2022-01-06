@@ -1,8 +1,8 @@
+# This function reads in raw EA data and cleans it up
+
 # Sarah Gao
 # October 12, 2021
-
-# This function reads in raw EA data and cleans it up
-# to be used in downstream analyses
+# hellosarahgao@gmail.com
 
 library("dplyr")
 
