@@ -9,7 +9,7 @@
 # January 5, 2022
 # hellosarahgao@gmail.com
 
-# Load libraries
+# Load packages
 library("readr")
 library("dplyr")
 
