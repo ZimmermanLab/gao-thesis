@@ -11,7 +11,7 @@ library("dplyr")
 
 calculate_srm_stats <- function(cleaned_ea_data) {
   all_srms <- cleaned_ea_data %>%
-    filter(sample == "SRM")
+    filter(sample_no == "SRM")
   mean_srm_n <- mean(all_srms$n_per)
   rsd_srm_n <- sd(all_srms$n_per) * 100 / mean_srm_n
 

@@ -1,4 +1,4 @@
-# This function reads in EA data and finds the
+# This function reads in cleaned EA data and finds the
 # mean and RSD of each sample.
 
 # Sarah Gao
@@ -15,14 +15,14 @@ calculate_sample_stats <- function(cleaned_ea_data) {
   # Collect all the samples into one dataframe and create a column that checks
   # for matched names
   all_samples <- cleaned_ea_data %>%
-    select(pos, sample, n_per, c_per) %>%
-    filter(sample != "SRM") %>%
-    filter(sample != "BLANK") %>%
-    filter(!str_detect(sample, "^ASP")) %>%
+    select(pos, sample_no, n_per, c_per) %>%
+    filter(sample_no != "SRM") %>%
+    filter(sample_no != "BLANK") %>%
+    filter(!str_detect(sample_no, "^ASP")) %>%
     mutate(name_match = as.numeric(
-      sample == lag(sample, 1))) %>%
+      sample_no == lag(sample_no, 1))) %>%
     replace(is.na(.), 0) %>%
-    arrange(sample)
+    arrange(sample_no)
 
   # Run a for loop that calculates the mean %C and C RSD for each sample
   mean_c <- c()
@@ -63,6 +63,9 @@ calculate_sample_stats <- function(cleaned_ea_data) {
   }
 
   all_samples <- cbind(all_samples, mean_n, rsd_n)
+  all_samples_clean <- all_samples %>%
+    select(sample_no, mean_c, rsd_c, mean_n, rsd_n) %>%
+    drop_na()
 
-return(all_samples)
+return(all_samples_clean)
 }

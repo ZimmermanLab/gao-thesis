@@ -14,15 +14,15 @@ library("readxl")
 
 ############
 
-# SRM
+# SRMs
 
 # First, we will examine the SRM data to see if there was any drift / trend
 # over the run and to determine if we need any correcting factors.
 
 # Read in and clean up EA data
 source("code/functions/ea_functions/clean_ea_data.R")
-ea_results_clean <- clean_ea_data("data/raw_data/EA_CN/20210727/210727_Run.csv")
-test <- readr::read_csv("data/raw_data/EA_CN/20210727/210727_Run.csv", col_names = FALSE)
+ea_results_clean <- clean_ea_data(
+  "data/raw_data/EA_CN/20210727/210727_Run.csv")
 
 # Calculate means and RSDs for both nitrogen and carbon
 # for all SRM samples
@@ -35,14 +35,14 @@ srm_stats <- calculate_srm_stats(ea_results_clean)
 
 # Plot the SRM values
 srm_n_plot <- ea_results_clean %>%
-  filter(sample == "SRM") %>%
+  filter(sample_no == "SRM") %>%
   ggplot(aes(x = pos, y = n_per)) +
   geom_point() +
   labs(title = "Standard Reference Material Nitrogen Content",
        x = "Position", y = "N percentage")
 
 srm_c_plot <- ea_results_clean %>%
-  filter(sample == "SRM") %>%
+  filter(sample_no == "SRM") %>%
   ggplot(aes(x = pos, y = c_per)) +
   geom_point() +
   labs(title = "Standard Reference Material Carbon Content",
@@ -64,8 +64,12 @@ sample_rsd <- sample_stats %>%
   filter(is.na(rsd_c) == FALSE) %>%
   select(rsd_c, rsd_n)
 
+# Calculate the mean and median rsds for both C and N across all samples
+# Not sure why I put this in here or why it's necessary but nice to have maybe?
 median_sample_rsd_c <- median(sample_rsd$rsd_c)
 mean_sample_rsd_c <- mean(sample_rsd$rsd_c)
 
 median_sample_rsd_n <- median(sample_rsd$rsd_n)
 mean_sample_rsd_n <- mean(sample_rsd$rsd_n)
+
+#
