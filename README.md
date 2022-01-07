@@ -13,6 +13,7 @@ This project will take data collected from an experiment run on soils from Star 
 ***
 
 ## Change Log:
+* 2022-01-06: Added plots to CN analysis script. Reordered the CN and N analysis scripts. Cleaned up both for more streamlined summarization and plotting.
 * 2022-01-05: Refactored multiple steps in the `07_n_analysis.R` script. Started script to analyze total C and N data from the EA.
 * 2021-12-08: Added N data from first SmartChem run. Wrote scripts + functions to analyze N data.
 * 2021-10-19: Added mean and median RSD assignments to EA samples to determine overall sample variability.
