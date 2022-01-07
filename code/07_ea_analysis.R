@@ -88,3 +88,29 @@ all_treatments_c_n <- add_results(all_treatments, samples_only)
 c_n_results_means <- all_treatments_c_n %>%
   group_by(drying_treatment, cc_treatment, pre_post_wet) %>%
   summarise(mean_n = mean(mean_n), mean_c = mean(mean_c))
+
+# Create a plot comparing N levels between groups with and
+# without cover crops at 4 weeks
+n_compare_cc_plot <- c_n_results_means %>%
+  filter(drying_treatment == "four_wk") %>%
+  ggplot(aes(x = pre_post_wet, y = mean_n, fill = cc_treatment)) +
+  geom_col(position = position_dodge()) +
+  scale_y_continuous() +
+  scale_x_discrete(limits = c("cw", "post"),
+                   labels = c(
+                     "Constant Water", "Post Wetting")) +
+  labs(title = "Total N Values in Samples With and Without Cover Crop Residue",
+       x = "Water Treatments", y = "N (%)")
+
+# Create a plot comparing C levels between groups with and
+# without cover crops at 4 weeks
+c_compare_cc_plot <- c_n_results_means %>%
+  filter(drying_treatment == "four_wk") %>%
+  ggplot(aes(x = pre_post_wet, y = mean_c, fill = cc_treatment)) +
+  geom_col(position = position_dodge()) +
+  scale_y_continuous() +
+  scale_x_discrete(limits = c("cw", "post"),
+                   labels = c(
+                     "Constant Water", "Post Wetting")) +
+  labs(title = "Total C Values in Samples With and Without Cover Crop Residue",
+       x = "Water Treatments", y = "C (%)")
