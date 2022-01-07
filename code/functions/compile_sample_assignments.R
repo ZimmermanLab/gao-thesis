@@ -96,7 +96,7 @@ compile_sample_assignments <- function() {
         "output/schedules/sampling_schedule_master/initial_sample_cw_all.csv") %>%
         select(jar_no) %>%
         rename(sample_no = jar_no) %>%
-        mutate(drying_treatment = "initial", pre_post_wet = "pre") %>%
+        mutate(drying_treatment = "initial", pre_post_wet = "cw") %>%
         rbind(sampling_schedule)) %>%
     rbind(
       readr::read_csv("output/jar_assignments/no_soil_controls.csv") %>%
@@ -120,13 +120,13 @@ compile_sample_assignments <- function() {
   cw_samples <- readr::read_csv("output/jar_assignments/w_cc_cw.csv") %>%
     select(jar_w_cc_cw) %>%
     rename(sample_no = jar_w_cc_cw) %>%
-    mutate(drying_treatment = "cw", pre_post_wet = NA, cc_treatment = "w_cc") %>%
+    mutate(drying_treatment = "cw", pre_post_wet = "cw", cc_treatment = "w_cc") %>%
     rbind(
       readr::read_csv("output/jar_assignments/no_cc_cw.csv") %>%
         select(jar_no_cc_cw) %>%
         rename(sample_no = jar_no_cc_cw) %>%
         mutate(drying_treatment = "cw",
-               pre_post_wet = NA, cc_treatment = "no_cc")) %>%
+               pre_post_wet = "cw", cc_treatment = "no_cc")) %>%
     arrange(sample_no)
 
   # Add leading zeros to sample_no
@@ -136,14 +136,12 @@ compile_sample_assignments <- function() {
   # Combine drying treatment and pre/post wet info with cc treatment dataframe
   all_treatments <- merge(sampling_schedule, cc_list, by = "sample_no")
 
-  # Replace drying_treatment values for all constant watered samples
+  # Replace pre_post_wet values for all constant watered samples
   # Again, due to previous idiocy
   for (row in 1:length(cw_samples$sample_no)) {
     match_row_num <- which(grepl(
       cw_samples$sample_no[row], all_treatments$sample_no))
-    all_treatments$drying_treatment[match_row_num] <- paste0(
-      all_treatments$drying_treatment[match_row_num], "_",
-      cw_samples$drying_treatment[row])
+    all_treatments$pre_post_wet[match_row_num] <- "cw"
   }
   return(all_treatments)
 }
