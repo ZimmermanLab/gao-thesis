@@ -13,6 +13,8 @@ This project will take data collected from an experiment run on soils from Star 
 ***
 
 ## Change Log:
+* 2022-02-07: Added script from NZ that analyzes raw CO2 data for concentrations.
+* 2022-02-03: Added CO2 raw data and concentrations from Integrator software from LICOR runs to `data/` folder. Attempted to analyze raw data, largely unsuccessful.
 * 2022-01-06: Added plots to CN analysis script. Reordered the CN and N analysis scripts. Cleaned up both for more streamlined summarization and plotting.
 * 2022-01-05: Refactored multiple steps in the `07_n_analysis.R` script. Started script to analyze total C and N data from the EA.
 * 2021-12-08: Added N data from first SmartChem run. Wrote scripts + functions to analyze N data.
