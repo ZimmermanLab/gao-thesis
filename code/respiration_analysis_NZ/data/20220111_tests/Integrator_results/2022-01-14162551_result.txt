@@ -1,0 +1,28 @@
+ID,Sl.No,Timestamp,Baseline,Peak,Area Under Curve,Remarks
+CO2,1A,2022-01-14 15:49:51,1209584.742,-1209584.073,-8467093.312,"Note: Est baseline: 4s, Integration time: 8s"
+CO2,1B,2022-01-14 15:52:25,1209307.041,-1208634.003,-13299751.168,"Note: Est baseline: 4s, Integration time: 12s"
+CO2,1C,2022-01-14 15:56:55,0.000,425.590,805.332,"Note: Est baseline: 0s, Integration time: 16s"
+CO2,1D,2022-01-14 15:58:05,0.264,62.777,-52.762,"Note: Est baseline: 0s, Integration time: 16s"
+CO2,1E,2022-01-14 15:59:45,0.183,135.533,22.503,"Note: Est baseline: 4s, Integration time: 20s"
+CO2,2A,2022-01-14 16:01:02,0.106,5007.547,13082.127,"Note: Est baseline: 4s, Integration time: 20s"
+CO2,2B,2022-01-14 16:01:54,0.000,1822.531,2629.411,"Note: Est baseline: 0s, Integration time: 20s, bad injection"
+CO2,2C,2022-01-14 16:02:56,0.000,866.481,916.362,"Note: Est baseline: 0s, Integration time: 20s"
+CO2,2D,2022-01-14 16:04:10,0.000,2896.977,9467.117,"Note: Est baseline: 0s, Integration time: 15s"
+CO2,2E,2022-01-14 16:05:12,0.000,1919.729,4115.309,"Note: Est baseline: 0s, Integration time: 20s"
+CO2,2F,2022-01-14 16:06:20,0.000,2456.716,5515.499,"Note: Est baseline: 0s, Integration time: 22s"
+CO2,3A,2022-01-14 16:07:39,0.000,995.614,3399.982,"Note: Est baseline: 0s, Integration time: 22s"
+CO2,3B,2022-01-14 16:08:28,0.000,4836014.171,4836438.891,"Note: Est baseline: 0s, Integration time: 22s"
+CO2,3C,2022-01-14 16:09:28,0.000,4839786.482,nan,"Note: Est baseline: 0s, Integration time: 22s"
+CO2,3D,2022-01-14 16:10:36,0.000,147.211,nan,"Note: Est baseline: 0s, Integration time: 22s"
+CO2,3E,2022-01-14 16:11:54,0.232,0.728,-82.601,"Note: Est baseline: 4s, Integration time: 22s"
+CO2,3F,2022-01-14 16:13:34,0.691,4846516.212,nan,"Note: Est baseline: 4s, Integration time: 22s"
+CO2,4A,2022-01-14 16:15:05,0.557,522.532,458.725,"Note: Est baseline: 4s, Integration time: 22s"
+CO2,4B,2022-01-14 16:16:04,0.000,2296.164,9560.451,"Note: Est baseline: 0s, Integration time: 22s"
+CO2,4C,2022-01-14 16:16:56,0.000,2687.258,10615.262,"Note: Est baseline: 0s, Integration time: 22s"
+CO2,4D,2022-01-14 16:18:06,0.000,5916.139,12422.933,"Note: Est baseline: 0s, Integration time: 22s"
+CO2,1F,2022-01-14 16:19:28,0.000,655.217,1333.334,"Note: Est baseline: 0s, Integration time: 22s"
+CO2,1G,2022-01-14 16:20:34,0.000,509.724,1886.482,"Note: Est baseline: 0s, Integration time: 22s"
+CO2,3G,2022-01-14 16:21:43,0.000,162.741,468.653,"Note: Est baseline: 0s, Integration time: 22s"
+CO2,3H,2022-01-14 16:22:49,0.000,4891528.285,nan,Note:
+CO2,3I,2022-01-14 16:23:59,0.000,364.832,1001.676,Note:
+CO2,27,2022-01-14 16:24:58,0.000,155.542,nan,Note:
