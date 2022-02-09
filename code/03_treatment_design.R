@@ -6,6 +6,7 @@
 # hellosarahgao@gmail.com
 
 library("dplyr")
+library("readr")
 
 # Note that 18 jars (dried for 1 week, 2 weeks and 4 weeks) will be used for
 # side measurement of CO2 respiration over a time series which will use a
@@ -17,14 +18,18 @@ all_jars <- data.frame(sample_no = 1:133)
 # Source function
 source("code/functions/random_assign_jars.R")
 
+num_per_treatment <- 64
+
+#### WARNING: DO NOT RERUN IF ASSIGNMENTS ARE ALREADY SET! ####
+
 # Choose jars for w_cc and no_cc
 already_chosen <- data.frame(sample_no = NA)
-w_cc <- assign_jars(all_jars, 1, 55, already_chosen) %>%
+w_cc <- assign_jars(all_jars, 1, num_per_treatment, already_chosen) %>%
   select(sample_no) %>%
   drop_na() %>%
   arrange(sample_no)
 already_chosen <- w_cc
-no_cc <- assign_jars(all_jars, 1, 55, already_chosen) %>%
+no_cc <- assign_jars(all_jars, 1, num_per_treatment, already_chosen) %>%
   select(sample_no) %>%
   drop_na() %>%
   arrange(sample_no)
@@ -228,27 +233,28 @@ no_cc_all_dry <- no_cc_all_dry_num %>%
 # Choose jars for CO2 experiment
 already_chosen <- rbind(w_cc_initial_num, w_cc_1wk_num, w_cc_2wk_num,
                         w_cc_4wk_num, w_cc_cw_1wk_num, w_cc_cw_2wk_num,
-                        w_cc_cw_4wk_num, w_cc_all_dry_num)
+                        w_cc_cw_4wk_num, w_cc_all_dry_num, no_cc_initial_num,
+                        no_cc_1wk_num, no_cc_2wk_num, no_cc_4wk_num,
+                        no_cc_cw_1wk_num, no_cc_cw_2wk_num, no_cc_cw_4wk_num,
+                        no_cc_all_dry_num)
 w_cc_co2_num <- assign_jars(w_cc, 3, 3, already_chosen)
 w_cc_co2 <- w_cc_co2_num %>%
   drop_na() %>%
   rename(drying_treatment = group_no) %>%
-  mutate(drying_treatment = case_when(drying_treatment = 1 ~ "one_wk",
-                                      drying_treatment = 2 ~ "two_wk",
-                                      drying_treatment = 3 ~ "four_wk") %>%
+  mutate(drying_treatment = case_when(drying_treatment == 1 ~ "one_wk",
+                                      drying_treatment == 2 ~ "two_wk",
+                                      drying_treatment == 3 ~ "four_wk")) %>%
            mutate(pre_post_wet = "post_co2") %>%
            mutate(cc_treatment = "w_cc") %>%
            arrange(sample_no)
-already_chosen <- rbind(no_cc_initial_num, no_cc_1wk_num, no_cc_2wk_num,
-                       no_cc_4wk_num, no_cc_cw_1wk_num, no_cc_cw_2wk_num,
-                       no_cc_cw_4wk_num, no_cc_all_dry_num)
-no_cc_co2_num <- assign_jars(no_cc, 3, 3, already_chosen) %>%
+already_chosen <- rbind(already_chosen, w_cc_co2_num)
+no_cc_co2_num <- assign_jars(no_cc, 3, 3, already_chosen)
 no_cc_co2 <- no_cc_co2_num %>%
   drop_na() %>%
   rename(drying_treatment = group_no) %>%
-  mutate(drying_treatment = case_when(drying_treatment = 1 ~ "one_wk",
-                                      drying_treatment = 2 ~ "two_wk",
-                                      drying_treatment = 3 ~ "four_wk") %>%
+  mutate(drying_treatment = case_when(drying_treatment == 1 ~ "one_wk",
+                                      drying_treatment == 2 ~ "two_wk",
+                                      drying_treatment == 3 ~ "four_wk")) %>%
            mutate(pre_post_wet = "post_co2") %>%
            mutate(cc_treatment = "no_cc") %>%
            arrange(sample_no)
@@ -262,17 +268,24 @@ all_jars <- rbind(no_soil_controls,
                   w_cc_co2, no_cc_co2) %>%
   arrange(sample_no)
 
+#### WARNING: DO NOT RERUN IF ASSIGNMENTS ARE ALREADY SET! ####
+
 # Save out to csvs
 write_csv(all_jars, "output/2022/jar_assignments/master_list.csv")
-write_csv(no_cc, "output/2022/jar_assignments/no_cc.csv")
-write_csv(w_cc, "output/2022/jar_assignments/w_cc.csv")
-write_csv(no_soil_controls, "output/2022/jar_assignments/no_soil_controls.csv")
+write_csv((no_cc %>% mutate(id = row_number()) %>%
+          relocate(id)), "output/2022/jar_assignments/no_cc.csv")
+write_csv((w_cc %>% mutate(id = row_number()) %>%
+          relocate(id)), "output/2022/jar_assignments/w_cc.csv")
+write_csv((no_soil_controls %>% select(sample_no) %>%
+          mutate(id = row_number()) %>%
+          relocate(id)), "output/2022/jar_assignments/no_soil_controls.csv")
 
 # Save out initial sampling schedule
 initial_samples <- rbind(w_cc_initial, no_cc_initial) %>%
   arrange(sample_no) %>%
   write_csv("output/2022/jar_assignments/initial_sampling.csv")
-initial_samples %>% select(sample_no) %>%
+initial_samples %>% select(sample_no) %>% mutate(id = row_number()) %>%
+  relocate(id) %>%
   write_csv("output/2022/schedules/initial_samples.csv")
 
 # Save out week 1 pre-wet sampling schedule
@@ -281,7 +294,8 @@ wk1_pre <- rbind((w_cc_1wk %>% filter(pre_post_wet == "pre")),
                  w_cc_cw_1wk, no_cc_cw_1wk) %>%
   arrange(sample_no) %>%
   write_csv("output/2022/jar_assignments/wk1_pre.csv")
-wk1_pre %>% select(sample_no) %>%
+wk1_pre %>% select(sample_no) %>% mutate(id = row_number()) %>%
+  relocate(id) %>%
   write_csv("output/2022/schedules/wk1_pre.csv")
 
 # Save out week 1 post-wet sampling schedule
@@ -289,8 +303,9 @@ wk1_post <- rbind((w_cc_1wk %>% filter(pre_post_wet == "post")),
                   (no_cc_1wk %>% filter(pre_post_wet == "post"))) %>%
   arrange(sample_no) %>%
   write_csv("output/2022/jar_assignments/wk1_post.csv")
-wk1_post %>% select(sample_no) %>%
-  write_csv("output/2022/schedules/wk2_post.csv")
+wk1_post %>% select(sample_no) %>% mutate(id = row_number()) %>%
+  relocate(id) %>%
+  write_csv("output/2022/schedules/wk1_post.csv")
 
 # Save out week 2 pre-wet sampling schedule
 wk2_pre <- rbind((w_cc_2wk %>% filter(pre_post_wet == "pre")),
@@ -298,7 +313,8 @@ wk2_pre <- rbind((w_cc_2wk %>% filter(pre_post_wet == "pre")),
                  w_cc_cw_2wk, no_cc_cw_2wk) %>%
   arrange(sample_no) %>%
   write_csv("output/2022/jar_assignments/wk2_pre.csv")
-wk2_pre %>% select(sample_no) %>%
+wk2_pre %>% select(sample_no) %>% mutate(id = row_number()) %>%
+  relocate(id) %>%
   write_csv("output/2022/schedules/wk2_pre.csv")
 
 # Save out week 2 post-wet sampling schedule
@@ -306,7 +322,8 @@ wk2_post <- rbind((w_cc_2wk %>% filter(pre_post_wet == "post")),
                   (no_cc_2wk %>% filter(pre_post_wet == "post"))) %>%
   arrange(sample_no) %>%
   write_csv("output/2022/jar_assignments/wk2_post.csv")
-wk2_post %>% select(sample_no) %>%
+wk2_post %>% select(sample_no) %>% mutate(id = row_number()) %>%
+  relocate(id) %>%
   write_csv("output/2022/schedules/wk2_post.csv")
 
 # Save out week 4 pre-wet sampling schedule
@@ -315,7 +332,8 @@ wk4_pre <- rbind((w_cc_4wk %>% filter(pre_post_wet == "pre")),
                  w_cc_cw_4wk, no_cc_cw_4wk) %>%
   arrange(sample_no) %>%
   write_csv("output/2022/jar_assignments/wk4_pre.csv")
-wk4_pre %>% select(sample_no) %>%
+wk4_pre %>% select(sample_no) %>% mutate(id = row_number()) %>%
+  relocate(id) %>%
   write_csv("output/2022/schedules/wk4_pre.csv")
 
 # Save out week 4 post-wet sampling schedule, including the all dry controls
@@ -325,27 +343,40 @@ wk4_post <- rbind((w_cc_4wk %>% filter(pre_post_wet == "post")),
                   w_cc_all_dry, no_cc_all_dry, no_soil_controls) %>%
   arrange(sample_no) %>%
   write_csv("output/2022/jar_assignments/wk4_post.csv")
-wk4_post %>% select(sample_no) %>%
+wk4_post %>% select(sample_no) %>% mutate(id = row_number()) %>%
+  relocate(id) %>%
   write_csv("output/2022/schedules/wk4_post_all.csv")
 wk4_post %>% filter(pre_post_wet == "post") %>% select(sample_no) %>%
+  mutate(id = row_number()) %>% relocate(id) %>%
   write_csv("output/2022/schedules/wk4_post_water.csv")
 
 # Create watering schedules for constantly watered samples
 wk1_water <- all_jars %>%
   filter(pre_post_wet == "cw") %>%
-  select(sample_no) %>%
+  select(sample_no) %>% mutate(id = row_number()) %>%
+  relocate(id) %>%
   write_csv("output/2022/schedules/wk1_cw_water.csv")
 wk2_water <- all_jars %>%
   filter(pre_post_wet == "cw" & drying_treatment != "one_wk") %>%
-  select(sample_no) %>%
+  select(sample_no) %>% mutate(id = row_number()) %>%
+  relocate(id) %>%
   write_csv("output/2022/schedules/wk2_cw_water.csv")
 wk4_water <- all_jars %>%
   filter(pre_post_wet == "cw" & drying_treatment == "four_wk") %>%
-  select(sample_no) %>%
+  select(sample_no) %>% mutate(id = row_number()) %>%
+  relocate(id) %>%
   write_csv("output/2022/schedules/wk4_cw_water.csv")
 
 # Save out CO2 assignments
 co2_only <- all_jars %>%
   filter(pre_post_wet == "post_co2") %>%
   select(sample_no, drying_treatment) %>%
+  mutate(id = row_number()) %>%
+  relocate(id) %>%
   write_csv("output/2022/schedules/co2_only.csv")
+co2_only %>% filter(drying_treatment == "one_wk") %>%
+  write_csv("output/2022/schedules/co2_wk1.csv")
+co2_only %>% filter(drying_treatment == "two_wk") %>%
+  write_csv("output/2022/schedules/co2_wk2.csv")
+co2_only %>% filter(drying_treatment == "four_wk") %>%
+  write_csv("output/2022/schedules/co2_wk4.csv")

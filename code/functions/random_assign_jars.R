@@ -10,6 +10,8 @@
 # February 8, 2022
 # hellosarahgao@gmail.com
 
+# Load libraries
+library("dplyr")
 
 assign_jars <- function(group_name, group_num, num_choose, already_chosen) {
   already_chosen <- already_chosen %>%
