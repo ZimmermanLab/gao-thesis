@@ -1,31 +1,21 @@
-# Sarah Gao
-# April 4, 2021
 # This script creates an ordered map of jar locations and randomizes
 # treatments to jar numbers.
 
+# Sarah Gao
+# April 4, 2021
+# hellosarahgao@gmail.com
+
 library("dplyr")
 
-# Note that 18 jars (dried for 1 week, 2 weeks and 4 weeks) will be used for side measurement of CO2 respiration
-# over time which will use a smaller volume of soil.
+# Note that 18 jars (dried for 1 week, 2 weeks and 4 weeks) will be used for
+# side measurement of CO2 respiration over a time series which will use a
+# smaller volume of soil than the other main jars.
 # Main experiment requires 115 jars.
 
 all_jars <- data.frame(sample_no = 1:133)
 
-assign_jars <- function(group_name, group_num, num_choose, already_chosen) {
-  already_chosen <- already_chosen %>%
-    select(sample_no)
-  assignments <- data.frame(sample_no = NA, group_no = NA)
-  assignment_group <- 0
-  for (group in 1:group_num) {
-    assignment_group <- assignment_group + 1
-    chosen_jars <- sample_n(subset(group_name, !(group_name$sample_no %in% already_chosen$sample_no)),
-      num_choose, replace = FALSE)
-    group_assign <- cbind(chosen_jars, group_no = assignment_group)
-    assignments <- rbind(group_assign, assignments)
-    already_chosen <- rbind(already_chosen, chosen_jars)
-  }
-  return(assignments)
-}
+# Source function
+source("code/functions/random_assign_jars.R")
 
 # Choose jars for w_cc and no_cc
 already_chosen <- data.frame(sample_no = NA)
@@ -38,19 +28,6 @@ no_cc <- assign_jars(all_jars, 1, 55, already_chosen) %>%
   select(sample_no) %>%
   drop_na() %>%
   arrange(sample_no)
-
-# Choose jars for CO2 experiment
-already_chosen <- data.frame(sample_no = NA)
-w_cc_co2_num <- assign_jars(w_cc, 3, 3, already_chosen)
-w_cc_co2 <- w_cc_co2_num %>%
-  drop_na() %>%
-  rename(drying_treatment = group_no) %>%
-  mutate(drying_treatment = case_when(drying_treatment = 1 ~ "one_wk",
-                                      drying_treatment = 2 ~ "two_wk",) %>%
-  mutate(pre_post_wet = "co2") %>%
-  mutate(cc_treatment = "w_cc") %>%
-  arrange(sample_no)
-w_cc_
 
 # Choose jars for no soil controls
 already_chosen <- rbind(w_cc, no_cc)
@@ -248,12 +225,41 @@ no_cc_all_dry <- no_cc_all_dry_num %>%
   mutate(drying_treatment = "all_dry") %>%
   arrange(sample_no)
 
+# Choose jars for CO2 experiment
+already_chosen <- rbind(w_cc_initial_num, w_cc_1wk_num, w_cc_2wk_num,
+                        w_cc_4wk_num, w_cc_cw_1wk_num, w_cc_cw_2wk_num,
+                        w_cc_cw_4wk_num, w_cc_all_dry_num)
+w_cc_co2_num <- assign_jars(w_cc, 3, 3, already_chosen)
+w_cc_co2 <- w_cc_co2_num %>%
+  drop_na() %>%
+  rename(drying_treatment = group_no) %>%
+  mutate(drying_treatment = case_when(drying_treatment = 1 ~ "one_wk",
+                                      drying_treatment = 2 ~ "two_wk",
+                                      drying_treatment = 3 ~ "four_wk") %>%
+           mutate(pre_post_wet = "post_co2") %>%
+           mutate(cc_treatment = "w_cc") %>%
+           arrange(sample_no)
+already_chosen <- rbind(no_cc_initial_num, no_cc_1wk_num, no_cc_2wk_num,
+                       no_cc_4wk_num, no_cc_cw_1wk_num, no_cc_cw_2wk_num,
+                       no_cc_cw_4wk_num, no_cc_all_dry_num)
+no_cc_co2_num <- assign_jars(no_cc, 3, 3, already_chosen) %>%
+no_cc_co2 <- no_cc_co2_num %>%
+  drop_na() %>%
+  rename(drying_treatment = group_no) %>%
+  mutate(drying_treatment = case_when(drying_treatment = 1 ~ "one_wk",
+                                      drying_treatment = 2 ~ "two_wk",
+                                      drying_treatment = 3 ~ "four_wk") %>%
+           mutate(pre_post_wet = "post_co2") %>%
+           mutate(cc_treatment = "no_cc") %>%
+           arrange(sample_no)
+
 # Combine all into master list
 all_jars <- rbind(no_soil_controls,
                   w_cc_initial, w_cc_1wk, w_cc_2wk, w_cc_4wk, w_cc_cw_1wk,
                   w_cc_cw_2wk, w_cc_cw_4wk, w_cc_all_dry,
                   no_cc_initial, no_cc_1wk, no_cc_2wk, no_cc_4wk, no_cc_cw_1wk,
-                  no_cc_cw_2wk, no_cc_cw_4wk, no_cc_all_dry) %>%
+                  no_cc_cw_2wk, no_cc_cw_4wk, no_cc_all_dry,
+                  w_cc_co2, no_cc_co2) %>%
   arrange(sample_no)
 
 # Save out to csvs
@@ -329,13 +335,17 @@ wk1_water <- all_jars %>%
   filter(pre_post_wet == "cw") %>%
   select(sample_no) %>%
   write_csv("output/2022/schedules/wk1_cw_water.csv")
-
 wk2_water <- all_jars %>%
   filter(pre_post_wet == "cw" & drying_treatment != "one_wk") %>%
   select(sample_no) %>%
   write_csv("output/2022/schedules/wk2_cw_water.csv")
-
 wk4_water <- all_jars %>%
   filter(pre_post_wet == "cw" & drying_treatment == "four_wk") %>%
   select(sample_no) %>%
   write_csv("output/2022/schedules/wk4_cw_water.csv")
+
+# Save out CO2 assignments
+co2_only <- all_jars %>%
+  filter(pre_post_wet == "post_co2") %>%
+  select(sample_no, drying_treatment) %>%
+  write_csv("output/2022/schedules/co2_only.csv")
