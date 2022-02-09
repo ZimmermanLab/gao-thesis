@@ -13,6 +13,7 @@ This project will take data collected from an experiment run on soils from Star 
 ***
 
 ## Change Log:
+* 2022-02-08: Streamlined and refactored jar assignments script, saved out finalized jar assignments as output csvs.
 * 2022-02-07: Added script from NZ that analyzes raw CO2 data for concentrations.
 * 2022-02-03: Added CO2 raw data and concentrations from Integrator software from LICOR runs to `data/` folder. Attempted to analyze raw data, largely unsuccessful.
 * 2022-01-06: Added plots to CN analysis script. Reordered the CN and N analysis scripts. Cleaned up both for more streamlined summarization and plotting.
