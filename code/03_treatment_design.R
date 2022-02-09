@@ -5,101 +5,247 @@
 
 library("dplyr")
 
-all_jars_plot <- read.csv("data/exp_design/Experimental_Design.csv")
+# Note that 9 jars will be used for side measurement of CO2 respiration
+# over time which will use a smaller volume of soil but will be sampled at
+# similar times. Main experiment requires 115 jars.
 
-total_jars <- data.frame(total_jars = 1:115)
+all_jars <- data.frame(sample_no = 1:115)
 
-# Choose jars for cover crop and no cover crop
-num_w_cc <- 55
-num_no_cc <- 55
+assign_jars <- function(group_name, group_num, num_choose, already_chosen) {
+  already_chosen <- already_chosen %>%
+    select(sample_no)
+  assignments <- data.frame(sample_no = NA, group_no = NA)
+  assignment_group <- 0
+  for (group in 1:group_num) {
+    assignment_group <- assignment_group + 1
+    chosen_jars <- sample_n(subset(group_name, !(group_name$sample_no %in% already_chosen$sample_no)),
+      num_choose, replace = FALSE)
+    group_assign <- cbind(chosen_jars, group_no = assignment_group)
+    assignments <- rbind(group_assign, assignments)
+    already_chosen <- rbind(already_chosen, chosen_jars)
+  }
+  return(assignments)
+}
 
-w_cc <- data.frame(jar_w_cc = sample(max(total_jars),
-                                     num_w_cc, replace = FALSE)) %>%
-  arrange(jar_w_cc)
-no_cc <- sample_n(subset(total_jars,
-                  !(total_jars %in% w_cc$jar_w_cc)), 55, replace = FALSE) %>%
-  rename(jar_no_cc = total_jars) %>%
-  arrange(jar_no_cc)
+# Choose jars for w_cc and no_cc
+already_chosen <- data.frame(sample_no = NA)
+w_cc <- assign_jars(all_jars, 1, 55, already_chosen) %>%
+  select(sample_no) %>%
+  drop_na() %>%
+  arrange(sample_no)
+already_chosen <- w_cc
+no_cc <- assign_jars(all_jars, 1, 55, already_chosen) %>%
+  select(sample_no) %>%
+  drop_na() %>%
+  arrange(sample_no)
 
-# Choose jars for consistent watering
-w_cc_cw <- sample_n(w_cc, 20, replace = FALSE) %>%
-  rename(jar_w_cc_cw = jar_w_cc) %>%
-  arrange(jar_w_cc_cw)
+# Choose jars for no soil controls
+already_chosen <- rbind(w_cc, no_cc)
+no_soil_controls <- assign_jars(all_jars, 1, 5, already_chosen) %>%
+  drop_na() %>%
+  rename(pre_post_wet = group_no) %>%
+  mutate(pre_post_wet = "no_soil") %>%
+  mutate(cc_treatment = "no_soil") %>%
+  mutate(drying_treatment = "no_soil") %>%
+  arrange(sample_no)
 
-no_cc_cw <- sample_n(no_cc, 20, replace = FALSE) %>%
-  rename(jar_no_cc_cw = jar_no_cc) %>%
-  arrange(jar_no_cc_cw)
+# Choose jars for w_cc_initial
+already_chosen <- data.frame(sample_no = NA)
+w_cc_initial_num <- assign_jars(w_cc, 1, 5, already_chosen)
+w_cc_initial <- w_cc_initial_num %>%
+  drop_na() %>%
+  rename(pre_post_wet = group_no) %>%
+  mutate(pre_post_wet = "initial") %>%
+  mutate(cc_treatment = "w_cc") %>%
+  mutate(drying_treatment = "initial") %>%
+  arrange(sample_no)
 
-# Choose jars for 1 week drought
-w_cc_1wk <- sample_n(subset(w_cc,
-                                !(jar_w_cc %in% w_cc_cw$jar_w_cc_cw)),
-                                10, replace = FALSE) %>%
-  rename(jar_w_cc_1wk = jar_w_cc) %>%
-  arrange(jar_w_cc_1wk)
+# Choose jars for w_cc_1wk
+already_chosen <- w_cc_initial_num
+w_cc_1wk_num <- assign_jars(w_cc, 2, 5, already_chosen)
+w_cc_1wk <- w_cc_1wk_num %>%
+  drop_na() %>%
+  mutate(group_no = case_when(group_no == 1 ~ "pre", group_no == 2 ~ "post")) %>%
+  rename(pre_post_wet = group_no) %>%
+  mutate(cc_treatment = "w_cc") %>%
+  mutate(drying_treatment = "one_wk") %>%
+  arrange(sample_no)
 
-no_cc_1wk <- sample_n(subset(no_cc,
-                                !(jar_no_cc %in% no_cc_cw$jar_no_cc_cw)),
-                                10, replace = FALSE) %>%
-  rename(jar_no_cc_1wk = jar_no_cc) %>%
-  arrange(jar_no_cc_1wk)
+# Choose jars for w_cc_2wk
+already_chosen <- rbind(w_cc_initial_num, w_cc_1wk_num)
+w_cc_2wk_num <- assign_jars(w_cc, 2, 5, already_chosen)
+w_cc_2wk <- w_cc_2wk_num %>%
+  drop_na() %>%
+  mutate(group_no = case_when(group_no == 1 ~ "pre", group_no == 2 ~ "post")) %>%
+  rename(pre_post_wet = group_no) %>%
+  mutate(cc_treatment = "w_cc") %>%
+  mutate(drying_treatment = "two_wk") %>%
+  arrange(sample_no)
 
-# Choose jars for 2 week drought
-w_cc_2wk <- sample_n(subset(w_cc,
-                                !((jar_w_cc %in% w_cc_cw$jar_w_cc_cw) |
-                                (jar_w_cc %in% w_cc_1wk$jar_w_cc_1wk))),
-                                10, replace = FALSE) %>%
-  rename(jar_w_cc_2wk = jar_w_cc) %>%
-  arrange(jar_w_cc_2wk)
+# Choose jars for w_cc_4wk
+already_chosen <- rbind(w_cc_initial_num, w_cc_1wk_num, w_cc_2wk_num)
+w_cc_4wk_num <- assign_jars(w_cc, 2, 5, already_chosen)
+w_cc_4wk <- w_cc_4wk_num %>%
+  drop_na() %>%
+  mutate(group_no = case_when(group_no == 1 ~ "pre", group_no == 2 ~ "post")) %>%
+  rename(pre_post_wet = group_no) %>%
+  mutate(cc_treatment = "w_cc") %>%
+  mutate(drying_treatment = "four_wk") %>%
+  arrange(sample_no)
 
-no_cc_2wk <- sample_n(subset(no_cc,
-                                !((jar_no_cc %in% no_cc_cw$jar_no_cc_cw) |
-                                (jar_no_cc %in% no_cc_1wk$jar_no_cc_1wk))),
-                                10, replace = FALSE) %>%
-    rename(jar_no_cc_2wk = jar_no_cc) %>%
-    arrange(jar_no_cc_2wk)
+# Choose jars for w_cc_cw_1wk
+already_chosen <- rbind(w_cc_initial_num, w_cc_1wk_num, w_cc_2wk_num,
+                        w_cc_4wk_num)
+w_cc_cw_1wk_num <- assign_jars(w_cc, 1, 5, already_chosen)
+w_cc_cw_1wk <- w_cc_cw_1wk_num %>%
+  drop_na() %>%
+  mutate(group_no = "cw") %>%
+  rename(pre_post_wet = group_no) %>%
+  mutate(cc_treatment = "w_cc") %>%
+  mutate(drying_treatment = "one_wk") %>%
+  arrange(sample_no)
 
-# Choose jars for 4 week drought
-w_cc_4wk <- sample_n(subset(w_cc,
-                                !((jar_w_cc %in% w_cc_cw$jar_w_cc_cw) |
-                                (jar_w_cc %in% w_cc_1wk$jar_w_cc_1wk) |
-                                (jar_w_cc %in% w_cc_2wk$jar_w_cc_2wk))),
-                                10, replace = FALSE) %>%
-  rename(jar_w_cc_4wk = jar_w_cc) %>%
-  arrange(jar_w_cc_4wk)
+# Choose jars for w_cc_cw_2wk
+already_chosen <- rbind(w_cc_initial_num, w_cc_1wk_num, w_cc_2wk_num,
+                        w_cc_4wk_num, w_cc_cw_1wk_num)
+w_cc_cw_2wk_num <- assign_jars(w_cc, 1, 5, already_chosen)
+w_cc_cw_2wk <- w_cc_cw_2wk_num %>%
+  drop_na() %>%
+  mutate(group_no = "cw") %>%
+  rename(pre_post_wet = group_no) %>%
+  mutate(cc_treatment = "w_cc") %>%
+  mutate(drying_treatment = "two_wk") %>%
+  arrange(sample_no)
 
-no_cc_4wk <- sample_n(subset(no_cc,
-                                !((jar_no_cc %in% no_cc_cw$jar_no_cc_cw) |
-                                (jar_no_cc %in% no_cc_1wk$jar_no_cc_1wk) |
-                                (jar_no_cc %in% no_cc_2wk$jar_no_cc_2wk))),
-                                10, replace = FALSE) %>%
-  rename(jar_no_cc_4wk = jar_no_cc) %>%
-  arrange(jar_no_cc_4wk)
+# Choose jars for w_cc_cw_4wk
+already_chosen <- rbind(w_cc_initial_num, w_cc_1wk_num, w_cc_2wk_num,
+                        w_cc_4wk_num, w_cc_cw_1wk_num, w_cc_cw_2wk_num)
+w_cc_cw_4wk_num <- assign_jars(w_cc, 1, 5, already_chosen)
+w_cc_cw_4wk <- w_cc_cw_4wk_num %>%
+  drop_na() %>%
+  mutate(group_no = "cw") %>%
+  rename(pre_post_wet = group_no) %>%
+  mutate(cc_treatment = "w_cc") %>%
+  mutate(drying_treatment = "four_wk") %>%
+  arrange(sample_no)
 
-# Choose jars for drought whole time
-w_cc_wt <- sample_n(subset(w_cc,
-                                !((jar_w_cc %in% w_cc_cw$jar_w_cc_cw) |
-                                (jar_w_cc %in% w_cc_1wk$jar_w_cc_1wk) |
-                                (jar_w_cc %in% w_cc_2wk$jar_w_cc_2wk) |
-                                (jar_w_cc %in% w_cc_4wk$jar_w_cc_4wk))),
-                                10, replace = FALSE) %>%
-  rename(jar_no = jar_w_cc) %>%
-  arrange(jar_w_cc_wt)
+# Choose jars for w_cc_all_dry
+already_chosen <- rbind(w_cc_initial_num, w_cc_1wk_num, w_cc_2wk_num,
+                        w_cc_4wk_num, w_cc_cw_1wk_num, w_cc_cw_2wk_num,
+                        w_cc_cw_4wk_num)
+w_cc_all_dry_num <- assign_jars(w_cc, 1, 5, already_chosen)
+w_cc_all_dry <- w_cc_all_dry_num %>%
+  drop_na() %>%
+  mutate(group_no = "all_dry") %>%
+  rename(pre_post_wet = group_no) %>%
+  mutate(cc_treatment = "w_cc") %>%
+  mutate(drying_treatment = "all_dry") %>%
+  arrange(sample_no)
 
-no_cc_wt <- sample_n(subset(no_cc,
-                                !((jar_no_cc %in% no_cc_cw$jar_no_cc_cw) |
-                                (jar_no_cc %in% no_cc_1wk$jar_no_cc_1wk) |
-                                (jar_no_cc %in% no_cc_2wk$jar_no_cc_2wk) |
-                                (jar_no_cc %in% no_cc_4wk$jar_no_cc_4wk))),
-                                10, replace = FALSE) %>%
-  rename(jar_no = jar_no_cc) %>%
-  arrange(jar_no_cc_wt)
+# Choose jars for no_cc_initial
+already_chosen <- data.frame(sample_no = NA)
+no_cc_initial_num <- assign_jars(no_cc, 1, 5, already_chosen)
+no_cc_initial <- no_cc_initial_num %>%
+  drop_na() %>%
+  rename(pre_post_wet = group_no) %>%
+  mutate(pre_post_wet = "initial") %>%
+  mutate(cc_treatment = "no_cc") %>%
+  mutate(drying_treatment = "initial") %>%
+  arrange(sample_no)
 
-# Choose jars for 5 controls of no soil, only water
-no_soil_controls <- subset(total_jars,
-                           !((total_jars %in% w_cc$jar_w_cc) |
-                            (total_jars %in% no_cc$jar_no_cc))) %>%
-  rename(no_soil_controls = total_jars) %>%
-  arrange(no_soil_controls)
+# Choose jars for no_cc_1wk
+already_chosen <- no_cc_initial_num
+no_cc_1wk_num <- assign_jars(no_cc, 2, 5, already_chosen)
+no_cc_1wk <- no_cc_1wk_num %>%
+  drop_na() %>%
+  mutate(group_no = case_when(group_no == 1 ~ "pre", group_no == 2 ~ "post")) %>%
+  rename(pre_post_wet = group_no) %>%
+  mutate(cc_treatment = "no_cc") %>%
+  mutate(drying_treatment = "one_wk") %>%
+  arrange(sample_no)
+
+# Choose jars for no_cc_2wk
+already_chosen <- rbind(no_cc_initial_num, no_cc_1wk_num)
+no_cc_2wk_num <- assign_jars(no_cc, 2, 5, already_chosen)
+no_cc_2wk <- no_cc_2wk_num %>%
+  drop_na() %>%
+  mutate(group_no = case_when(group_no == 1 ~ "pre", group_no == 2 ~ "post")) %>%
+  rename(pre_post_wet = group_no) %>%
+  mutate(cc_treatment = "no_cc") %>%
+  mutate(drying_treatment = "two_wk") %>%
+  arrange(sample_no)
+
+# Choose jars for no_cc_4wk
+already_chosen <- rbind(no_cc_initial_num, no_cc_1wk_num, no_cc_2wk_num)
+no_cc_4wk_num <- assign_jars(no_cc, 2, 5, already_chosen)
+no_cc_4wk <- no_cc_4wk_num %>%
+  drop_na() %>%
+  mutate(group_no = case_when(group_no == 1 ~ "pre", group_no == 2 ~ "post")) %>%
+  rename(pre_post_wet = group_no) %>%
+  mutate(cc_treatment = "no_cc") %>%
+  mutate(drying_treatment = "four_wk") %>%
+  arrange(sample_no)
+
+# Choose jars for no_cc_cw_1wk
+already_chosen <- rbind(no_cc_initial_num, no_cc_1wk_num, no_cc_2wk_num,
+                        no_cc_4wk_num)
+no_cc_cw_1wk_num <- assign_jars(no_cc, 1, 5, already_chosen)
+no_cc_cw_1wk <- no_cc_cw_1wk_num %>%
+  drop_na() %>%
+  mutate(group_no = "cw") %>%
+  rename(pre_post_wet = group_no) %>%
+  mutate(cc_treatment = "no_cc") %>%
+  mutate(drying_treatment = "one_wk") %>%
+  arrange(sample_no)
+
+# Choose jars for no_cc_cw_2wk
+already_chosen <- rbind(no_cc_initial_num, no_cc_1wk_num, no_cc_2wk_num,
+                        no_cc_4wk_num, no_cc_cw_1wk_num)
+no_cc_cw_2wk_num <- assign_jars(no_cc, 1, 5, already_chosen)
+no_cc_cw_2wk <- no_cc_cw_2wk_num %>%
+  drop_na() %>%
+  mutate(group_no = "cw") %>%
+  rename(pre_post_wet = group_no) %>%
+  mutate(cc_treatment = "no_cc") %>%
+  mutate(drying_treatment = "two_wk") %>%
+  arrange(sample_no)
+
+# Choose jars for no_cc_cw_4wk
+already_chosen <- rbind(no_cc_initial_num, no_cc_1wk_num, no_cc_2wk_num,
+                        no_cc_4wk_num, no_cc_cw_1wk_num, no_cc_cw_2wk_num)
+no_cc_cw_4wk_num <- assign_jars(no_cc, 1, 5, already_chosen)
+no_cc_cw_4wk <- no_cc_cw_4wk_num %>%
+  drop_na() %>%
+  mutate(group_no = "cw") %>%
+  rename(pre_post_wet = group_no) %>%
+  mutate(cc_treatment = "no_cc") %>%
+  mutate(drying_treatment = "four_wk") %>%
+  arrange(sample_no)
+
+# Choose jars for no_cc_all_dry
+already_chosen <- rbind(no_cc_initial_num, no_cc_1wk_num, no_cc_2wk_num,
+                        no_cc_4wk_num, no_cc_cw_1wk_num, no_cc_cw_2wk_num,
+                        no_cc_cw_4wk_num)
+no_cc_all_dry_num <- assign_jars(no_cc, 1, 5, already_chosen)
+no_cc_all_dry <- no_cc_all_dry_num %>%
+  drop_na() %>%
+  mutate(group_no = "all_dry") %>%
+  rename(pre_post_wet = group_no) %>%
+  mutate(cc_treatment = "no_cc") %>%
+  mutate(drying_treatment = "all_dry") %>%
+  arrange(sample_no)
+
+# Combine all into master list
+all_jars <- rbind(no_soil_controls,
+                  w_cc_initial, w_cc_1wk, w_cc_2wk, w_cc_4wk, w_cc_cw_1wk,
+                  w_cc_cw_2wk, w_cc_cw_4wk, w_cc_all_dry,
+                  no_cc_initial, no_cc_1wk, no_cc_2wk, no_cc_4wk, no_cc_cw_1wk,
+                  no_cc_cw_2wk, no_cc_cw_4wk, no_cc_all_dry) %>%
+  arrange(sample_no)
+
+
+
+
 
 # Save out all lists
 write.csv(w_cc, file = "output/jar_assignments/w_cc.csv")
