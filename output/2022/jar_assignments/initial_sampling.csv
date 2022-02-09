@@ -1,0 +1,11 @@
+sample_no,pre_post_wet,cc_treatment,drying_treatment
+8,initial,no_cc,initial
+19,initial,w_cc,initial
+23,initial,no_cc,initial
+27,initial,w_cc,initial
+31,initial,w_cc,initial
+42,initial,no_cc,initial
+83,initial,w_cc,initial
+84,initial,w_cc,initial
+85,initial,no_cc,initial
+102,initial,no_cc,initial
