@@ -99,8 +99,13 @@ n_compare_cc_plot <- c_n_results_means %>%
   scale_x_discrete(limits = c("cw", "post"),
                    labels = c(
                      "Constant Water", "Post Wetting")) +
-  labs(title = "Total N Values in Samples With and Without Cover Crop Residue",
-       x = "Water Treatments", y = "N (%)")
+  labs(title = "Total Nitrogen in Samples With and Without Cover Crop Residue",
+       x = "Water Treatments", y = "Total Nitrogen (%)",
+       fill = "Cover Crop Treatment") +
+  scale_fill_discrete(labels = c("Without cover crop", "With cover crop"))
+
+ggsave(n_compare_cc_plot,
+       filename = "output/2021/ea_plots/n_v_cc.png")
 
 # Create a plot comparing C levels between groups with and
 # without cover crops at 4 weeks
@@ -112,5 +117,10 @@ c_compare_cc_plot <- c_n_results_means %>%
   scale_x_discrete(limits = c("cw", "post"),
                    labels = c(
                      "Constant Water", "Post Wetting")) +
-  labs(title = "Total C Values in Samples With and Without Cover Crop Residue",
-       x = "Water Treatments", y = "C (%)")
+  labs(title = "Total Carbon in Samples With and Without Cover Crop Residue",
+       x = "Water Treatments", y = "Total Carbon (%)",
+       fill = "Cover Crop Treatment") +
+  scale_fill_discrete(labels = c("Without cover crop", "With cover crop"))
+
+ggsave(c_compare_cc_plot,
+       filename = "output/2021/ea_plots/c_v_cc_.png")
