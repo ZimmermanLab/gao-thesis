@@ -23,7 +23,7 @@ compile_sample_assignments <- function() {
   # ALSO Please eventually write another script that reads in these values
   # from the initial sampling script kthx
   cc_list <- readr::read_csv(
-    "output/jar_assignments/master_list.csv", col_names =  FALSE) %>%
+    "output/2021/jar_assignments/master_list.csv", col_names =  FALSE) %>%
     select(X2) %>%
     rename(sample_no = X2) %>%
     mutate(cc_treatment = NA)
@@ -45,61 +45,61 @@ compile_sample_assignments <- function() {
 
   sampling_schedule <- data.frame()
   sampling_schedule <- readr::read_csv(
-    "output/schedules/sampling_schedule_master/all_1wk_postwet.csv") %>%
+    "output/2021/schedules/sampling_schedule_master/all_1wk_postwet.csv") %>%
     select(jar_no) %>%
     rename(sample_no = jar_no) %>%
     mutate(drying_treatment = "one_wk", pre_post_wet = "post") %>%
     rbind(
       readr::read_csv(
-        "output/schedules/sampling_schedule_master/all_1wk_prewet.csv") %>%
+        "output/2021/schedules/sampling_schedule_master/all_1wk_prewet.csv") %>%
         select(jar_no) %>%
         rename(sample_no = jar_no) %>%
         mutate(drying_treatment = "one_wk", pre_post_wet = "pre") %>%
         rbind(sampling_schedule)) %>%
     rbind(
       readr::read_csv(
-        "output/schedules/sampling_schedule_master/all_2wk_postwet.csv") %>%
+        "output/2021/schedules/sampling_schedule_master/all_2wk_postwet.csv") %>%
         select(jar_no) %>%
         rename(sample_no = jar_no) %>%
         mutate(drying_treatment = "two_wk", pre_post_wet = "post") %>%
         rbind(sampling_schedule)) %>%
     rbind(
       readr::read_csv(
-        "output/schedules/sampling_schedule_master/all_2wk_prewet.csv") %>%
+        "output/2021/schedules/sampling_schedule_master/all_2wk_prewet.csv") %>%
         select(jar_no) %>%
         rename(sample_no = jar_no) %>%
         mutate(drying_treatment = "two_wk", pre_post_wet = "pre") %>%
         rbind(sampling_schedule)) %>%
     rbind(
       readr::read_csv(
-        "output/schedules/sampling_schedule_master/all_4wk_prewet.csv") %>%
+        "output/2021/schedules/sampling_schedule_master/all_4wk_prewet.csv") %>%
         select(jar_no) %>%
         rename(sample_no = jar_no) %>%
         mutate(drying_treatment = "four_wk", pre_post_wet = "pre") %>%
         rbind(sampling_schedule)) %>%
     rbind(
       readr::read_csv(
-        "output/schedules/sampling_schedule_master/all_4wk_total.csv") %>%
+        "output/2021/schedules/sampling_schedule_master/all_4wk_total.csv") %>%
         select(jar_no) %>%
         rename(sample_no = jar_no) %>%
         mutate(drying_treatment = "four_wk", pre_post_wet = NA) %>%
         rbind(sampling_schedule)) %>%
     rbind(
       readr::read_csv(
-        "output/schedules/all_drought_wt.csv") %>%
+        "output/2021/schedules/all_drought_wt.csv") %>%
         select(jar_no) %>%
         rename(sample_no = jar_no) %>%
         mutate(drying_treatment = "four_wk", pre_post_wet = "drought") %>%
         rbind(sampling_schedule)) %>%
     rbind(
       readr::read_csv(
-        "output/schedules/sampling_schedule_master/initial_sample_cw_all.csv") %>%
+        "output/2021/schedules/sampling_schedule_master/initial_sample_cw_all.csv") %>%
         select(jar_no) %>%
         rename(sample_no = jar_no) %>%
         mutate(drying_treatment = "initial", pre_post_wet = "cw") %>%
         rbind(sampling_schedule)) %>%
     rbind(
-      readr::read_csv("output/jar_assignments/no_soil_controls.csv") %>%
+      readr::read_csv("output/2021/jar_assignments/no_soil_controls.csv") %>%
         select(no_soil_controls) %>%
         rename(sample_no = no_soil_controls) %>%
         mutate(drying_treatment = "no_soil", pre_post_wet = "no_soil") %>%
@@ -117,12 +117,12 @@ compile_sample_assignments <- function() {
     distinct(sample_no, .keep_all = TRUE)
 
   # Account for constantly watered samples ugh
-  cw_samples <- readr::read_csv("output/jar_assignments/w_cc_cw.csv") %>%
+  cw_samples <- readr::read_csv("output/2021/jar_assignments/w_cc_cw.csv") %>%
     select(jar_w_cc_cw) %>%
     rename(sample_no = jar_w_cc_cw) %>%
     mutate(drying_treatment = "cw", pre_post_wet = "cw", cc_treatment = "w_cc") %>%
     rbind(
-      readr::read_csv("output/jar_assignments/no_cc_cw.csv") %>%
+      readr::read_csv("output/2021/jar_assignments/no_cc_cw.csv") %>%
         select(jar_no_cc_cw) %>%
         rename(sample_no = jar_no_cc_cw) %>%
         mutate(drying_treatment = "cw",
