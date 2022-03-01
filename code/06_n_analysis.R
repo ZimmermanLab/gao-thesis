@@ -120,7 +120,7 @@ no2_compare_cc_plot <- n_data_stats %>%
   scale_x_discrete(limits = c("cw", "pre", "post"),
                    labels = c(
                      "Constant Water", "Pre Wetting", "Post Wetting")) +
-  labs(title = paste("NO2 in Samples With and Without Cover Crop\n",
+  labs(title = paste("NO2- in Samples With and Without Cover Crop\n",
                      " Residue After 4 Weeks of Drying"),
        x = "Water Treatments", y = "NO2 (ppm)",
        fill = "Cover Crop Treatment") +
@@ -156,7 +156,7 @@ no3_compare_cc_plot <- n_data_stats %>%
   scale_x_discrete(limits = c("cw", "pre", "post"),
                    labels = c(
                      "Constant Water", "Pre Wetting", "Post Wetting")) +
-  labs(title = paste("NO3- in Samples With and Without Cover Crop\n",
+  labs(title = paste("NO3 in Samples With and Without Cover Crop\n",
                      " Residue After 4 Weeks of Drying"),
        x = "Water Treatments", y = "NO3 (ppm)",
        fill = "Cover Crop Treatment") +
