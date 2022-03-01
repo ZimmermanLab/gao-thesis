@@ -99,7 +99,8 @@ n_compare_cc_plot <- c_n_results_means %>%
   scale_x_discrete(limits = c("cw", "post"),
                    labels = c(
                      "Constant Water", "Post Wetting")) +
-  labs(title = "Total Nitrogen in Samples With and Without Cover Crop Residue",
+  labs(title = paste("Total Nitrogen in Samples With and Without Cover Crop",
+                     "Residue After 4 Weeks of Drying"),
        x = "Water Treatments", y = "Total Nitrogen (%)",
        fill = "Cover Crop Treatment") +
   scale_fill_discrete(labels = c("Without cover crop", "With cover crop"))
@@ -117,10 +118,25 @@ c_compare_cc_plot <- c_n_results_means %>%
   scale_x_discrete(limits = c("cw", "post"),
                    labels = c(
                      "Constant Water", "Post Wetting")) +
-  labs(title = "Total Carbon in Samples With and Without Cover Crop Residue",
+  labs(title = paste("Total Carbon in Samples With and Without Cover Crop",
+                     "Residue After 4 Weeks of Drying"),
        x = "Water Treatments", y = "Total Carbon (%)",
        fill = "Cover Crop Treatment") +
   scale_fill_discrete(labels = c("Without cover crop", "With cover crop"))
 
 ggsave(c_compare_cc_plot,
        filename = "output/2021/ea_plots/c_v_cc_.png")
+
+#########
+
+# Compare C:N ratios
+samples_only %>%
+  left_join(all_treatments) %>%
+  filter(drying_treatment == "four_wk") %>%
+  filter(pre_post_wet == "post") %>%
+  group_by(cc_treatment) %>%
+  summarise(mean_mean_c = mean(mean_c),
+            mean_mean_n = mean(mean_n)) %>%
+  ggplot(aes(x = cc_treatment,
+             y = mean_mean_c / mean_mean_n)) +
+  geom_col(position = position_dodge())
