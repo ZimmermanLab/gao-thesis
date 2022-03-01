@@ -13,10 +13,6 @@ source("code/functions/n_functions/n_clean_n_data.R")
 n_data_clean <- clean_n_data(
   "data/raw_data/SmartChem_N_extractions/20210212_Gao_1_export.csv")
 
-# Source and run function to analyze stats for samples
-# source("code/functions/n_functions/n_calculate_sample_stats.R")
-# n_sample_stats <- n_calculate_sample_stats(n_data_clean)
-
 # Source and run function that compiles all the bad jar assignment
 # csvs from Spring 2021
 source("code/functions/compile_sample_assignments.R")
@@ -43,15 +39,15 @@ theme_update(plot.title = element_text(face = "bold",
                                        hjust = 0.5,
                                        margin = margin(10, 0, 10, 0),
                                        lineheight = 1.2),
-             axis.title.x = element_text(size = 10,
+             axis.title.x = element_text(size = 8,
                                          face = "bold",
                                          vjust = -3),
-             axis.text.x = element_text(size = 8,
+             axis.text.x = element_text(size = 6,
                                         color = "#808080"),
-             axis.title.y = element_text(size = 10,
+             axis.title.y = element_text(size = 8,
                                          face = "bold",
                                          vjust = 3),
-             axis.text.y = element_text(size = 8,
+             axis.text.y = element_text(size = 6,
                                         color = "#808080"),
              plot.margin = margin(20, 30, 40, 30),
              legend.position = "right",
@@ -70,10 +66,11 @@ theme_update(plot.title = element_text(face = "bold",
 
 # Create a plot comparing NH3 levels between groups with and
 # without cover crops at 4 weeks
-no2_no3_compare_cc_plot <- n_data_stats %>%
+nh3_compare_cc_plot <- n_data_stats %>%
   filter(pre_post_wet != "no soil") %>%
   group_by(pre_post_wet, cc_treatment) %>%
-  summarize(mean_mean_nh3 = mean(mean_nh3),
+  summarize(mean_mean_nh3 = mean(mean_nh3), # Note that "mean_mean" here denotes
+            # the mean across all technical *and* experimental replicates
             sd_mean_nh3 = sd(mean_nh3)) %>%
   ggplot(aes(x = pre_post_wet,
              y = mean_mean_nh3,
@@ -81,54 +78,78 @@ no2_no3_compare_cc_plot <- n_data_stats %>%
   geom_col(position = position_dodge()) +
   geom_errorbar(aes(ymax = mean_mean_nh3 + sd_mean_nh3,
                     ymin = mean_mean_nh3 - sd_mean_nh3),
-                position = position_dodge()) +
+                size = 0.25,
+                width = 0.2,
+                position = position_dodge(0.9)) +
   scale_x_discrete(limits = c("cw", "pre", "post"),
                    labels = c(
                      "Constant Water", "Pre Wetting", "Post Wetting")) +
   labs(title = paste("NH3 in Samples With and Without Cover Crop\n",
                      " Residue After 4 Weeks of Drying"),
-       x = "Water Treatments", y = "NO2-NO3 (ppm)",
+       x = "Water Treatments", y = "NH3 (ppm)",
        fill = "Cover Crop Treatment") +
   scale_fill_discrete(breaks = c("w_cc", "no_cc"),
                       labels = c("Without cover crop", "With cover crop"))
 
 ggsave(nh3_compare_cc_plot,
-         filename = "output/2021/n_plots/nh3_v_cc.png")
+         filename = "output/2021/n_plots/nh3_plot.png")
 
-# Create a plot comparing NH3 levels between groups with and
-# without cover crops at 4 weeks
-nh3_compare_cc_plot <- n_results_means %>%
-  filter(drying_treatment == "four_wk") %>%
-  ggplot(aes(x = pre_post_wet, y = mean_nh3, fill = cc_treatment)) +
-  geom_col(position = position_dodge()) +
-  scale_y_continuous() +
-  scale_x_discrete(limits = c("cw", "pre", "post"),
-                   labels = c(
-                     "Constant Water", "Pre Wetting", "Post Wetting")) +
-  labs(title = paste("NH3 in Samples With and Without Cover Crop Residue",
-                     "After 4 Weeks of Drying"),
-       x = "Water Treatments", y = "NH3 (ppm)",
-       fill = "Cover Crop Treatment") +
-  scale_fill_discrete(labels = c("Without cover crop", "With cover crop"))
 
-ggsave(nh3_compare_cc_plot,
-       filename = "output/2021/n_plots/nh3_v_cc.png")
 
 # Create a plot comparing NO2 levels between groups with and
 # without cover crops at 4 weeks
-no2_compare_cc_plot <- n_results_means %>%
-  filter(drying_treatment == "four_wk") %>%
-  ggplot(aes(x = pre_post_wet, y = mean_no2, fill = cc_treatment)) +
+no2_compare_cc_plot <- n_data_stats %>%
+  filter(pre_post_wet != "no soil") %>%
+  group_by(pre_post_wet, cc_treatment) %>%
+  summarize(mean_mean_no2 = mean(mean_no2),
+            sd_mean_no2 = sd(mean_no2)) %>%
+  ggplot(aes(x = pre_post_wet,
+             y = mean_mean_no2,
+             fill = cc_treatment)) +
   geom_col(position = position_dodge()) +
-  scale_y_continuous() +
+  geom_errorbar(aes(ymax = mean_mean_no2 + sd_mean_no2,
+                    ymin = mean_mean_no2 - sd_mean_no2),
+                size = 0.25,
+                width = 0.2,
+                position = position_dodge(0.9)) +
   scale_x_discrete(limits = c("cw", "pre", "post"),
                    labels = c(
                      "Constant Water", "Pre Wetting", "Post Wetting")) +
-  labs(title = paste("NO2 in Samples With and Without Cover Crop Residue",
-                     "After 4 Weeks of Drying"),
+  labs(title = paste("NO2 in Samples With and Without Cover Crop\n",
+                     " Residue After 4 Weeks of Drying"),
        x = "Water Treatments", y = "NO2 (ppm)",
        fill = "Cover Crop Treatment") +
-  scale_fill_discrete(labels = c("Without cover crop", "With cover crop"))
+  scale_fill_discrete(breaks = c("w_cc", "no_cc"),
+                      labels = c("Without cover crop", "With cover crop"))
 
 ggsave(no2_compare_cc_plot,
-       filename = "output/2021/n_plots/no2_v_cc.png")
+       filename = "output/2021/n_plots/no2_plot.png")
+
+# Create a plot comparing NO3 levels between groups with and
+# without cover crops at 4 weeks
+no3_compare_cc_plot <- n_data_stats %>%
+  filter(pre_post_wet != "no soil") %>%
+  group_by(pre_post_wet, cc_treatment) %>%
+  summarize(mean_mean_no3 = mean(mean_no3),
+            sd_mean_no3 = sd(mean_no3)) %>%
+  ggplot(aes(x = pre_post_wet,
+             y = mean_mean_no3,
+             fill = cc_treatment)) +
+  geom_col(position = position_dodge()) +
+  geom_errorbar(aes(ymax = mean_mean_no3 + sd_mean_no3,
+                    ymin = mean_mean_no3 - sd_mean_no3),
+                size = 0.25,
+                width = 0.2,
+                position = position_dodge(0.9)) +
+  scale_x_discrete(limits = c("cw", "pre", "post"),
+                   labels = c(
+                     "Constant Water", "Pre Wetting", "Post Wetting")) +
+  labs(title = paste("NO3- in Samples With and Without Cover Crop\n",
+                     " Residue After 4 Weeks of Drying"),
+       x = "Water Treatments", y = "NO3 (ppm)",
+       fill = "Cover Crop Treatment") +
+  scale_fill_discrete(breaks = c("w_cc", "no_cc"),
+                      labels = c("Without cover crop", "With cover crop"))
+
+ggsave(no3_compare_cc_plot,
+       filename = "output/2021/n_plots/no3_plot.png")
