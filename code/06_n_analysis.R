@@ -57,7 +57,7 @@ theme_update(plot.title = element_text(face = "bold",
                                          margin = margin(r = 10, unit = "pt")),
              legend.text = element_text(size = 6,
                                         color = "#808080",
-                                        margin = margin(r = 10, unit = "pt")),
+                                        margin = margin(r = 0, unit = "pt")),
              legend.background = element_rect(color = "#E7E7E7"),
              legend.margin = margin(5, 5, 5, 5),
              legend.box.spacing = unit(20, "pt"),
@@ -94,7 +94,12 @@ nh3_compare_cc_plot <- n_data_stats %>%
 ggsave(nh3_compare_cc_plot,
          filename = "output/2021/n_plots/nh3_plot.png")
 
-
+# Run statistical analysis on NH3, excluding cw and no_soil jars
+nh3_stats <- n_data_stats %>%
+  filter(pre_post_wet != "no_soil") %>%
+  filter(pre_post_wet != "cw") %>%
+  lm(data = ., mean_nh3 ~ pre_post_wet * cc_treatment) %>%
+  anova()
 
 # Create a plot comparing NO2 levels between groups with and
 # without cover crops at 4 weeks
@@ -125,6 +130,13 @@ no2_compare_cc_plot <- n_data_stats %>%
 ggsave(no2_compare_cc_plot,
        filename = "output/2021/n_plots/no2_plot.png")
 
+# Run statistical analysis on NO2, excluding cw and no_soil jars
+no2_stats <- n_data_stats %>%
+  filter(pre_post_wet != "no_soil") %>%
+  filter(pre_post_wet != "cw") %>%
+  lm(data = ., mean_no2 ~ pre_post_wet * cc_treatment) %>%
+  anova()
+
 # Create a plot comparing NO3 levels between groups with and
 # without cover crops at 4 weeks
 no3_compare_cc_plot <- n_data_stats %>%
@@ -153,3 +165,10 @@ no3_compare_cc_plot <- n_data_stats %>%
 
 ggsave(no3_compare_cc_plot,
        filename = "output/2021/n_plots/no3_plot.png")
+
+# Run statistical analysis on NO3, excluding cw and no_soil jars
+no3_stats <- n_data_stats %>%
+  filter(pre_post_wet != "no_soil") %>%
+  filter(pre_post_wet != "cw") %>%
+  lm(data = ., mean_no3 ~ pre_post_wet * cc_treatment) %>%
+  anova()
