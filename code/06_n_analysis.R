@@ -49,7 +49,10 @@ theme_update(plot.title = element_text(face = "bold",
                                          vjust = 3),
              axis.text.y = element_text(size = 6,
                                         color = "#808080"),
-             plot.margin = margin(20, 30, 40, 30),
+             # These margins are for standalone figures
+             # plot.margin = margin(20, 30, 40, 30),
+             # These margins are for poster assets
+             plot.margin = margin(0, 0, 10, 5),
              legend.position = "right",
              legend.title = element_text(size = 6,
                                          face = "bold",
@@ -89,7 +92,12 @@ nh3_compare_cc_plot <- n_data_stats %>%
        x = "Water Treatments", y = "NH3 (ppm)",
        fill = "Cover Crop Treatment") +
   scale_fill_discrete(breaks = c("w_cc", "no_cc"),
-                      labels = c("Without cover crop", "With cover crop"))
+                      labels = c("Without cover crop", "With cover crop")) +
+  # These additions are for creating poster assets
+  scale_fill_manual(values = c("no_cc" = "#00C2FF",
+                               "w_cc" = "#3EA50D")) +
+  theme(legend.position = "none")
+ggsave(nh3_compare_cc_plot, filename = "output/2021/n_plots/nh3_plot_772.png", width=772*2, height=590*2, units= "px", dpi=300)
 
 ggsave(nh3_compare_cc_plot,
          filename = "output/2021/n_plots/nh3_plot.png")
@@ -125,7 +133,13 @@ no2_compare_cc_plot <- n_data_stats %>%
        x = "Water Treatments", y = "NO2 (ppm)",
        fill = "Cover Crop Treatment") +
   scale_fill_discrete(breaks = c("w_cc", "no_cc"),
-                      labels = c("Without cover crop", "With cover crop"))
+                      labels = c("Without cover crop", "With cover crop")) +
+  # These additions are for creating poster assets
+  scale_fill_manual(values = c("no_cc" = "#00C2FF",
+                               "w_cc" = "#3EA50D")) +
+  theme(legend.position = "none")
+ggsave(no2_compare_cc_plot, filename = "output/2021/n_plots/no2_plot_772.png",
+       width=772*2, height=590*2, units= "px", dpi=300)
 
 ggsave(no2_compare_cc_plot,
        filename = "output/2021/n_plots/no2_plot.png")
@@ -161,7 +175,14 @@ no3_compare_cc_plot <- n_data_stats %>%
        x = "Water Treatments", y = "NO3 (ppm)",
        fill = "Cover Crop Treatment") +
   scale_fill_discrete(breaks = c("w_cc", "no_cc"),
-                      labels = c("Without cover crop", "With cover crop"))
+                      labels = c("Without cover crop", "With cover crop")) +
+  # These additions are for creating poster assets
+  scale_fill_manual(values = c("no_cc" = "#00C2FF",
+                               "w_cc" = "#3EA50D")) +
+  theme(legend.position = "none")
+ggsave(no3_compare_cc_plot, filename = "output/2021/n_plots/no3_plot_772.png",
+       width=772*2, height=590*2, units= "px", dpi=300)
+
 
 ggsave(no3_compare_cc_plot,
        filename = "output/2021/n_plots/no3_plot.png")
