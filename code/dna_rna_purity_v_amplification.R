@@ -16,5 +16,6 @@ raw_nanodrop <- read_csv(
   select("sample_id", "concentration_ng/uL", "A260/A280", "A260/A230")
 
 # Read in amplification data
+raw_qPCR <- read_csv("data/raw_data/qPCR/")
 
 
