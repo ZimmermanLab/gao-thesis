@@ -28,6 +28,8 @@ raw_data_all <- do.call("rbind", raw_data_each) %>%
 
 raw_data_all$`concentration_mg/L` <- as.numeric(raw_data_all$`concentration_mg/L`)
 
+
+
 # Find samples that exceeded the 20.0 mg/L threshold
 need_rerun <- raw_data_all %>%
   filter(`concentration_mg/L` > 19) %>%
