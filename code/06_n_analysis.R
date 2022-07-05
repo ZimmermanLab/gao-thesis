@@ -10,28 +10,32 @@ library("tidyverse")
 
 # Source and run function to clean N data
 source("code/functions/n_functions/n_clean_n_data.R")
-n_data_clean <- clean_n_data(
-  "data/raw_data/SmartChem_N_extractions/20210212_Gao_1_export.csv")
 
-# Source and run function that compiles all the bad jar assignment
-# csvs from Spring 2021
-source("code/functions/compile_sample_assignments.R")
-all_treatments <- compile_sample_assignments()
+# Get file list
+file_list <- paste0("data/raw_data/SmartChem_N_extractions/2022_samples/",
+                    list.files("data/raw_data/SmartChem_N_extractions/2022_samples/",
+                        pattern = "*.Csv"))
+
+# Read all csv files in the folder and create a compiled dataframe
+n_data_clean <- clean_n_data(file_list) %>%
+  select(-c(1,2)) %>%
+  relocate(sample_no, rep_no)
+
+# Get list of jar assignments from 2022
+all_treatments <- readr::read_csv("output/2022/jar_assignments/master_list.csv")
 
 # Summarize data (i.e. calculate means and SDs) and map to all_treatments
 n_data_stats <- n_data_clean %>%
-  mutate(no3 = no2_no3 - no2) %>%
-  group_by(sample_no) %>%
-  mutate(no3 = no2_no3 - no2) %>%
+  group_by(sample_no, sample_type) %>%
   summarize(mean_nh3 = mean(nh3),
             sd_nh3 = sd(nh3),
-            mean_no2 = mean(no2),
-            sd_no2 = sd(no2),
-            mean_no3 = mean(no3),
-            sd_no3 = sd(no3),
             mean_no2_no3 = mean(no2_no3),
             sd_no2_no3 = sd(no2_no3)) %>%
   left_join(all_treatments)
+
+
+#############
+
 
 # Set plot themes
 theme_update(plot.title = element_text(face = "bold",

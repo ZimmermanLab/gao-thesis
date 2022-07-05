@@ -15,24 +15,36 @@ clean_n_data <- function(input_file_name) {
 
 # Read in SmartChem data.
 # Note that all values are concentrations in ppm or mg/L.
-n_data_raw <- readr::read_csv(input_file_name)
-n_data_raw <- n_data_raw %>%
-  select(SampleID, WNH3, WNO1, WNO3) %>%
-  rename("sample_no" = SampleID, "nh3" = WNH3, "no2" = WNO1, "no2_no3" = WNO3)
-
-# Separate sample ID number and replicate number
-n_data_clean <- n_data_raw %>%
-  mutate(sample_no = stri_reverse(sample_no)) %>%
-  separate(sample_no, into = c("rep_no", "sample_no"), sep = 1) %>%
-  mutate(sample_no = stri_reverse(sample_no)) %>%
-  relocate(rep_no, .after = sample_no) %>%
-  filter(str_detect(sample_no, "^[0-9]")) %>%
-  mutate(id_match = as.numeric(
-    sample_no == lag(sample_no, 1))) %>% # A value of 1 means it matches
-  replace(is.na(.), 0)
+n_data_clean <- read_delim(input_file_name, col_names = FALSE, delim = ";") %>%
+  select(X1, X4, X7, X8) %>%
+  rename("sample_no_full" = X1,
+         "concentration_mg/L" = X4,
+         "run_time" = X7,
+         "type" = X8) %>%
+  pivot_wider(names_from = "type", values_from = "concentration_mg/L") %>%
+  mutate(run_time = str_sub(run_time, end = 10)) %>%
+  group_by(sample_no_full, run_time) %>%
+  summarise_all(list(~first(na.omit(.)))) %>%
+  rename("nh3" = "WNHR",
+         "no2_no3" = "WNO6") %>%
+  mutate("sample_type" = case_when(
+    grepl("^[0-9]{3}E", sample_no_full) == TRUE ~ "extract",
+    grepl("^[0-9]{3}L", sample_no_full) == TRUE ~ "leachate",
+    grepl("Blank", sample_no_full) == TRUE ~ "blank")) %>%
+  ungroup() %>%
+  arrange(sample_no_full)
 
 # Replace all negative values with 0
 n_data_clean <- replace(n_data_clean, n_data_clean < 0, 0)
+
+# Separate sample ID number and replicate number
+n_data_clean <- n_data_clean %>%
+  mutate("sample_no" = case_when(
+    grepl("^Blank", sample_no_full) == FALSE ~
+      as.numeric(str_sub(sample_no_full, end = 3)))) %>%
+  mutate("rep_no" = case_when(
+    grepl("^Blank", sample_no_full) == FALSE ~
+      as.numeric(str_sub(sample_no_full, start = -1))))
 
 return(n_data_clean)
 }
