@@ -13,7 +13,8 @@ source("code/functions/n_functions/n_clean_n_data.R")
 
 # Get file list
 file_list <- paste0("data/raw_data/SmartChem_N_extractions/2022_samples/",
-                    list.files("data/raw_data/SmartChem_N_extractions/2022_samples/",
+                    list.files(
+                      "data/raw_data/SmartChem_N_extractions/2022_samples/",
                         pattern = "*.Csv"))
 
 # Read all csv files in the folder and create a compiled dataframe
@@ -24,52 +25,12 @@ n_data_clean <- clean_n_data(file_list) %>%
 # Get list of jar assignments from 2022
 all_treatments <- readr::read_csv("output/2022/jar_assignments/master_list.csv")
 
-# Summarize data (i.e. calculate means and SDs) and map to all_treatments
-n_data_stats <- n_data_clean %>%
-  group_by(sample_no, sample_type) %>%
-  summarize(mean_nh3 = mean(nh3),
-            sd_nh3 = sd(nh3),
-            mean_no2_no3 = mean(no2_no3),
-            sd_no2_no3 = sd(no2_no3)) %>%
-  left_join(all_treatments)
+source("code/functions/n_functions/run_n_stats.R")
+n_data_stats <- run_n_stats(n_data_clean, all_treatments)
 
 
 #############
 
-
-# Set plot themes
-theme_update(plot.title = element_text(face = "bold",
-                                       size = 12,
-                                       hjust = 0.5,
-                                       margin = margin(10, 0, 10, 0),
-                                       lineheight = 1.2),
-             axis.title.x = element_text(size = 8,
-                                         face = "bold",
-                                         vjust = -3),
-             axis.text.x = element_text(size = 6,
-                                        color = "#808080"),
-             axis.title.y = element_text(size = 8,
-                                         face = "bold",
-                                         vjust = 3),
-             axis.text.y = element_text(size = 6,
-                                        color = "#808080"),
-             # These margins are for standalone figures
-             # plot.margin = margin(20, 30, 40, 30),
-             # These margins are for poster assets
-             plot.margin = margin(0, 0, 10, 5),
-             legend.position = "right",
-             legend.title = element_text(size = 6,
-                                         face = "bold",
-                                         color = "#808080",
-                                         margin = margin(r = 10, unit = "pt")),
-             legend.text = element_text(size = 6,
-                                        color = "#808080",
-                                        margin = margin(r = 0, unit = "pt")),
-             legend.background = element_rect(color = "#E7E7E7"),
-             legend.margin = margin(5, 5, 5, 5),
-             legend.box.spacing = unit(20, "pt"),
-             legend.key.size = unit(8, "pt")
-)
 
 # Create a plot comparing NH3 levels in extracts between groups with and
 # without cover crops across all times
