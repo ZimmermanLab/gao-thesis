@@ -71,11 +71,13 @@ theme_update(plot.title = element_text(face = "bold",
              legend.key.size = unit(8, "pt")
 )
 
-# Create a plot comparing NH3 levels between groups with and
-# without cover crops at 4 weeks
-nh3_compare_cc_plot <- n_data_stats %>%
-  filter(pre_post_wet != "no soil") %>%
-  group_by(pre_post_wet, cc_treatment) %>%
+# Create a plot comparing NH3 levels in extracts between groups with and
+# without cover crops across all times
+nh3_extracts_plot <- n_data_stats %>%
+  filter(pre_post_wet != "no_soil",
+         sample_type == "extract",
+         sample_no != NA) %>%
+  group_by(pre_post_wet, cc_treatment, drying_treatment) %>%
   summarize(mean_mean_nh3 = mean(mean_nh3), # Note that "mean_mean" here denotes
             # the mean across all technical *and* experimental replicates
             sd_mean_nh3 = sd(mean_nh3)) %>%
@@ -83,16 +85,18 @@ nh3_compare_cc_plot <- n_data_stats %>%
              y = mean_mean_nh3,
              fill = cc_treatment)) +
   geom_col(position = position_dodge()) +
+  facet_grid(~drying_treatment) +
   geom_errorbar(aes(ymax = mean_mean_nh3 + sd_mean_nh3,
                     ymin = mean_mean_nh3 - sd_mean_nh3),
                 size = 0.25,
                 width = 0.2,
                 position = position_dodge(0.9)) +
-  scale_x_discrete(limits = c("cw", "pre", "post"),
-                   labels = c(
-                     "Constant Water", "Pre Wetting", "Post Wetting")) +
+  scale_x_discrete(limits = c("all_dry", "cw", "pre", "post"),
+                   labels = c("All Dry", "Constant Water", "Pre Wetting",
+                              "Post Wetting")) +
+  # coord_cartesian(ylim=c(0, 8)) +
   labs(title = paste("NH3 in Samples With and Without Cover Crop\n",
-                     " Residue After 4 Weeks of Drying"),
+                     " Residue in Soil Extracts"),
        x = "Water Treatments", y = "NH3 (ppm)",
        fill = "Cover Crop Treatment") +
   scale_fill_discrete(breaks = c("w_cc", "no_cc"),
@@ -106,10 +110,43 @@ ggsave(nh3_compare_cc_plot, filename = "output/2021/n_plots/nh3_plot_772.png", w
 ggsave(nh3_compare_cc_plot,
          filename = "output/2021/n_plots/nh3_plot.png")
 
-# Run statistical analysis on NH3, excluding cw and no_soil jars
+# Create a plot comparing NH3 levels in leachates between groups with and
+# without cover crops across all times
+nh3_leach_plot <- n_data_stats %>%
+  filter(pre_post_wet != "no_soil",
+         sample_no != "NA") %>%
+  group_by(pre_post_wet, cc_treatment, drying_treatment, sample_type) %>%
+  summarize(mean_mean_nh3 = mean(mean_nh3), # Note that "mean_mean" here denotes
+            # the mean across all technical *and* experimental replicates
+            sd_mean_nh3 = sd(mean_nh3)) %>%
+  ggplot(aes(x = pre_post_wet,
+             y = mean_mean_nh3,
+             fill = cc_treatment)) +
+  geom_col(position = position_dodge()) +
+  facet_grid(sample_type ~ factor(drying_treatment, levels = c(
+    "one_wk", "two_wk", "four_wk", "all_dry"))) +
+  geom_errorbar(aes(ymax = mean_mean_nh3 + sd_mean_nh3,
+                    ymin = mean_mean_nh3 - sd_mean_nh3),
+                size = 0.25,
+                width = 0.2,
+                position = position_dodge(0.9)) +
+  scale_x_discrete(limits = c("all_dry", "cw", "pre", "post"),
+                   labels = c("All Dry", "Constant Water", "Pre Wetting",
+                              "Post Wetting")) +
+  coord_cartesian(ylim=c(0, 8)) +
+  labs(title = paste("NH3 in Samples With and Without Cover Crop\n",
+                     " Residue in Soil Leachates"),
+       x = "Water Treatments", y = "NH3 (ppm)",
+       fill = "Cover Crop Treatment") +
+  scale_fill_discrete(breaks = c("w_cc", "no_cc"),
+                      labels = c("Without cover crop", "With cover crop"))
+
+
+# Run statistical analysis on extracts for NH3, excluding cw and no_soil jars
 nh3_stats <- n_data_stats %>%
-  filter(pre_post_wet != "no_soil") %>%
-  filter(pre_post_wet != "cw") %>%
+  filter(pre_post_wet != "no_soil",
+         pre_post_wet != "cw",
+         sample_type == "extract") %>%
   lm(data = ., mean_nh3 ~ pre_post_wet * cc_treatment) %>%
   anova()
 
