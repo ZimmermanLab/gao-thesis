@@ -1,0 +1,33 @@
+,,1,2,3,4,5,6,7,8,9,10,11,12
+A,Content,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn
+A,Sample,005-1,005-2,005-3,005-4,005-5,006-1,006-2,006-3,006-4,006-5,012-1,012-2
+A,Cq,NaN,NaN,NaN,11.9091570457321,NaN,NaN,11.9415484846004,NaN,15.7773335448416,20.9227560220103,NaN,NaN
+A,copy number,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN
+B,Content,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn
+B,Sample,012-3,012-4,012-5,021-1,021-2,021-3,021-4,021-5,038-1,038-2,038-3,038-4
+B,Cq,NaN,NaN,NaN,12.4554968410907,NaN,22.4538265821478,NaN,11.8862610300555,NaN,21.9001441600604,11.8982178628998,NaN
+B,copy number,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN
+C,Content,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn
+C,Sample,038-5,043-1,043-2,043-3,043-4,043-5,047-1,047-2,047-3,047-4,047-5,050-1
+C,Cq,NaN,16.3222473356746,NaN,NaN,NaN,NaN,17.7348602437548,NaN,NaN,NaN,NaN,NaN
+C,copy number,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN
+D,Content,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn
+D,Sample,050-2,050-3,050-4,050-5,061-1,061-2,061-3,061-4,061-5,062-1,062-2,062-3
+D,Cq,3.55333070385162,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,15.4203921204182
+D,copy number,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN
+E,Content,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn
+E,Sample,062-4,062-5,064-1,064-2,064-3,064-4,064-5,065-1,065-2,065-3,065-4,065-5
+E,Cq,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,19.70785530689,NaN,NaN
+E,copy number,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN
+F,Content,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn
+F,Sample,077-1,077-2,077-3,077-4,077-5,084-1,084-2,084-3,084-4,084-5,089-1,089-2
+F,Cq,NaN,NaN,NaN,NaN,NaN,21.9490997243408,3.1350282195496,NaN,NaN,NaN,NaN,22.2731325340756
+F,copy number,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN
+G,Content,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn
+G,Sample,089-3,089-4,089-5,096-1,096-2,096-3,096-4,096-5,103-1,103-2,103-3,103-4
+G,Cq,NaN,NaN,NaN,NaN,NaN,16.8262623237953,20.9166034271607,NaN,NaN,NaN,21.705926129676,4.8022248667742
+G,copy number,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN
+H,Content,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn
+H,Sample,103-5,109-1,109-2,109-3,109-4,109-5,048-1,048-2,014-1,014-2,014-3,Blank
+H,Cq,NaN,NaN,NaN,14.6599445448007,NaN,8.9706835659343,NaN,14.8371262221833,11.61736745921,NaN,21.8792683274543,NaN
+H,copy number,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN

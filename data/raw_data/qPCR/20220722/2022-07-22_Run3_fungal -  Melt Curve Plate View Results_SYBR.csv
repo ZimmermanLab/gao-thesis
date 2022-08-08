@@ -1,0 +1,33 @@
+,,1,2,3,4,5,6,7,8,9,10,11,12
+A,Content,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn
+A,Sample,005-1,005-2,005-3,005-4,005-5,006-1,006-2,006-3,006-4,006-5,012-1,012-2
+A,Peak 1,,,,,,,,,,,,
+A,Peak 2,,,,,,,,,,,,
+B,Content,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn
+B,Sample,012-3,012-4,012-5,021-1,021-2,021-3,021-4,021-5,038-1,038-2,038-3,038-4
+B,Peak 1,,,,,,,,,,,,
+B,Peak 2,,,,,,,,,,,,
+C,Content,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn
+C,Sample,038-5,043-1,043-2,043-3,043-4,043-5,047-1,047-2,047-3,047-4,047-5,050-1
+C,Peak 1,,,,,,,,,,,,
+C,Peak 2,,,,,,,,,,,,
+D,Content,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn
+D,Sample,050-2,050-3,050-4,050-5,061-1,061-2,061-3,061-4,061-5,062-1,062-2,062-3
+D,Peak 1,,,,,,,,,,,,
+D,Peak 2,,,,,,,,,,,,
+E,Content,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn
+E,Sample,062-4,062-5,064-1,064-2,064-3,064-4,064-5,065-1,065-2,065-3,065-4,065-5
+E,Peak 1,,,,,,,,,,,,
+E,Peak 2,,,,,,,,,,,,
+F,Content,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn
+F,Sample,077-1,077-2,077-3,077-4,077-5,084-1,084-2,084-3,084-4,084-5,089-1,089-2
+F,Peak 1,,,,,,,,,,,,
+F,Peak 2,,,,,,,,,,,,
+G,Content,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn
+G,Sample,089-3,089-4,089-5,096-1,096-2,096-3,096-4,096-5,103-1,103-2,103-3,103-4
+G,Peak 1,,,,,,,,,,,,
+G,Peak 2,,,,,,,,,,,,
+H,Content,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn
+H,Sample,103-5,109-1,109-2,109-3,109-4,109-5,048-1,048-2,014-1,014-2,014-3,Blank
+H,Peak 1,,,,,,,,,,,,
+H,Peak 2,,,,,,,,,,,,
