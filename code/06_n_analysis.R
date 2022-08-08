@@ -28,6 +28,8 @@ all_treatments <- readr::read_csv("output/2022/jar_assignments/master_list.csv")
 source("code/functions/n_functions/run_n_stats.R")
 n_data_stats <- run_n_stats(n_data_clean, all_treatments)
 
+source("code/functions/n_functions/plot_n_data.R")
+nh3_plot <- plot_n_data(n_data_stats, "nh3", "n")
 
 #############
 
