@@ -1,0 +1,33 @@
+,,1,2,3,4,5,6,7,8,9,10,11,12
+A,Content,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn
+A,Sample,048-1,048-2,014-1,014-2,014-3,007-1,007-2,007-3,007-4,007-5,008-1,008-2
+A,Cq,NaN,NaN,NaN,2.66977852420793,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN
+A,copy number,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN
+B,Content,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn
+B,Sample,008-3,008-4,008-5,011-1,011-2,011-3,011-4,011-5,026-1,026-2,026-3,026-4
+B,Cq,2.87777564718273,NaN,NaN,NaN,NaN,3.20066634092073,NaN,NaN,NaN,NaN,NaN,NaN
+B,copy number,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN
+C,Content,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn
+C,Sample,026-5,028-1,028-2,028-3,028-4,028-5,030-1,030-2,030-3,030-4,030-5,034-1
+C,Cq,NaN,NaN,NaN,1.06835481534218,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN
+C,copy number,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN
+D,Content,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn
+D,Sample,034-2,034-3,034-4,034-5,051-1,051-2,051-3,051-4,051-5,056-1,056-2,056-3
+D,Cq,NaN,4.47844305378094,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN
+D,copy number,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN
+E,Content,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn
+E,Sample,056-4,056-5,059-1,059-2,059-3,059-4,059-5,086-1,086-2,086-3,086-4,086-5
+E,Cq,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN
+E,copy number,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN
+F,Content,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn
+F,Sample,087-1,087-2,087-3,087-4,087-5,101-1,101-2,101-3,101-4,101-5,104-1,104-2
+F,Cq,NaN,NaN,NaN,NaN,NaN,19.9511008756192,NaN,NaN,NaN,NaN,NaN,NaN
+F,copy number,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN
+G,Content,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn
+G,Sample,104-3,104-4,104-5,112-1,112-2,112-3,112-4,112-5,120-1,120-2,120-3,120-4
+G,Cq,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,1.04185879437418,NaN
+G,copy number,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN
+H,Content,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn,Unkn
+H,Sample,120-5,123-1,123-2,123-3,123-4,123-5,125-1,125-2,125-3,125-4,125-5,Blank
+H,Cq,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN
+H,copy number,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN
