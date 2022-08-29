@@ -44,7 +44,7 @@ plot_n_data <- function(input_n_stats, n_species, poster_option) {
                legend.key.size = unit(8, "pt")
   )
 
-  # Create a list of drying_treatent labels and sample_type labels
+  # Create a list of drying_treatment labels and sample_type labels
   drying_labels <- c("One Week", "Two Weeks", "Four Weeks", "Always Dry")
   type_labels <- c("Extracts", "Leachates")
   names(drying_labels) <- c("one_wk", "two_wk", "four_wk", "all_dry")
