@@ -1,0 +1,28 @@
+
+                                Eager 300 Report
+
+Method Name   : Nitrogen/Carbon
+Method File   : C:\Eager for FLASH\Sarah Gao\20220601\20220601_02.mth
+Chromatogram  : 20220601004
+Operator ID   :                        Company  Name : 
+Analysed      : 06/01/2022  13:41      Printed       : 6/1/2022  13:46
+Sample ID     : ASP5 (# 5)
+Instrument N. : Instrument #1
+Analysis Type : Calibration (Area)     Sample weight : 5.071
+
+Calib. method : using 'K Factors'
+
+  Element Name                 Ret.Time    Area    BC  Area ratio   K factor  
+---------------- ------------- -------- ---------- -- ------------ -----------
+Nitrogen               10.5500      113    1385262 RS     6.010273 .258932E+07 
+Carbon                 36.0900      221    8325804 RS     1.000000 .454931E+07 
+Totals                 46.6400             9711066 
+
+
+
+ Element  Name   Ret.Time  K Factor   Level
+---------------- -------- ----------- -----
+Nitrogen              116 .256931E+07   3 
+Carbon                213 .435937E+07   3 
+
+

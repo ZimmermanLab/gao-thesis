@@ -1,0 +1,23 @@
+
+                                Eager 300 Report
+
+Method Name   : Nitrogen/Carbon
+Method File   : C:\Eager for FLASH\Sarah Gao\20220601\20220601_02.mth
+Chromatogram  : 20220601_extra1
+Operator ID   :                        Company  Name : 
+Analysed      : 06/01/2022  14:48      Printed       : 6/1/2022  14:53
+Sample ID     : SRM (# 14)
+Instrument N. : Instrument #1
+Analysis Type : UnkNown (Area)         Sample weight : 30.029
+
+Calib. method : using 'Least Squares to Linear fit'
+
+  Element Name                 Ret.Time    Area    BC  Area ratio   K factor  
+---------------- ------------- -------- ---------- -- ------------ -----------
+Nitrogen                0.3819      118     416833 RS    11.530920             
+Carbon                  3.5823      232    4806469 RS     1.000000             
+Totals                  3.9642             5223302 
+
+
+
+

@@ -1,0 +1,30 @@
+
+                                Eager 300 Report
+
+Method Name   : Nitrogen/Carbon
+Method File   : C:\Eager for FLASH\Sarah Gao\20220608\20220608_01.mth
+Chromatogram  : 20220608006
+Operator ID   :                        Company  Name : 
+Analysed      : 06/08/2022  13:27      Printed       : 6/8/2022  13:32
+Sample ID     : ASP5 (# 8)
+Instrument N. : Instrument #1
+Analysis Type : Calibration (Area)     Sample weight : 5.082
+
+Calib. method : using 'Least Squares to Linear fit'
+
+  Element Name                 Ret.Time    Area    BC  Area ratio   K factor  
+---------------- ------------- -------- ---------- -- ------------ -----------
+Nitrogen               10.5200      116    1007650 RS     8.694886             
+Carbon                 36.0900      222    8761402 RS     1.000000             
+Totals                 46.6100             9769052 
+
+
+
+Coefficents of least squares fit to linear equation
+
+ Element  Name   Ret.Time     X Term       Intercept    Level
+---------------- -------- -------------- -------------- -----
+Nitrogen              116  1.909410E+06  -1.652215E+04    3 
+Carbon                213  4.788345E+06  -1.211178E+04    3 
+
+
