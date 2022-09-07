@@ -59,28 +59,33 @@ qpcr_stats_treatment <- qpcr_stats %>%
   group_by(pre_post_wet, cc_treatment, drying_treatment) %>%
   summarize(mean_all_cq = mean(mean_cq),
             sd_all_cq = sd(sd_cq)) %>%
-  mutate(time = paste0(drying_treatment, "_", pre_post_wet))
+  mutate(time = paste0(drying_treatment, "_", pre_post_wet)) %>%
+  filter(pre_post_wet != "NA",
+         pre_post_wet != "no_soil")
 
 # Plot
 dna_plot_grid <- qpcr_stats_treatment %>%
   filter(pre_post_wet != "no_soil") %>%
   group_by(pre_post_wet, cc_treatment, drying_treatment) %>%
-  ggplot(aes(x = time,
+  ggplot(aes(x = pre_post_wet,
              y = mean_all_cq,
              fill = cc_treatment)) +
   geom_col(position = position_dodge()) +
+  facet_grid(. ~ factor(drying_treatment,
+                        levels = c("initial", "one_wk", "two_wk",
+                                   "four_wk", "all_dry"))) +
   geom_errorbar(aes(ymax = mean_all_cq + sd_all_cq,
                     ymin = mean_all_cq - sd_all_cq),
                 size = 0.25,
                 width = 0.2,
-                position = position_dodge(0.9))
-
+                position = position_dodge(0.9)) +
+  coord_cartesian(ylim=c(15, 35)) +
+  scale_x_discrete(limits = c("all_dry", "cw", "pre", "post"),
+                   labels = c("All Dry", "Constant Water", "Pre Wetting",
+                              "Post Wetting"))
 
 
 +
-  scale_x_discrete(limits = c("all_dry", "cw", "pre", "post"),
-                   labels = c("All Dry", "Constant Water", "Pre Wetting",
-                              "Post Wetting")) +
   coord_cartesian(ylim=c(0, 8)) +
   labs(title = "DNA concentrations in Samples With and Without Cover Crop\n",
                      " Residue in Soil Extracts",
