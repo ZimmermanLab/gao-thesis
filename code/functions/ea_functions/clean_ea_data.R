@@ -17,8 +17,8 @@ clean_ea_data <- function(input_file_list) {
 
   # Select only sample number, type of sample, and n and c percentages
   ea_results_clean <- ea_results_raw %>%
-    select("...2", "...6", "...12", "...13") %>%
-    rename("sample_no" = "...2", "type" = "...6",
+    select("...2", "...4", "...6", "...12", "...13") %>%
+    rename("sample_no" = "...2", "date" = "...4", "type" = "...6",
            "n_mg" = "...12", "c_mg" = "...13") %>%
     drop_na() %>%
     mutate(pos = row_number())

@@ -15,57 +15,27 @@ calculate_sample_stats <- function(cleaned_ea_data) {
   # Collect all the samples into one dataframe and create a column that checks
   # for matched names
   all_samples <- cleaned_ea_data %>%
-    select(pos, sample_no, n_per, c_per) %>%
-    filter(sample_no != "SRM") %>%
-    filter(sample_no != "BLANK") %>%
+    select(sample_no, n_mg, c_mg) %>%
+    filter(!(sample_no == "SRM" |
+               sample_no == "BLANK" |
+               sample_no == "Blank")) %>%
     filter(!str_detect(sample_no, "^ASP")) %>%
-    mutate(name_match = as.numeric(
-      sample_no == lag(sample_no, 1))) %>%
     replace(is.na(.), 0) %>%
     arrange(sample_no)
 
-  # Run a for loop that calculates the mean %C and C RSD for each sample
-  mean_c <- c()
-  rsd_c <- c()
-  for (sample_no in 1:length(all_samples$sample_no)) {
-    if (all_samples$name_match[sample_no] == 0) {
-      sample_group_c <- c(all_samples$c_per[sample_no],
-                          all_samples$c_per[sample_no + 1])
-      sample_mean_c <- mean(sample_group_c)
-      sample_rsd_c <- sd(sample_group_c) * 100 / sample_mean_c
-      }
-    else{
-      sample_mean_c <- NA
-      sample_rsd_c <- NA
-    }
-      mean_c <- c(mean_c, sample_mean_c)
-      rsd_c <- c(rsd_c, sample_rsd_c)
-  }
+ea_stats <- all_samples %>%
+  group_by(sample_no) %>%
+  summarize(mean_n = mean(n_mg),
+            sd_n = sd(n_mg),
+            mean_c = mean(c_mg),
+            sd_c = sd(c_mg)) %>%
+  mutate(rsd_n = sd_n * 100 / mean_n,
+         rsd_c = sd_c * 100 / mean_c)
 
-  all_samples <- cbind(all_samples, mean_c, rsd_c)
-
-  # Run a for loop that calculates the mean %N and N RSD for each sample
-  mean_n <- c()
-  rsd_n <- c()
-  for (sample_no in 1:length(all_samples$sample_no)) {
-    if (all_samples$name_match[sample_no] == 0) {
-      sample_group_n <- c(all_samples$n_per[sample_no],
-                        all_samples$n_per[sample_no + 1])
-      sample_mean_n <- mean(sample_group_n)
-      sample_rsd_n <- sd(sample_group_n) * 100 / sample_mean_n
-      }
-    else{
-      sample_mean_n <- NA
-      sample_rsd_n <- NA
-    }
-    mean_n <- c(mean_n, sample_mean_n)
-    rsd_n <- c(rsd_n, sample_rsd_n)
-  }
-
-  all_samples <- cbind(all_samples, mean_n, rsd_n)
-  all_samples_clean <- all_samples %>%
-    select(sample_no, mean_c, rsd_c, mean_n, rsd_n) %>%
-    drop_na()
+# Flag any crazies that might need to be rerun
+all_samples_clean <- ea_stats %>%
+  mutate(flag = case_when(rsd_c > 10 | rsd_n > 10
+                          | is.na(sd_n) | is.na(sd_c) ~ "yes"))
 
 return(all_samples_clean)
 }
