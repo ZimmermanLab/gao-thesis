@@ -13,6 +13,8 @@ This project will take data collected from an experiment run on soils from Star 
 ***
 
 ## Change Log:
+* 2022-09-07: Added recent EA data from 2022 samples and updated EA script to read that data in and analyze.
+* 2022-08-20: Added qPCR data from funga-only qPCR runs.
 * 2022-08-08: Created and updated scripts to analyze N data from the SmartChem, including creating plots and running statistics. Started scripts to analyze the qPCR data using initial runs for fungal DNA.
 * 2022-02-08: Streamlined and refactored jar assignments script, saved out finalized jar assignments as output csvs.
 * 2022-02-07: Added script from NZ that analyzes raw CO2 data for concentrations.
