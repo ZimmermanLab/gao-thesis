@@ -30,7 +30,10 @@ n_data_clean <- read_delim(input_file_name, col_names = FALSE, delim = ";") %>%
   mutate("sample_type" = case_when(
     grepl("^[0-9]{3}E", sample_no_full) == TRUE ~ "extract",
     grepl("^[0-9]{3}L", sample_no_full) == TRUE ~ "leachate",
-    grepl("Blank", sample_no_full) == TRUE ~ "blank")) %>%
+    grepl("^Blank.*L", sample_no_full) == TRUE ~ "blank_leachate",
+    grepl("^Blank.*E", sample_no_full) == TRUE ~ "blank_extract",
+    grepl("^NO2", sample_no_full) == TRUE ~ "no2_standard",
+    grepl("^NO3", sample_no_full) == TRUE ~ "no3_standard")) %>%
   ungroup() %>%
   arrange(sample_no_full)
 
@@ -40,10 +43,10 @@ n_data_clean <- replace(n_data_clean, n_data_clean < 0, 0)
 # Separate sample ID number and replicate number
 n_data_clean <- n_data_clean %>%
   mutate("sample_no" = case_when(
-    grepl("^Blank", sample_no_full) == FALSE ~
+    grepl("^[0-9]", sample_no_full) == TRUE ~
       as.numeric(str_sub(sample_no_full, end = 3)))) %>%
   mutate("rep_no" = case_when(
-    grepl("^Blank", sample_no_full) == FALSE ~
+    grepl("^[0-9]", sample_no_full) == TRUE ~
       as.numeric(str_sub(sample_no_full, start = -1))))
 
 return(n_data_clean)
