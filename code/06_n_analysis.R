@@ -23,6 +23,15 @@ n_data_clean <- clean_n_data(file_list) %>%
 
 # Find means and SDs per sample
 n_all_stats <- n_data_clean %>%
+  # Filter out the previous runs of samples that I reran on 6/30/22
+  filter(!(sample_no == 3 & run_time != "06/30/2022"
+           & sample_type == "leachate"),
+         !(sample_no == 21 & run_time != "06/30/2022"
+           & sample_type == "leachate"),
+         !(sample_no == 121 & run_time != "06/30/2022"
+           & sample_type == "leachate"),
+         !(sample_no == 132 & run_time != "06/30/2022"
+           & sample_type == "leachate")) %>%
   group_by(sample_no, sample_type) %>%
   summarize(mean_nh3 = mean(nh3),
             sd_nh3 = sd(nh3),

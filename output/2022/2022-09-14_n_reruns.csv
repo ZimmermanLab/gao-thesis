@@ -1,6 +1,5 @@
 sample_no,sample_type,dilute
 2,leachate,yes
-3,leachate,NA
 4,leachate,yes
 5,extract,yes
 16,extract,yes
@@ -8,7 +7,6 @@ sample_no,sample_type,dilute
 17,leachate,yes
 19,leachate,NA
 20,extract,yes
-21,leachate,NA
 22,leachate,yes
 24,leachate,yes
 27,extract,yes
@@ -22,6 +20,4 @@ sample_no,sample_type,dilute
 104,leachate,NA
 107,leachate,yes
 120,leachate,yes
-121,leachate,NA
-132,leachate,NA
 NA,no3_standard,NA
