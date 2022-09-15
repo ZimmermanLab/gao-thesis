@@ -19,14 +19,38 @@ file_list <- paste0("data/raw_data/SmartChem_N_extractions/2022_samples/",
 
 # Read all csv files in the folder and create a compiled dataframe
 n_data_clean <- clean_n_data(file_list) %>%
-  select(-c(1,2)) %>%
   relocate(sample_no, rep_no)
+
+# Find means and SDs per sample
+n_all_stats <- n_data_clean %>%
+  group_by(sample_no, sample_type) %>%
+  summarize(mean_nh3 = mean(nh3),
+            sd_nh3 = sd(nh3),
+            mean_no2_no3 = mean(no2_no3),
+            sd_no2_no3 = sd(no2_no3),
+            run_time = run_time)
+
+# Pull samples that need to be rerun based on weirdo replicates or because
+# they overshot 20 mg/L thresholds (set to 19 here)
+# Set a dilution flag to "yes" if they overshot and need to be diluted
+n_reruns <- n_all_stats %>%
+  filter(sd_nh3 > 1 | sd_no2_no3 > 1) %>%
+  rbind(n_all_stats %>%
+          filter(mean_nh3 > 19 | mean_no2_no3 > 19)) %>%
+  mutate(dilute = (case_when((mean_nh3 > 19 | mean_no2_no3 > 19) ~ "yes"))) %>%
+  group_by(sample_no, sample_type, dilute) %>%
+  summarize()
+
+# Save this list out
+write_csv(n_reruns, paste0("output/2022/", Sys.Date(), "_n_reruns.csv"))
 
 # Get list of jar assignments from 2022
 all_treatments <- readr::read_csv("output/2022/jar_assignments/master_list.csv")
 
+# Map data to assignments and find mean + SDs of all samples
 source("code/functions/n_functions/run_n_stats.R")
 n_data_stats <- run_n_stats(n_data_clean, all_treatments)
+
 
 source("code/functions/n_functions/plot_n_data.R")
 nh3_plot <- plot_n_data(n_data_stats, "nh3", "n")
@@ -38,12 +62,7 @@ nh3_plot <- plot_n_data(n_data_stats, "nh3", "n")
 # without cover crops across all times
 nh3_extracts_plot <- n_data_stats %>%
   filter(pre_post_wet != "no_soil",
-         sample_type == "extract",
-         sample_no != NA) %>%
-  group_by(pre_post_wet, cc_treatment, drying_treatment) %>%
-  summarize(mean_mean_nh3 = mean(mean_nh3), # Note that "mean_mean" here denotes
-            # the mean across all technical *and* experimental replicates
-            sd_mean_nh3 = sd(mean_nh3)) %>%
+         sample_type == "extract") %>%
   ggplot(aes(x = pre_post_wet,
              y = mean_mean_nh3,
              fill = cc_treatment)) +
@@ -68,20 +87,11 @@ nh3_extracts_plot <- n_data_stats %>%
   scale_fill_manual(values = c("no_cc" = "#00C2FF",
                                "w_cc" = "#3EA50D")) +
   theme(legend.position = "none")
-ggsave(nh3_compare_cc_plot, filename = "output/2021/n_plots/nh3_plot_772.png", width=772*2, height=590*2, units= "px", dpi=300)
-
-ggsave(nh3_compare_cc_plot,
-         filename = "output/2021/n_plots/nh3_plot.png")
 
 # Create a plot comparing NH3 levels in leachates between groups with and
 # without cover crops across all times
 nh3_leach_plot <- n_data_stats %>%
-  filter(pre_post_wet != "no_soil",
-         sample_no != "NA") %>%
-  group_by(pre_post_wet, cc_treatment, drying_treatment, sample_type) %>%
-  summarize(mean_mean_nh3 = mean(mean_nh3), # Note that "mean_mean" here denotes
-            # the mean across all technical *and* experimental replicates
-            sd_mean_nh3 = sd(mean_nh3)) %>%
+  filter(pre_post_wet != "no_soil") %>%
   ggplot(aes(x = pre_post_wet,
              y = mean_mean_nh3,
              fill = cc_treatment)) +
@@ -117,9 +127,6 @@ nh3_stats <- n_data_stats %>%
 # without cover crops at 4 weeks
 no2_compare_cc_plot <- n_data_stats %>%
   filter(pre_post_wet != "no soil") %>%
-  group_by(pre_post_wet, cc_treatment) %>%
-  summarize(mean_mean_no2 = mean(mean_no2),
-            sd_mean_no2 = sd(mean_no2)) %>%
   ggplot(aes(x = pre_post_wet,
              y = mean_mean_no2,
              fill = cc_treatment)) +
@@ -142,11 +149,37 @@ no2_compare_cc_plot <- n_data_stats %>%
   scale_fill_manual(values = c("no_cc" = "#00C2FF",
                                "w_cc" = "#3EA50D")) +
   theme(legend.position = "none")
-ggsave(no2_compare_cc_plot, filename = "output/2021/n_plots/no2_plot_772.png",
-       width=772*2, height=590*2, units= "px", dpi=300)
 
-ggsave(no2_compare_cc_plot,
-       filename = "output/2021/n_plots/no2_plot.png")
+
+# Create a plot comparing NH3 loss as a ratio of NH3 concentration in
+# leachate to total extractable N
+nh3_ratio_plot <- n_data_stats %>%
+  filter(pre_post_wet != "no_soil",
+         sample_type == "extract") %>%
+  group_by(pre_post_wet, cc_treatment, drying_treatment) %>%
+  #IDK HOW TO DO THIS
+  summarize(ratio = case_when())
+  ggplot(aes(x = pre_post_wet,
+             y = mean_mean_nh3,
+             fill = cc_treatment)) +
+  geom_col(position = position_dodge()) +
+  facet_grid(~drying_treatment) +
+  geom_errorbar(aes(ymax = mean_mean_nh3 + sd_mean_nh3,
+                    ymin = mean_mean_nh3 - sd_mean_nh3),
+                size = 0.25,
+                width = 0.2,
+                position = position_dodge(0.9)) +
+  scale_x_discrete(limits = c("all_dry", "cw", "pre", "post"),
+                   labels = c("All Dry", "Constant Water", "Pre Wetting",
+                              "Post Wetting")) +
+  # coord_cartesian(ylim=c(0, 8)) +
+  labs(title = paste("NH3 in Samples With and Without Cover Crop\n",
+                     " Residue in Soil Extracts"),
+       x = "Water Treatments", y = "NH3 (ppm)",
+       fill = "Cover Crop Treatment") +
+  scale_fill_discrete(breaks = c("w_cc", "no_cc"),
+                      labels = c("Without cover crop", "With cover crop"))
+##########
 
 # Run statistical analysis on NO2, excluding cw and no_soil jars
 no2_stats <- n_data_stats %>%
@@ -184,12 +217,6 @@ no3_compare_cc_plot <- n_data_stats %>%
   scale_fill_manual(values = c("no_cc" = "#00C2FF",
                                "w_cc" = "#3EA50D")) +
   theme(legend.position = "none")
-ggsave(no3_compare_cc_plot, filename = "output/2021/n_plots/no3_plot_772.png",
-       width=772*2, height=590*2, units= "px", dpi=300)
-
-
-ggsave(no3_compare_cc_plot,
-       filename = "output/2021/n_plots/no3_plot.png")
 
 # Run statistical analysis on NO3, excluding cw and no_soil jars
 no3_stats <- n_data_stats %>%

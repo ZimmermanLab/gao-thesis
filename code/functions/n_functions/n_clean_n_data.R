@@ -47,7 +47,8 @@ n_data_clean <- n_data_clean %>%
       as.numeric(str_sub(sample_no_full, end = 3)))) %>%
   mutate("rep_no" = case_when(
     grepl("^[0-9]", sample_no_full) == TRUE ~
-      as.numeric(str_sub(sample_no_full, start = -1))))
+      as.numeric(str_sub(sample_no_full, start = -1)))) %>%
+  select(-c(sample_no_full))
 
 return(n_data_clean)
 }
