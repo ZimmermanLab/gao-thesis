@@ -22,9 +22,9 @@ n_data_clean <- read_delim(input_file_name, col_names = FALSE, delim = ";") %>%
          "run_time" = X7,
          "type" = X8) %>%
   pivot_wider(names_from = "type", values_from = "concentration_mg/L") %>%
-  mutate(run_time = str_sub(run_time, end = 10)) %>%
+  # mutate(run_time = str_sub(run_time, end = 10)) %>%
   group_by(sample_no_full, run_time) %>%
-  summarise_all(list(~first(na.omit(.)))) %>%
+  # summarise_all(list(~first(na.omit(.)))) %>%
   rename("nh3" = "WNHR",
          "no2_no3" = "WNO6") %>%
   mutate("sample_type" = case_when(

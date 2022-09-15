@@ -53,6 +53,17 @@ n_reruns <- n_all_stats %>%
 # Save this list out
 write_csv(n_reruns, paste0("output/2022/", Sys.Date(), "_n_reruns.csv"))
 
+no2_stds <- n_data_clean %>%
+  filter(sample_type == "no2_standard" | sample_type == "no3_standard") %>%
+  arrange(run_time) %>%
+  mutate(run_no = c(2,2,3,3,4,4,5,5,6,6,7,7,8,8,9,9,10,10)) %>%
+  select(-c(sample_no, rep_no, nh3)) %>%
+  filter(no2_no3 != 0) %>%
+  ggplot(aes(x = run_no, y = no2_no3, group = sample_type)) +
+  geom_line(aes(linetype= sample_type)) +
+  geom_point() +
+  labs(x = "Run Number", y = "Concentration (mg/L)")
+
 # Get list of jar assignments from 2022
 all_treatments <- readr::read_csv("output/2022/jar_assignments/master_list.csv")
 
