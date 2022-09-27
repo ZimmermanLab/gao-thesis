@@ -8,15 +8,14 @@
 library("ggplot2")
 library("tidyverse")
 
-# Source and run function to clean N data
-source("code/functions/n_functions/n_clean_n_data.R")
-
 # Get file list
 file_list <- paste0("data/raw_data/SmartChem_N_extractions/2022_samples/",
                     list.files(
                       "data/raw_data/SmartChem_N_extractions/2022_samples/",
                         pattern = "*.Csv"))
 
+# Source and run function to clean N data
+source("code/functions/n_functions/n_clean_n_data.R")
 # Read all csv files in the folder and create a compiled dataframe
 n_data_clean <- clean_n_data(file_list) %>%
   relocate(sample_no, rep_no)
@@ -64,6 +63,9 @@ no2_stds <- n_data_clean %>%
   geom_point() +
   labs(x = "Run Number", y = "Concentration (mg/L)")
 
+ggsave(plot = no2_stds, filename = "output/2022/no2_standards_plot.png",
+       device = "png", width = 6, height = 3)
+
 # Get list of jar assignments from 2022
 all_treatments <- readr::read_csv("output/2022/jar_assignments/master_list.csv")
 
@@ -71,9 +73,6 @@ all_treatments <- readr::read_csv("output/2022/jar_assignments/master_list.csv")
 source("code/functions/n_functions/run_n_stats.R")
 n_data_stats <- run_n_stats(n_data_clean, all_treatments)
 
-
-source("code/functions/n_functions/plot_n_data.R")
-nh3_plot <- plot_n_data(n_data_stats, "nh3", "n")
 
 #############
 
