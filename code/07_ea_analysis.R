@@ -87,19 +87,27 @@ mapped_results <- sample_stats %>%
 # Calculate means of each drying x cc treatment group across replicates and
 # calculate C:N ratios
 c_n_results_means <- mapped_results %>%
+  mutate(c_n_ratio = mean_c / mean_n) %>%
   group_by(drying_treatment, cc_treatment, pre_post_wet) %>%
-  summarise(mean_n = mean(mean_n), mean_c = mean(mean_c)) %>%
-  mutate("c_n_ratio" = mean_c / mean_n)
+  summarise(mean_c_n_ratio = mean(c_n_ratio),
+            sd_c_n_ratio = sd(c_n_ratio))
+
+# Calculate C:N ratios individually and then find the mean of the ratio
+# also gets error bars
 
 # Create a plot comparing C:N ratios
 c_n_plot <- c_n_results_means %>%
   filter(pre_post_wet != "no_soil") %>%
   filter(pre_post_wet != "all_dry") %>%
   group_by(pre_post_wet, cc_treatment, drying_treatment) %>%
-  ggplot(aes(x = pre_post_wet,
-             y = c_n_ratio,
-             fill = cc_treatment)) +
-  geom_col(position = position_dodge()) +
+  ggplot(aes(x = pre_post_wet)) +
+  geom_col(aes(y = mean_c_n_ratio,
+               fill = cc_treatment),
+           position = position_dodge()) +
+  geom_errorbar(aes(ymax = mean_c_n_ratio + sd_c_n_ratio,
+                    ymin = mean_c_n_ratio - sd_c_n_ratio,
+                    group = cc_treatment),
+                position = position_dodge()) +
   facet_grid(. ~ factor(drying_treatment,
                         levels = c("initial", "one_wk", "two_wk",
                                    "four_wk", "all_dry"))) +
@@ -111,8 +119,53 @@ c_n_plot <- c_n_results_means %>%
 #                              "Post Wetting"))
 
 # Run statistical analysis on C:N, excluding cw and no_soil jars
-ea_final_stats <- c_n_results_means %>%
+ea_final_stats <- mapped_results %>%
+  mutate(c_n_ratio = mean_c / mean_n) %>%
   filter(pre_post_wet != "no_soil") %>%
   filter(pre_post_wet != "cw") %>%
-  lm(data = ., c_n_ratio ~ pre_post_wet * cc_treatment) %>%
-  anova()
+  glm(data = ., c_n_ratio ~ drying_treatment * pre_post_wet * cc_treatment) %>%
+  summary()
+
+# Subset data to look at one thing across time
+# or within a timeframe look at pre/post wet
+# or a pre/post wet comparing cc treatment
+# Have targeted q's: eg is there interaction b/w week and pre/post
+
+
+mapped_results %>%
+  group_by(pre_post_wet, cc_treatment, drying_treatment) %>%
+  mutate(mean_mean_n = mean(mean_n),
+         sd_mean_n = sd(mean_n)) %>%
+  filter(pre_post_wet != "no_soil") %>%
+  filter(pre_post_wet != "all_dry") %>%
+  group_by(pre_post_wet, cc_treatment, drying_treatment) %>%
+  ggplot(aes(x = pre_post_wet)) +
+  geom_col(aes(y = mean_mean_n,
+               fill = cc_treatment),
+           position = position_dodge()) +
+  facet_grid(. ~ factor(drying_treatment,
+                        levels = c("initial", "one_wk", "two_wk",
+                                   "four_wk", "all_dry"))) +
+  geom_errorbar(aes(ymax = mean_mean_n + sd_mean_n,
+                    ymin = mean_mean_n - sd_mean_n,
+                    group = cc_treatment),
+                position = position_dodge())
+
+mapped_results %>%
+  group_by(pre_post_wet, cc_treatment, drying_treatment) %>%
+  mutate(mean_mean_c = mean(mean_c),
+         sd_mean_c = sd(mean_c)) %>%
+  filter(pre_post_wet != "no_soil") %>%
+  filter(pre_post_wet != "all_dry") %>%
+  group_by(pre_post_wet, cc_treatment, drying_treatment) %>%
+  ggplot(aes(x = pre_post_wet)) +
+  geom_col(aes(y = mean_mean_c,
+               fill = cc_treatment),
+           position = position_dodge()) +
+  facet_grid(. ~ factor(drying_treatment,
+                        levels = c("initial", "one_wk", "two_wk",
+                                   "four_wk", "all_dry"))) +
+  geom_errorbar(aes(ymax = mean_mean_c + sd_mean_c,
+                    ymin = mean_mean_c - sd_mean_c,
+                    group = cc_treatment),
+                position = position_dodge())
