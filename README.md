@@ -13,6 +13,8 @@ This project will take data collected from an experiment run on soils from Star 
 ***
 
 ## Change Log:
+* 2022-09-27: Added more EA data, clean up EA code.
+* 2022-09-26: Added more EA data and added some code to plot C:N ratios.
 * 2022-09-07: Added recent EA data from 2022 samples and updated EA script to read that data in and analyze.
 * 2022-08-20: Added qPCR data from funga-only qPCR runs.
 * 2022-08-08: Created and updated scripts to analyze N data from the SmartChem, including creating plots and running statistics. Started scripts to analyze the qPCR data using initial runs for fungal DNA.
