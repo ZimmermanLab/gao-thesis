@@ -39,49 +39,34 @@ srm_stats <- calculate_srm_stats(ea_results_clean)
 
 ############
 
-# SRM PLOTS
-
-# Plot the SRM values
-srm_n_plot <- ea_results_clean %>%
-  filter(sample_no == "SRM") %>%
-  ggplot(aes(x = pos, y = n_per)) +
-  geom_point() +
-  labs(title = "Standard Reference Material Nitrogen Content",
-       x = "Position", y = "N percentage")
-
-srm_c_plot <- ea_results_clean %>%
-  filter(sample_no == "SRM") %>%
-  ggplot(aes(x = pos, y = c_per)) +
-  geom_point() +
-  labs(title = "Standard Reference Material Carbon Content",
-       x = "Position", y = "C percentage")
-
-ggsave(filename = "output/ea_plots/srm_n_plot.png", srm_n_plot)
-ggsave(filename = "output/ea_plots/srm_c_plot.png", srm_c_plot)
-
-############
-
 # SAMPLES
 
 # Calculate means and RSDs for each sample
 source("code/functions/ea_functions/ea_calculate_sample_stats.R")
-sample_stats <- calculate_sample_stats(ea_results_clean)
+sample_stats <- calculate_sample_stats(ea_results_clean) %>%
+  filter(!(grepl("Blank", sample_no)))
 
 # Pull out list of questionable samples that need to be rerun
 # based on high RSDs
 need_rerun <- sample_stats %>%
   left_join(ea_results_clean) %>%
   filter(flag == "yes")
+# Save out this list
+write_csv(need_rerun, paste0("output/2022/", Sys.Date(), "_ea_reruns.csv"))
+
+# Filter out need rerun samples
+sample_stats_no_rerun <- sample_stats %>%
+  filter(!(sample_no %in% need_rerun$sample_no))
 
 # Clean up sample names
-sample_stats$sample_no <- as.numeric(str_sub(
-  sample_stats$sample_no, start = -3))
+sample_stats_no_rerun$sample_no <- as.numeric(str_sub(
+  sample_stats_no_rerun$sample_no, start = -3))
 
 # Map samples and results to master list of treatments
 all_treatments <- read_csv("output/2022/jar_assignments/master_list.csv") %>%
   transform(sample_no = as.numeric(sample_no))
 
-mapped_results <- sample_stats %>%
+mapped_results <- sample_stats_no_rerun %>%
   left_join(all_treatments)
 
 # Calculate means of each drying x cc treatment group across replicates and

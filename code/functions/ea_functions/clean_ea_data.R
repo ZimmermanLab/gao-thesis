@@ -20,11 +20,7 @@ clean_ea_data <- function(input_file_list) {
     select("...2", "...4", "...6", "...12", "...13") %>%
     rename("sample_no" = "...2", "date" = "...4", "type" = "...6",
            "n_mg" = "...12", "c_mg" = "...13") %>%
-    drop_na() %>%
-    mutate(pos = row_number())
-
-  # Reorder the columns so position is the first column
-  ea_results_clean <- ea_results_clean[colnames(ea_results_clean)[c(5, 1:4)]]
+    drop_na()
 
   return(ea_results_clean)
 }
