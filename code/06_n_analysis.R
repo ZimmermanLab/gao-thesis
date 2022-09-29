@@ -41,13 +41,13 @@ n_all_stats <- n_data_clean %>%
 # Pull samples that need to be rerun based on weirdo replicates or because
 # they overshot 20 mg/L thresholds (set to 19 here)
 # Set a dilution flag to "yes" if they overshot and need to be diluted
-n_reruns <- n_all_stats %>%
-  filter(sd_nh3 > 1 | sd_no2_no3 > 1) %>%
-  rbind(n_all_stats %>%
-          filter(mean_nh3 > 19 | mean_no2_no3 > 19)) %>%
-  mutate(dilute = (case_when((mean_nh3 > 19 | mean_no2_no3 > 19) ~ "yes"))) %>%
-  group_by(sample_no, sample_type, dilute) %>%
-  summarize()
+# n_reruns <- n_all_stats %>%
+#  filter(sd_nh3 > 1 | sd_no2_no3 > 1) %>%
+#  rbind(n_all_stats %>%
+#          filter(mean_nh3 > 19 | mean_no2_no3 > 19)) %>%
+#  mutate(dilute = (case_when((mean_nh3 > 19 | mean_no2_no3 > 19) ~ "yes"))) %>%
+#  group_by(sample_no, sample_type, dilute) %>%
+#  summarize()
 
 # Save this list out
 write_csv(n_reruns, paste0("output/2022/", Sys.Date(), "_n_reruns.csv"))
