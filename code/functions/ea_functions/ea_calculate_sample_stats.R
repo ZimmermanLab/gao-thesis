@@ -19,7 +19,8 @@ calculate_sample_stats <- function(cleaned_ea_data) {
     filter(!(sample_no == "SRM" |
                sample_no == "BLANK" |
                sample_no == "Blank" |
-               grepl("Blank", sample_no) == TRUE)) %>%
+               grepl("Blank", sample_no) == TRUE |
+               sample_no == "Bypass")) %>%
     filter(!str_detect(sample_no, "^ASP")) %>%
     replace(is.na(.), 0) %>%
     arrange(sample_no)
