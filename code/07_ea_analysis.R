@@ -11,6 +11,7 @@ library("dplyr")
 library("ggplot2")
 library("scales")
 library("readxl")
+library("fs")
 
 ############
 
@@ -20,43 +21,44 @@ library("readxl")
 # over the run and to determine if we need any correcting factors.
 
 # Compile list of file paths of EA data
-files <- list.files(path = "data/raw_data/EA_CN/2022",
-                    recursive = TRUE, full.names = TRUE,
-                    pattern = "\\w+_Run\\d_\\d{2}.(xls|XLS)")
+files_percent <- dir_ls(path = "data/raw_data/EA_CN/2022/",
+                recurse = 1,
+                regex = "\\w+_Run\\d_\\d{2}_percent.(xls|XLS)")
+files_ratio <- dir_ls(path = "data/raw_data/EA_CN/2022/",
+                      recurse = 1,
+                      regex = "\\w+_Run\\d_\\d{2}_ratio.(xls|XLS)")
 
-# Read in and clean up EA data
+# Read in and clean up percentage EA data
 source("code/functions/ea_functions/clean_ea_data.R")
-ea_results_clean <- clean_ea_data(files) %>%
-  filter(!(sample_no == "SRM" & n_mg > 0.8)) %>%
-# High SRM N values from 6/7/22 probably means should be rerun
-  filter(date != "06/07/2022")
+cn_percent_clean <- clean_ea_data(files_percent)
 
 # Calculate means and RSDs for both nitrogen and carbon
 # for all SRM samples
 # From Calla: RSDs for both N and C should be 5-10%
 source("code/functions/ea_functions/ea_calculate_srm_stats.R")
-srm_stats <- calculate_srm_stats(ea_results_clean)
+srm_stats <- calculate_srm_stats(cn_percent_clean)
 
 ############
 
 # SAMPLES
 
+# Compile C:N ratio data
+cn_ratio_clean <- clean_ea_data(files_ratio)
+
 # Calculate means and RSDs for each sample
 source("code/functions/ea_functions/ea_calculate_sample_stats.R")
-sample_stats <- calculate_sample_stats(ea_results_clean) %>%
-  filter(!(grepl("Blank", sample_no)))
+sample_stats <- calculate_sample_stats(cn_ratio_clean)
 
 # Pull out list of questionable samples that need to be rerun
 # based on high RSDs
 need_rerun <- sample_stats %>%
-  left_join(ea_results_clean) %>%
+  left_join(cn_ratio_clean) %>%
   filter(flag == "yes")
-# Save out this list
-write_csv(need_rerun, paste0("output/2022/", Sys.Date(), "_ea_reruns.csv"))
 
 # Filter out need rerun samples
 sample_stats_no_rerun <- sample_stats %>%
-  filter(!(sample_no %in% need_rerun$sample_no))
+  filter(!(sample_no %in% need_rerun$sample_no)) %>%
+  select(-(flag))
 
 # Clean up sample names
 sample_stats_no_rerun$sample_no <- as.numeric(str_sub(
@@ -69,34 +71,29 @@ all_treatments <- read_csv("output/2022/jar_assignments/master_list.csv") %>%
 mapped_results <- sample_stats_no_rerun %>%
   left_join(all_treatments)
 
-# Calculate means of each drying x cc treatment group across replicates and
-# calculate C:N ratios
-c_n_results_means <- mapped_results %>%
-  mutate(c_n_ratio = mean_c / mean_n) %>%
+# Compile across treatment replicates
+compiled_results <- mapped_results %>%
   group_by(drying_treatment, cc_treatment, pre_post_wet) %>%
-  summarise(mean_c_n_ratio = mean(c_n_ratio),
-            sd_c_n_ratio = sd(c_n_ratio))
-
-# Calculate C:N ratios individually and then find the mean of the ratio
-# also gets error bars
+  summarise(mean_mean_cn = mean(mean_c_n),
+            sd_sd_cn = sd(sd_c_n))
 
 # Create a plot comparing C:N ratios
-c_n_plot <- c_n_results_means %>%
+c_n_plot <- compiled_results %>%
   filter(pre_post_wet != "no_soil") %>%
   filter(pre_post_wet != "all_dry") %>%
   group_by(pre_post_wet, cc_treatment, drying_treatment) %>%
   ggplot(aes(x = pre_post_wet)) +
-  geom_col(aes(y = mean_c_n_ratio,
+  geom_col(aes(y = mean_mean_cn,
                fill = cc_treatment),
            position = position_dodge()) +
-  geom_errorbar(aes(ymax = mean_c_n_ratio + sd_c_n_ratio,
-                    ymin = mean_c_n_ratio - sd_c_n_ratio,
+  geom_errorbar(aes(ymax = mean_mean_cn + sd_sd_cn,
+                    ymin = mean_mean_cn - sd_sd_cn,
                     group = cc_treatment),
                 position = position_dodge()) +
   facet_grid(. ~ factor(drying_treatment,
                         levels = c("initial", "one_wk", "two_wk",
                                    "four_wk", "all_dry"))) +
-  coord_cartesian(ylim=c(5, 9))
+  coord_cartesian(ylim=c(16, 21))
 
 
 #  scale_x_discrete(limits = c("all_dry", "cw", "pre", "post"),

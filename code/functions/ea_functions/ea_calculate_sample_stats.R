@@ -15,27 +15,24 @@ calculate_sample_stats <- function(cleaned_ea_data) {
   # Collect all the samples into one dataframe and create a column that checks
   # for matched names
   all_samples <- cleaned_ea_data %>%
-    select(sample_no, n_mg, c_mg) %>%
+    select(sample_no, c_n_ratio) %>%
     filter(!(sample_no == "SRM" |
                sample_no == "BLANK" |
-               sample_no == "Blank")) %>%
+               sample_no == "Blank" |
+               grepl("Blank", sample_no) == TRUE)) %>%
     filter(!str_detect(sample_no, "^ASP")) %>%
     replace(is.na(.), 0) %>%
     arrange(sample_no)
 
-ea_stats <- all_samples %>%
+  ea_stats <- all_samples %>%
   group_by(sample_no) %>%
-  summarize(mean_n = mean(n_mg),
-            sd_n = sd(n_mg),
-            mean_c = mean(c_mg),
-            sd_c = sd(c_mg)) %>%
-  mutate(rsd_n = sd_n * 100 / mean_n,
-         rsd_c = sd_c * 100 / mean_c)
+  summarize(mean_c_n = mean(c_n_ratio),
+            sd_c_n = sd(c_n_ratio)) %>%
+  mutate(rsd_c_n = sd_c_n * 100 / mean_c_n)
 
 # Flag any crazies that might need to be rerun
 all_samples_clean <- ea_stats %>%
-  mutate(flag = case_when(rsd_c > 10 | rsd_n > 10
-                          | is.na(sd_n) | is.na(sd_c) ~ "yes"))
+  mutate(flag = case_when(rsd_c_n > 10 | is.na(sd_c_n) ~ "yes"))
 
 return(all_samples_clean)
 }
