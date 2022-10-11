@@ -16,8 +16,10 @@ files <- dir(
   "data/raw_data/qPCR/", recursive = TRUE, full.names = TRUE,
   pattern = "\\Quantification Cq Results.csv")
 
-# Read in data from csv files
-raw_data <- read_csv(files)
+files_fungal <- grep("fungal", files, value = TRUE)
+
+# Read in data from csv files of fungal plates only
+raw_data <- read_csv(files_fungal)
 
 # Clean up compiled data
 clean_data <- raw_data %>%
