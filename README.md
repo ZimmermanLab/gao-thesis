@@ -13,6 +13,7 @@ This project will take data collected from an experiment run on soils from Star 
 ***
 
 ## Change Log:
+* 2022-10-11: Updated / added C:N ratio EA data and added those to the analyses. Tried out different ways to normalize Cq values in qPCR data (with Qubit concentrations vs dry soil weight).
 * 2022-09-27: Added more EA data, clean up EA code.
 * 2022-09-26: Added more EA data and added some code to plot C:N ratios.
 * 2022-09-07: Added recent EA data from 2022 samples and updated EA script to read that data in and analyze.
