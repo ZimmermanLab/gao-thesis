@@ -21,10 +21,11 @@ files_fungal <- grep("fungal", files, value = TRUE)
 # Read in data from csv files of fungal plates only
 raw_data <- read_csv(files_fungal)
 
-# Clean up compiled data
+# Clean up compiled data and remove Blanks
 clean_data <- raw_data %>%
   filter(Fluor == "SYBR") %>%
-  select(Sample, Cq)
+  select(Sample, Cq) %>%
+  filter(!(Sample == "Blank"))
 
 # Separate out replicate numbers
 clean_data_all <- clean_data %>%
@@ -35,54 +36,84 @@ clean_data_all <- clean_data %>%
 # Filter out NA values and store them separately
 na_only <- clean_data_all %>%
   filter(cq == "NaN") %>%
-  filter(sample_no_full != "Blank")
+  select(sample_no, rep_no, cq)
+# Save out need rerun samples
+write_csv(na_only, file = paste0("output/2022/",
+                                 Sys.Date(), "_fungal_qpcr_reruns.csv"))
 clean_data_samples <- clean_data_all %>%
-  filter(cq != "NaN") %>%
-  filter(sample_no_full != "Blank") %>%
+  filter(!(sample_no %in% na_only$sample_no)) %>%
   select(sample_no, rep_no, cq) %>%
   arrange(sample_no)
 
-# Bring in master list of jar assignments
-all_treatments <- readr::read_csv("output/2022/jar_assignments/master_list.csv")
 
 # Calculate means and SDs per sample
-qpcr_stats <- clean_data_all %>%
+qpcr_stats <- clean_data_samples %>%
   group_by(sample_no) %>%
   summarize(mean_cq = mean(cq),
             sd_cq = sd(cq))
 
-# Calculate SD difference of each replicate to determine outliers
-# stats_clean <- qpcr_data_stats %>%
-#   mutate(outlier = (cq >= mean_cq + 0.3) | (cq <= mean_cq - 0.3))
+# Bring in dried soil weights and Qubit concentrations
+dried_weights <- read_csv("data/raw_data/qPCR/2022_DNA.csv") %>%
+  select(sample_no, extraction_soil_wt_mg,
+         qubit_concentration, dry_soil_only) %>%
+  filter(sample_no != "bacteria-control")
+dried_weights$sample_no <- as.double(dried_weights$sample_no)
+dried_weights$qubit_concentration <-as.double(
+  dried_weights$qubit_concentration)
+
+# Map to qPCR data
+qpcr_stats_all <- qpcr_stats %>%
+  left_join(dried_weights) %>%
+  filter(is.na(dry_soil_only) == FALSE)
+
+# Test correlation between dry soil weight and Cq values
+ggplot(qpcr_stats_all, aes(x = dry_soil_only,
+                           y = mean_cq)) + geom_point()
+cor(qpcr_stats_all$dry_soil_only, qpcr_stats_all$mean_cq)
+# Normalize Cq values based on dried soil weights
+qpcr_soil_standardized <- qpcr_stats_all %>%
+  mutate(dry_soil_norm = (scale(dry_soil_only, center = FALSE))) %>%
+  mutate(cq_normalized = mean_cq * dry_soil_norm)
+
+
+# Test correlation between total Qubit DNA and Cq values
+ggplot(qpcr_stats_all, aes(x = qubit_concentration,
+                           y = mean_cq)) + geom_point()
+cor(qpcr_stats_all$qubit_concentration, qpcr_stats_all$mean_cq)
+# Normalize Cq values based on Qubit concentrations
+qpcr_qubit_standardized <- qpcr_stats_all %>%
+  mutate("qubit_norm" = (scale(qubit_concentration, center = FALSE))) %>%
+  mutate("cq_normalized" = mean_cq / qubit_norm)
+
+# Bring in master list of jar assignments
+all_treatments <- readr::read_csv("output/2022/jar_assignments/master_list.csv")
 
 # Map to jar assignments and calculate stats per treatment
-qpcr_stats_treatment <- qpcr_stats %>%
+# using Qubit normalization
+qpcr_stats_treatment <- qpcr_qubit_standardized %>%
   left_join(all_treatments) %>%
   group_by(pre_post_wet, cc_treatment, drying_treatment) %>%
-  summarize(mean_all_cq = mean(mean_cq),
-            sd_all_cq = sd(sd_cq)) %>%
-  mutate(time = paste0(drying_treatment, "_", pre_post_wet)) %>%
-  filter(pre_post_wet != "NA",
-         pre_post_wet != "no_soil")
+  summarize(mean_mean_cq = mean(cq_normalized),
+            sd_mean_cq = sd(cq_normalized))
 
 # Plot
 dna_plot_grid <- qpcr_stats_treatment %>%
-  filter(pre_post_wet != "no_soil") %>%
   group_by(pre_post_wet, cc_treatment, drying_treatment) %>%
   ggplot(aes(x = pre_post_wet,
-             y = mean_all_cq,
+             y = mean_mean_cq,
              fill = cc_treatment)) +
   geom_col(position = position_dodge()) +
   facet_grid(. ~ factor(drying_treatment,
                         levels = c("initial", "one_wk", "two_wk",
                                    "four_wk", "all_dry"))) +
-  geom_errorbar(aes(ymax = mean_all_cq + sd_all_cq,
-                    ymin = mean_all_cq - sd_all_cq),
+  geom_errorbar(aes(ymax = mean_mean_cq + sd_mean_cq,
+                    ymin = mean_mean_cq - sd_mean_cq),
                 size = 0.25,
                 width = 0.2,
                 position = position_dodge(0.9)) +
-  coord_cartesian(ylim=c(15, 35)) +
-  scale_x_discrete(limits = c("all_dry", "cw", "pre", "post"),
+  coord_cartesian(ylim=c(0, 40)) +
+  scale_x_discrete(limits = c("all_dry", "initial", "cw", "pre", "post"))
+,
                    labels = c("All Dry", "Constant Water", "Pre Wetting",
                               "Post Wetting"))
 
