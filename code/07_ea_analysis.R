@@ -75,7 +75,7 @@ mapped_results <- sample_stats_no_rerun %>%
 compiled_results <- mapped_results %>%
   group_by(drying_treatment, cc_treatment, pre_post_wet) %>%
   summarise(mean_mean_cn = mean(mean_c_n),
-            sd_sd_cn = sd(sd_c_n))
+            sd_mean_cn = sd(mean_c_n))
 
 # Create a plot comparing C:N ratios
 c_n_plot <- compiled_results %>%
@@ -85,13 +85,14 @@ c_n_plot <- compiled_results %>%
   geom_col(aes(y = mean_mean_cn,
                fill = cc_treatment),
            position = position_dodge()) +
-  geom_errorbar(aes(ymax = mean_mean_cn + sd_sd_cn,
-                    ymin = mean_mean_cn - sd_sd_cn,
+  geom_errorbar(aes(ymax = mean_mean_cn + sd_mean_cn,
+                    ymin = mean_mean_cn - sd_mean_cn,
                     group = cc_treatment),
                 position = position_dodge()) +
   facet_grid(. ~ factor(drying_treatment,
                         levels = c("initial", "one_wk", "two_wk",
                                    "four_wk", "all_dry"))) +
+  scale_x_discrete(limits = c("all_dry", "cw", "pre", "post"))
   coord_cartesian(ylim=c(17, 23))
 
 
