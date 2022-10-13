@@ -12,11 +12,9 @@ library("stringr")
 library("ggplot2")
 
 # Compile list of file paths of Cq results from runs
-files <- dir(
-  "data/raw_data/qPCR/", recursive = TRUE, full.names = TRUE,
-  pattern = "\\Quantification Cq Results.csv")
-
-files_fungal <- grep("fungal", files, value = TRUE)
+files_fungal <- dir_ls(path = "data/raw_data/qPCR/",
+                recurse = 1,
+                regex = "fungal -  Quantification Cq Results.csv")
 
 # Read in data from csv files of fungal plates only
 raw_data <- read_csv(files_fungal)
@@ -90,11 +88,11 @@ all_treatments <- readr::read_csv("output/2022/jar_assignments/master_list.csv")
 
 # Map to jar assignments and calculate stats per treatment
 # using Qubit normalization
-qpcr_stats_treatment <- qpcr_qubit_standardized %>%
+qpcr_stats_treatment <- qpcr_stats %>%
   left_join(all_treatments) %>%
   group_by(pre_post_wet, cc_treatment, drying_treatment) %>%
-  summarize(mean_mean_cq = mean(cq_normalized),
-            sd_mean_cq = sd(cq_normalized))
+  summarize(mean_mean_cq = mean(mean_cq),
+            sd_mean_cq = sd(mean_cq))
 
 # Plot
 dna_plot_grid <- qpcr_stats_treatment %>%
