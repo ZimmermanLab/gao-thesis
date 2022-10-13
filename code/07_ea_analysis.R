@@ -23,9 +23,10 @@ library("fs")
 # Compile list of file paths of percentage EA data
 files_percent <- dir_ls(path = "data/raw_data/EA_CN/2022/",
                 recurse = 1,
-                regex = "\\w+_Run\\d_\\d{2}_percent.(xls|XLS)")
+                regex = "\\w+_Run\\d_(repeat_)*(\\d{2}_)*percent.(xls|XLS)")
 
 # Read in and clean up percentage EA data
+# Filter out any weird sample runs that had 0
 source("code/functions/ea_functions/clean_ea_data.R")
 cn_percent_clean <- clean_ea_data(files_percent)
 
@@ -42,10 +43,11 @@ srm_stats <- calculate_srm_stats(cn_percent_clean)
 # Compile C:N ratio data
 files_ratio <- dir_ls(path = "data/raw_data/EA_CN/2022/",
                       recurse = 1,
-                      regex = "\\w+_Run\\d_\\d{2}_ratio.(xls|XLS)")
+                      regex = "\\w+_Run\\d_(repeat_)*(\\d{2}_)*ratio.(xls|XLS)")
 cn_ratio_clean <- clean_ea_data(files_ratio)
 
 # Calculate means and RSDs for each sample
+# Samples that have an RSD > 10 are flagged
 source("code/functions/ea_functions/ea_calculate_sample_stats.R")
 sample_stats <- calculate_sample_stats(cn_ratio_clean)
 
