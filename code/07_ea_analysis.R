@@ -46,13 +46,14 @@ files_ratio <- dir_ls(path = "data/raw_data/EA_CN/2022/",
                       regex = "\\w+_Run\\d_(repeat_)*(\\d{2}_)*ratio.(xls|XLS)")
 cn_ratio_clean <- clean_ea_data(files_ratio)
 
+
 # Calculate means and RSDs for each sample
 # Samples that have an RSD > 10 are flagged
 source("code/functions/ea_functions/ea_calculate_sample_stats.R")
 sample_stats <- calculate_sample_stats(cn_ratio_clean)
 
 # Pull out list of questionable samples that need to be rerun
-# based on high RSDs
+# based on high RSDs (>= 10%)
 need_rerun <- sample_stats %>%
   left_join(cn_ratio_clean) %>%
   filter(flag == "yes")
@@ -77,7 +78,8 @@ mapped_results <- sample_stats_no_rerun %>%
 compiled_results <- mapped_results %>%
   group_by(drying_treatment, cc_treatment, pre_post_wet) %>%
   summarise(mean_mean_cn = mean(mean_c_n),
-            sd_mean_cn = sd(mean_c_n))
+            sd_mean_cn = sd(mean_c_n),
+            rsd_mean_cn = sd_mean_cn / mean_mean_cn * 100)
 
 # Create a plot comparing C:N ratios
 c_n_plot <- compiled_results %>%
@@ -91,11 +93,11 @@ c_n_plot <- compiled_results %>%
                     ymin = mean_mean_cn - sd_mean_cn,
                     group = cc_treatment),
                 position = position_dodge()) +
+  coord_cartesian(ylim = c(0, 23)) +
   facet_grid(. ~ factor(drying_treatment,
                         levels = c("initial", "one_wk", "two_wk",
                                    "four_wk", "all_dry"))) +
-  scale_x_discrete(limits = c("all_dry", "cw", "pre", "post"))
-  coord_cartesian(ylim=c(17, 23))
+  scale_x_discrete(limits = c("all_dry","initial", "cw", "pre", "post"))
 
 
 #  scale_x_discrete(limits = c("all_dry", "cw", "pre", "post"),
