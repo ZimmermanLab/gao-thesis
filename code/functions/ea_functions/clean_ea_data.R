@@ -24,12 +24,18 @@ clean_ea_data <- function(input_file_list) {
     select("...2", "...4", "...6", "...12", "...13") %>%
     rename("sample_no" = "...2", "date" = "...4", "type" = "...6",
            "n_mg" = "...12", "c_mg" = "...13") %>%
-    drop_na(),
+    drop_na() %>%
+    # Filter out any samples and/or SRM runs that were 0
+    filter(!(str_detect(sample_no, "SG") & n_mg == 0)) %>%
+    filter(!(str_detect(sample_no, "SRM") & n_mg == 0)),
   no = ea_results_clean <- ea_results_raw %>%
       select("...2", "...4", "...6", "...13") %>%
       rename("sample_no" = "...2", "date" = "...4", "type" = "...6",
              "c_n_ratio" = "...13") %>%
-      drop_na())
+      drop_na() %>%
+    # Filter out any samples and/or SRM runs that were 0
+    filter(!(str_detect(sample_no, "SG") & c_n_ratio == 0)) %>%
+    filter(!(str_detect(sample_no, "SRM") & c_n_ratio == 0)))
 
   return(ea_results_clean)
 }
