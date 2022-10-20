@@ -1,0 +1,148 @@
+File Name,2022-10-18_Run2_02_bacterial.pcrd,,,,,
+Created By User,admin,,,,,
+Notes,,,,,,
+ID,,,,,,
+Run Started,10/18/2022 6:55:55 PM UTC -07:00,,,,,
+Run Ended,10/18/2022 9:39:41 PM UTC -07:00,,,,,
+Sample Vol,25,,,,,
+Lid Temp,105,,,,,
+Protocol File Name,20221017_Eub338_Eub518.prcl,,,,,
+Plate Setup File Name,20221018_Run2_02_bacterial.pltd,,,,,
+Base Serial Number,CT005160,,,,,
+Optical Head Serial Number,785BR6959,,,,,
+CFX Manager Version,2.1.1022.0523. ,,,,,
+,,,,,,
+Well group,All Wells,,,,,
+Amplification step,5,,,,,
+Melt step,,,,,,
+,,,,,,
+,,,,,,
+Well,Fluor,Target,Content,Sample,Cq,Starting Quantity (SQ)
+A01,ROX,,Unkn,Blank,N/A,N/A
+A02,ROX,,Unkn,003-1,N/A,N/A
+A03,ROX,,Unkn,003-2,N/A,N/A
+A04,ROX,,Unkn,003-3,N/A,N/A
+A05,ROX,,Unkn,003-4,N/A,N/A
+A06,ROX,,Unkn,003-5,N/A,N/A
+A07,ROX,,Unkn,010-1,N/A,N/A
+A08,ROX,,Unkn,010-2,N/A,N/A
+B01,ROX,,Unkn,010-3,N/A,N/A
+B02,ROX,,Unkn,010-4,N/A,N/A
+B03,ROX,,Unkn,010-5,N/A,N/A
+B04,ROX,,Unkn,013-1,N/A,N/A
+B05,ROX,,Unkn,013-2,N/A,N/A
+B06,ROX,,Unkn,013-3,N/A,N/A
+B07,ROX,,Unkn,013-4,N/A,N/A
+B08,ROX,,Unkn,013-5,N/A,N/A
+C01,ROX,,Unkn,021-1,N/A,N/A
+C02,ROX,,Unkn,021-2,N/A,N/A
+C03,ROX,,Unkn,021-3,N/A,N/A
+C04,ROX,,Unkn,021-4,N/A,N/A
+C05,ROX,,Unkn,021-5,N/A,N/A
+C06,ROX,,Unkn,Blank-15ml,N/A,N/A
+C07,ROX,,Unkn,038-1,N/A,N/A
+C08,ROX,,Unkn,038-2,N/A,N/A
+D01,ROX,,Unkn,038-3,N/A,N/A
+D02,ROX,,Unkn,038-4,N/A,N/A
+D03,ROX,,Unkn,038-5,N/A,N/A
+D04,ROX,,Unkn,041-1,N/A,N/A
+D05,ROX,,Unkn,041-2,N/A,N/A
+D06,ROX,,Unkn,041-3,N/A,N/A
+D07,ROX,,Unkn,041-4,N/A,N/A
+D08,ROX,,Unkn,041-5,N/A,N/A
+E01,ROX,,Unkn,043-1,N/A,N/A
+E02,ROX,,Unkn,043-2,N/A,N/A
+E03,ROX,,Unkn,043-3,N/A,N/A
+E04,ROX,,Unkn,043-4,N/A,N/A
+E05,ROX,,Unkn,043-5,N/A,N/A
+E06,ROX,,Unkn,047-1,N/A,N/A
+E07,ROX,,Unkn,047-2,N/A,N/A
+E08,ROX,,Unkn,047-3,N/A,N/A
+F01,ROX,,Unkn,047-4,N/A,N/A
+F02,ROX,,Unkn,047-5,N/A,N/A
+F03,ROX,,Unkn,050-1,N/A,N/A
+F04,ROX,,Unkn,050-2,N/A,N/A
+F05,ROX,,Unkn,050-3,N/A,N/A
+F06,ROX,,Unkn,050-4,N/A,N/A
+F07,ROX,,Unkn,050-5,N/A,N/A
+F08,ROX,,Unkn,019-1,N/A,N/A
+G01,ROX,,Unkn,019-2,N/A,N/A
+G02,ROX,,Unkn,024-1,N/A,N/A
+G03,ROX,,Unkn,024-2,N/A,N/A
+G04,ROX,,Unkn,Blank,N/A,N/A
+G05,ROX,,Unkn,060-1,N/A,N/A
+G06,ROX,,Unkn,060-2,N/A,N/A
+G07,ROX,,Unkn,060-3,N/A,N/A
+G08,ROX,,Unkn,060-4,N/A,N/A
+H01,ROX,,Unkn,060-5,N/A,N/A
+H02,ROX,,Unkn,061-1,N/A,N/A
+H03,ROX,,Unkn,061-2,N/A,N/A
+H04,ROX,,Unkn,061-3,N/A,N/A
+H05,ROX,,Unkn,061-4,N/A,N/A
+H06,ROX,,Unkn,061-5,N/A,N/A
+H07,ROX,,Unkn,Blank,N/A,N/A
+H08,ROX,,Unkn,,N/A,N/A
+A01,SYBR,,Unkn,Blank,37.55,N/A
+A02,SYBR,,Unkn,003-1,13.98,N/A
+A03,SYBR,,Unkn,003-2,14.31,N/A
+A04,SYBR,,Unkn,003-3,13.91,N/A
+A05,SYBR,,Unkn,003-4,13.81,N/A
+A06,SYBR,,Unkn,003-5,14.03,N/A
+A07,SYBR,,Unkn,010-1,14.13,N/A
+A08,SYBR,,Unkn,010-2,14.01,N/A
+B01,SYBR,,Unkn,010-3,15.10,N/A
+B02,SYBR,,Unkn,010-4,14.05,N/A
+B03,SYBR,,Unkn,010-5,14.10,N/A
+B04,SYBR,,Unkn,013-1,13.77,N/A
+B05,SYBR,,Unkn,013-2,13.46,N/A
+B06,SYBR,,Unkn,013-3,13.85,N/A
+B07,SYBR,,Unkn,013-4,13.83,N/A
+B08,SYBR,,Unkn,013-5,14.42,N/A
+C01,SYBR,,Unkn,021-1,15.22,N/A
+C02,SYBR,,Unkn,021-2,14.04,N/A
+C03,SYBR,,Unkn,021-3,13.69,N/A
+C04,SYBR,,Unkn,021-4,14.08,N/A
+C05,SYBR,,Unkn,021-5,14.26,N/A
+C06,SYBR,,Unkn,Blank-15ml,38.81,N/A
+C07,SYBR,,Unkn,038-1,14.52,N/A
+C08,SYBR,,Unkn,038-2,13.77,N/A
+D01,SYBR,,Unkn,038-3,15.52,N/A
+D02,SYBR,,Unkn,038-4,14.11,N/A
+D03,SYBR,,Unkn,038-5,14.40,N/A
+D04,SYBR,,Unkn,041-1,13.69,N/A
+D05,SYBR,,Unkn,041-2,14.53,N/A
+D06,SYBR,,Unkn,041-3,14.27,N/A
+D07,SYBR,,Unkn,041-4,14.52,N/A
+D08,SYBR,,Unkn,041-5,14.39,N/A
+E01,SYBR,,Unkn,043-1,14.50,N/A
+E02,SYBR,,Unkn,043-2,14.44,N/A
+E03,SYBR,,Unkn,043-3,14.10,N/A
+E04,SYBR,,Unkn,043-4,14.10,N/A
+E05,SYBR,,Unkn,043-5,14.60,N/A
+E06,SYBR,,Unkn,047-1,12.61,N/A
+E07,SYBR,,Unkn,047-2,12.53,N/A
+E08,SYBR,,Unkn,047-3,15.77,N/A
+F01,SYBR,,Unkn,047-4,14.46,N/A
+F02,SYBR,,Unkn,047-5,12.63,N/A
+F03,SYBR,,Unkn,050-1,14.46,N/A
+F04,SYBR,,Unkn,050-2,14.46,N/A
+F05,SYBR,,Unkn,050-3,14.19,N/A
+F06,SYBR,,Unkn,050-4,14.59,N/A
+F07,SYBR,,Unkn,050-5,14.42,N/A
+F08,SYBR,,Unkn,019-1,14.14,N/A
+G01,SYBR,,Unkn,019-2,15.50,N/A
+G02,SYBR,,Unkn,024-1,13.43,N/A
+G03,SYBR,,Unkn,024-2,13.48,N/A
+G04,SYBR,,Unkn,Blank,38.03,N/A
+G05,SYBR,,Unkn,060-1,13.75,N/A
+G06,SYBR,,Unkn,060-2,13.42,N/A
+G07,SYBR,,Unkn,060-3,13.66,N/A
+G08,SYBR,,Unkn,060-4,13.61,N/A
+H01,SYBR,,Unkn,060-5,15.96,N/A
+H02,SYBR,,Unkn,061-1,12.92,N/A
+H03,SYBR,,Unkn,061-2,13.62,N/A
+H04,SYBR,,Unkn,061-3,12.94,N/A
+H05,SYBR,,Unkn,061-4,13.41,N/A
+H06,SYBR,,Unkn,061-5,13.78,N/A
+H07,SYBR,,Unkn,Blank,34.61,N/A
+H08,SYBR,,Unkn,,37.91,N/A
