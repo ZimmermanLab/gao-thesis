@@ -1,22 +1,3 @@
-File Name,2022-10-18_Run2_02_bacterial.pcrd,,,,,
-Created By User,admin,,,,,
-Notes,,,,,,
-ID,,,,,,
-Run Started,10/18/2022 6:55:55 PM UTC -07:00,,,,,
-Run Ended,10/18/2022 9:39:41 PM UTC -07:00,,,,,
-Sample Vol,25,,,,,
-Lid Temp,105,,,,,
-Protocol File Name,20221017_Eub338_Eub518.prcl,,,,,
-Plate Setup File Name,20221018_Run2_02_bacterial.pltd,,,,,
-Base Serial Number,CT005160,,,,,
-Optical Head Serial Number,785BR6959,,,,,
-CFX Manager Version,2.1.1022.0523. ,,,,,
-,,,,,,
-Well group,All Wells,,,,,
-Amplification step,5,,,,,
-Melt step,,,,,,
-,,,,,,
-,,,,,,
 Well,Fluor,Target,Content,Sample,Cq,Starting Quantity (SQ)
 A01,ROX,,Unkn,Blank,N/A,N/A
 A02,ROX,,Unkn,003-1,N/A,N/A
@@ -90,9 +71,9 @@ A05,SYBR,,Unkn,003-4,13.81,N/A
 A06,SYBR,,Unkn,003-5,14.03,N/A
 A07,SYBR,,Unkn,010-1,14.13,N/A
 A08,SYBR,,Unkn,010-2,14.01,N/A
-B01,SYBR,,Unkn,010-3,15.10,N/A
+B01,SYBR,,Unkn,010-3,15.1,N/A
 B02,SYBR,,Unkn,010-4,14.05,N/A
-B03,SYBR,,Unkn,010-5,14.10,N/A
+B03,SYBR,,Unkn,010-5,14.1,N/A
 B04,SYBR,,Unkn,013-1,13.77,N/A
 B05,SYBR,,Unkn,013-2,13.46,N/A
 B06,SYBR,,Unkn,013-3,13.85,N/A
@@ -108,17 +89,17 @@ C07,SYBR,,Unkn,038-1,14.52,N/A
 C08,SYBR,,Unkn,038-2,13.77,N/A
 D01,SYBR,,Unkn,038-3,15.52,N/A
 D02,SYBR,,Unkn,038-4,14.11,N/A
-D03,SYBR,,Unkn,038-5,14.40,N/A
+D03,SYBR,,Unkn,038-5,14.4,N/A
 D04,SYBR,,Unkn,041-1,13.69,N/A
 D05,SYBR,,Unkn,041-2,14.53,N/A
 D06,SYBR,,Unkn,041-3,14.27,N/A
 D07,SYBR,,Unkn,041-4,14.52,N/A
 D08,SYBR,,Unkn,041-5,14.39,N/A
-E01,SYBR,,Unkn,043-1,14.50,N/A
+E01,SYBR,,Unkn,043-1,14.5,N/A
 E02,SYBR,,Unkn,043-2,14.44,N/A
-E03,SYBR,,Unkn,043-3,14.10,N/A
-E04,SYBR,,Unkn,043-4,14.10,N/A
-E05,SYBR,,Unkn,043-5,14.60,N/A
+E03,SYBR,,Unkn,043-3,14.1,N/A
+E04,SYBR,,Unkn,043-4,14.1,N/A
+E05,SYBR,,Unkn,043-5,14.6,N/A
 E06,SYBR,,Unkn,047-1,12.61,N/A
 E07,SYBR,,Unkn,047-2,12.53,N/A
 E08,SYBR,,Unkn,047-3,15.77,N/A
@@ -130,7 +111,7 @@ F05,SYBR,,Unkn,050-3,14.19,N/A
 F06,SYBR,,Unkn,050-4,14.59,N/A
 F07,SYBR,,Unkn,050-5,14.42,N/A
 F08,SYBR,,Unkn,019-1,14.14,N/A
-G01,SYBR,,Unkn,019-2,15.50,N/A
+G01,SYBR,,Unkn,019-2,15.5,N/A
 G02,SYBR,,Unkn,024-1,13.43,N/A
 G03,SYBR,,Unkn,024-2,13.48,N/A
 G04,SYBR,,Unkn,Blank,38.03,N/A
