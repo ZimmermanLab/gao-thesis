@@ -106,6 +106,8 @@ initial_nocc_mean_bacterial <- all_treatments %>%
 
 # Map to samples and normalize fungal and bacterial Cq values
 norm_cq_all <- all_stats %>%
+  mutate(fungal_delta_cq = initial_nocc_mean_fungal - ) %>%
+  mutate(bacterial_initial_mean = initial_nocc_mean_bacterial) %>%
   left_join(norm_scale_mapped) %>%
   mutate(norm_cq = dry_soil_norm * mean_cq)
 
