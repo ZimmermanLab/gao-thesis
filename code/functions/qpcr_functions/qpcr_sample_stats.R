@@ -14,6 +14,6 @@ qpcr_sample_stats <- function(clean_data) {
     qpcr_stats <- clean_data %>%
       group_by(sample_no) %>%
       summarize(mean_cq = mean(cq),
-                sd_cq = sd(cq))
+             sd_cq = sd(cq))
     return(qpcr_stats)
 }
