@@ -45,6 +45,7 @@ plot_dna <- function(treatment_stats, type) {
                       size = 0.25,
                       width = 0.2,
                       position = position_dodge(0.9)) +
+        coord_cartesian(ylim = c(0, 0.0002)) +
         scale_x_discrete(limits = c("all_dry", "initial", "cw", "pre", "post"),
                          labels = c("All-Dry", "Initial", "Constant", "Pre-Wet",
                                     "Post-Wet"))
@@ -63,6 +64,7 @@ plot_dna <- function(treatment_stats, type) {
                     size = 0.25,
                     width = 0.2,
                     position = position_dodge(0.9)) +
+      coord_cartesian(ylim = c(-0.1e-6, 3.1e-6)) +
       scale_x_discrete(limits = c("all_dry", "initial", "cw", "pre", "post"),
                        labels = c("All-Dry", "Initial", "Constant", "Pre-Wet",
                                   "Post-Wet"))

@@ -166,26 +166,39 @@ no_extreme_ratio_plot <- plot_dna(treatment_stats_no_ext, "ratio")
 no_extreme_bact_plot <- plot_dna(treatment_stats_no_ext, "bacterial")
 no_extreme_fung_plot <- plot_dna(treatment_stats_no_ext, "fungal")
 
-no_moderate_plot <- plot_dna(treatment_stats_no_mod, "ratio")
-no_moderate_plot <- plot_dna(treatment_stats_no_mod, "bacterial")
-no_moderate_plot <- plot_dna(treatment_stats_no_mod, "fungal")
+no_moderate_ratio_plot <- plot_dna(treatment_stats_no_mod, "ratio")
+no_moderate_bact_plot <- plot_dna(treatment_stats_no_mod, "bacterial")
+no_moderate_fung_plot <- plot_dna(treatment_stats_no_mod, "fungal")
 
-all_plots <- list(all_data_ratio_plot, all_data_bact_plot, all_data_fung_plot,
-               no_extreme_ratio_plot, no_extreme_bact_plot, no_extreme_fung_plot,
-               no_moderate_plot, no_moderate_plot, no_moderate_plot)
+ggsave(plot = all_data_ratio_plot,
+       filename = "output/2022/qpcr_plots/ratio_all_data_plot.png",
+       width = 14, height = 8, units = "in")
+ggsave(plot = no_extreme_ratio_plot,
+       filename = "output/2022/qpcr_plots/ratio_no_extreme_plot.png",
+       width = 14, height = 8, units = "in")
+ggsave(plot = no_moderate_ratio_plot,
+       filename = "output/2022/qpcr_plots/ratio_no_mod_plot.png",
+       width = 14, height = 8, units = "in")
 
-invisible(mapply(ggsave, file=paste0("output/2022/qpcr_plots/",
-                                     names(all_plots), ".png"), plot=all_plots))
+ggsave(plot = all_data_bact_plot,
+       filename = "output/2022/qpcr_plots/bact_all_data_plot.png",
+       width = 14, height = 8, units = "in")
+ggsave(plot = no_extreme_bact_plot,
+       filename = "output/2022/qpcr_plots/bact_no_extreme_plot.png",
+       width = 14, height = 8, units = "in")
+ggsave(plot = no_moderate_bact_plot,
+       filename = "output/2022/qpcr_plots/bact_no_mod_plot.png",
+       width = 14, height = 8, units = "in")
 
-
-ggsave(plot = all_data_plot,
-       filename = "output/2022/qpcr_plots/ratio_all_data_plot.png")
-ggsave(plot = no_extreme_plot,
-       filename = "output/2022/qpcr_plots/ratio_no_extreme_plot.png")
-ggsave(plot = no_moderate_plot,
-       filename = "output/2022/qpcr_plots/ratio_no_mod_plot.png")
-
-# Plot proportional concentrations
+ggsave(plot = all_data_fung_plot,
+       filename = "output/2022/qpcr_plots/fung_all_data_plot.png",
+       width = 14, height = 8, units = "in")
+ggsave(plot = no_extreme_fung_plot,
+       filename = "output/2022/qpcr_plots/fung_no_extreme_plot.png",
+       width = 14, height = 8, units = "in")
+ggsave(plot = no_moderate_fung_plot,
+       filename = "output/2022/qpcr_plots/fung_no_mod_plot.png",
+       width = 14, height = 8, units = "in")
 
   coord_cartesian(ylim=c(0, 8)) +
   labs(title = "DNA concentrations in Samples With and Without Cover Crop\n",
