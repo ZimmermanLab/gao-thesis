@@ -26,10 +26,12 @@ calculate_sample_stats <- function(cleaned_ea_data) {
     arrange(sample_no)
 
   ea_stats <- all_samples %>%
-  group_by(sample_no) %>%
-  summarize(mean_c_n = mean(c_n_ratio),
-            sd_c_n = sd(c_n_ratio)) %>%
-  mutate(rsd_c_n = sd_c_n * 100 / mean_c_n)
+    # Filter out samples that are clearly bad
+    filter(c_n_ratio > 6) %>%
+    group_by(sample_no) %>%
+    summarize(mean_c_n = mean(c_n_ratio),
+              sd_c_n = sd(c_n_ratio)) %>%
+    mutate(rsd_c_n = sd_c_n * 100 / mean_c_n)
 
 # Flag any crazies that might need to be rerun
 all_samples_clean <- ea_stats %>%
