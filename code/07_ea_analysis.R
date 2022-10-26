@@ -25,6 +25,14 @@ files_percent <- dir_ls(path = "data/raw_data/EA_CN/2022/",
 source("code/functions/ea_functions/clean_ea_data.R")
 cn_percent_clean <- clean_ea_data(files_percent)
 
+# Get outlier flags (>1.5x IQR = moderate, >3x IQR = extreme)
+source("code/functions/ea_functions/flag_outliers.R")
+percent_flags <- flag_outliers(cn_percent_clean, "percent")
+
+# Save out outliers only
+percent_outliers <- percent_flags %>%
+  filter(!(is.na(outlier_flags)))
+
 # SRMs
 # Examine the SRM data to see if there was any drift / trend
 # over time and to determine if we need any correcting factors.
@@ -45,42 +53,46 @@ files_ratio <- dir_ls(path = "data/raw_data/EA_CN/2022/",
                       regex = "\\w+_Run\\d_(repeat_)*(\\d{2}_)*ratio.(xls|XLS)")
 cn_ratio_clean <- clean_ea_data(files_ratio)
 
+# Flag outliers
+ratio_flags <- flag_outliers(cn_ratio_clean, "ratio")
 
-# Calculate means and RSDs for each sample
-# Samples that have an RSD > 10 are flagged
+# Calculate means and RSDs for each sample at each outlier threshold
 source("code/functions/ea_functions/ea_calculate_sample_stats.R")
-sample_stats <- calculate_sample_stats(cn_ratio_clean)
+ratio_stats_all <- calculate_sample_stats(ratio_flags)
+ratio_stats_no_ext <- ratio_flags %>%
+  filter(outlier_flags == "moderate" |
+           is.na(outlier_flags)) %>%
+  calculate_sample_stats()
+ratio_stats_no_mod <- ratio_flags %>%
+  filter(is.na(outlier_flags)) %>%
+  calculate_sample_stats()
 
-# Pull out list of questionable samples that need to be rerun
-# based on high RSDs (>= 10%)
-need_rerun <- sample_stats %>%
-  left_join(cn_ratio_clean) %>%
-  filter(flag == "yes")
+# Save out outlier list separately
+ratio_outliers_only <- ratio_flags %>%
+  filter(!(is.na(outlier_flags)))
 
-# Filter out need rerun samples
-sample_stats_no_rerun <- sample_stats %>%
-  filter(!(sample_no %in% need_rerun$sample_no)) %>%
-  select(-(flag))
-
-# Clean up sample names
-sample_stats_no_rerun$sample_no <- as.numeric(str_sub(
-  sample_stats_no_rerun$sample_no, start = -3))
-
-# Map samples and results to master list of treatments
+# Map samples and results to master list of treatments for all outlier
+# thresholds
 all_treatments <- read_csv("output/2022/jar_assignments/master_list.csv") %>%
   transform(sample_no = as.numeric(sample_no))
 
-mapped_results <- sample_stats_no_rerun %>%
+mapped_all <- ratio_stats_all %>%
+  left_join(all_treatments)
+mapped_no_ext <- ratio_stats_no_ext %>%
+  left_join(all_treatments)
+mapped_no_mod <- ratio_stats_no_mod %>%
   left_join(all_treatments)
 
 # Compile across treatment replicates
-compiled_results <- mapped_results %>%
-  group_by(drying_treatment, cc_treatment, pre_post_wet) %>%
-  summarise(mean_mean_cn = mean(mean_c_n),
-            sd_mean_cn = sd(mean_c_n),
-            rsd_mean_cn = sd_mean_cn / mean_mean_cn * 100)
+source("code/functions/ea_functions/summarize_treatments.R")
+treatments_all <- summarize_treatments(mapped_all)
+treatments_no_ext <- summarize_treatments(mapped_no_ext)
+treatments_no_mod <- summarize_treatments(mapped_no_mod)
 
 # Create a plot comparing C:N ratios with all factors
+source("code/functions/ea_functions/create_ratio_plots.R")
+ratio_plot_all <- create_ratio_plot(treatments_all)
+ratio_plot_no_ext <- create_ratio_plot(treatments_no_ext)
 c_n_plot_all <- compiled_results %>%
   filter(pre_post_wet != "no_soil") %>%
   group_by(pre_post_wet, cc_treatment, drying_treatment) %>%
