@@ -12,8 +12,6 @@ library("stringr")
 library("ggplot2")
 library("fs")
 
-### 1. READ IN DATA AND CLEAN
-
 # Source data cleaning function
 source("code/functions/qpcr_functions/clean_qpcr_data.R")
 
@@ -45,7 +43,6 @@ clean_bacterial <- clean_qpcr_data(files_bacterial_full) %>%
 na_only_fungal <- clean_fungal %>%
   filter(cq == "NaN") %>%
   select(sample_no, rep_no, cq)
-
 na_only_bacterial <- clean_bacterial %>%
   filter(cq == "NaN") %>%
   select(sample_no, rep_no, cq)
@@ -60,19 +57,68 @@ clean_fungal_no_na <- clean_fungal %>%
   select(sample_no, rep_no, cq) %>%
   arrange(sample_no)
 
-### 2. GET STATS FOR SAMPLES AND NORMALIZE TO DRY SOIL WEIGHT
+# Bring in treatment mapping
+all_treatments <- read_csv("output/2022/jar_assignments/master_list.csv")
+no_soil <- all_treatments %>%
+  filter(pre_post_wet == "no_soil")
+
+# Filter water only samples from bacterial dataset
+bacterial_no_h2o <- clean_bacterial_no_na %>%
+  filter(!(sample_no %in% no_soil$sample_no))
+
+# Flag outliers from the datasets
+source("code/functions/qpcr_functions/flag_outliers.R")
+bacterial_outlier_flags <- flag_outliers(bacterial_no_h2o)
+fungal_outlier_flags <- flag_outliers(clean_fungal_no_na)
 
 # Get sample stats using function
 source("code/functions/qpcr_functions/qpcr_sample_stats.R")
-fungal_stats <- qpcr_sample_stats(clean_fungal_no_na)
-bacterial_stats <- qpcr_sample_stats(clean_bacterial_no_na)
+
+# Use all data (includes all outliers)
+fungal_stats_all <- qpcr_sample_stats(fungal_outlier_flags)
+bacterial_stats_all <- qpcr_sample_stats(bacterial_outlier_flags)
+# Filter out extreme outliers (> 3x IQR)
+fungal_stats_no_extreme <- fungal_outlier_flags %>%
+  filter(!(outlier_flag == "extreme") |
+           is.na(outlier_flag)) %>%
+  qpcr_sample_stats()
+bacterial_stats_no_extreme <- bacterial_outlier_flags %>%
+  filter(!(outlier_flag == "extreme") |
+           is.na(outlier_flag)) %>%
+  qpcr_sample_stats()
+# Filter out extreme and moderate outliers (> 1.5x IQR)
+fungal_stats_no_moderate <- fungal_outlier_flags %>%
+  filter(is.na(outlier_flag)) %>%
+  qpcr_sample_stats()
+bacterial_stats_no_moderate <- bacterial_outlier_flags %>%
+  filter(is.na(outlier_flag)) %>%
+  qpcr_sample_stats()
 
 # Merge fungal and bacterial dataframes
-all_stats <- fungal_stats %>%
+# With outliers included
+all_stats_all <- fungal_stats_all %>%
   rename("fungal_mean_cq" = mean_cq,
          "fungal_sd_cq" = sd_cq) %>%
-  mutate(bacterial_mean_cq = bacterial_stats$mean_cq,
-         bacterial_sd_cq = bacterial_stats$sd_cq)
+  mutate(bacterial_mean_cq = bacterial_stats_all$mean_cq,
+         bacterial_sd_cq = bacterial_stats_all$sd_cq)
+# With extreme outliers filtered out
+all_stats_no_extreme <- fungal_stats_no_extreme %>%
+  rename("fungal_mean_cq" = mean_cq,
+         "fungal_sd_cq" = sd_cq) %>%
+  mutate(bacterial_mean_cq = bacterial_stats_no_extreme$mean_cq,
+         bacterial_sd_cq = bacterial_stats_no_extreme$sd_cq)
+# With moderate and extreme outliers filtered out
+all_stats_no_moderate <- fungal_stats_no_moderate %>%
+  rename("fungal_mean_cq" = mean_cq,
+         "fungal_sd_cq" = sd_cq) %>%
+  mutate(bacterial_mean_cq = bacterial_stats_no_moderate$mean_cq,
+         bacterial_sd_cq = bacterial_stats_no_moderate$sd_cq)
+
+# Find proportional starting concentrations using 2^-Cq
+source("code/functions/qpcr_functions/calculate_prop_concentrations.R")
+concentrations_all <- calc_prop_conc(all_stats_all)
+concentrations_no_extreme <- calc_prop_conc(all_stats_no_extreme)
+concentrations_no_moderate <- calc_prop_conc(all_stats_no_moderate)
 
 # Bring in dried soil weights and Qubit concentrations
 dried_wts_qubit <- read_csv("data/raw_data/qPCR/2022_DNA.csv") %>%
@@ -84,86 +130,63 @@ dried_wts_qubit$sample_no <- as.double(dried_wts_qubit$sample_no)
 dried_wts_qubit$qubit_concentration <-as.double(
   dried_wts_qubit$qubit_concentration)
 
-# Normalize dried soil weights
-library("caret")
-process_dry_soil <- preProcess(dried_wts_qubit[,c(4)], method = c("range"))
-norm_scale_mapped <- predict(process_dry_soil, dried_wts_qubit[,c(1,4)]) %>%
-  rename(dry_soil_norm = dry_soil_only)
-
-# Use initial no cc as baseline for delta delta Cq calculations
-all_treatments <- read_csv("output/2022/jar_assignments/master_list.csv")
-initial_nocc_mean_fungal <- all_treatments %>%
-  left_join(all_stats) %>%
-  filter(pre_post_wet == "initial",
-         cc_treatment == "no_cc") %>%
-  summarize(fungal_mean_cq = mean(fungal_mean_cq))
-
-initial_nocc_mean_bacterial <- all_treatments %>%
-  left_join(all_stats) %>%
-  filter(pre_post_wet == "initial",
-         cc_treatment == "no_cc") %>%
-  summarize(bacterial_mean_cq = mean(bacterial_mean_cq))
-
-# Map to samples and normalize fungal and bacterial Cq values
-norm_cq_all <- all_stats %>%
-  mutate(fungal_delta_cq = initial_nocc_mean_fungal - ) %>%
-  mutate(bacterial_initial_mean = initial_nocc_mean_bacterial) %>%
-  left_join(norm_scale_mapped) %>%
-  mutate(norm_cq = dry_soil_norm * mean_cq)
-
-# Map to qPCR data
-qpcr_stats_all <- qpcr_stats %>%
-  left_join(dried_weights) %>%
-  filter(is.na(dry_soil_only) == FALSE)
-
+####
 # Test correlation between dry soil weight and qubit concentrations
 cor(qpcr_stats_all$dry_soil_only, qpcr_stats_all$qubit_concentration)
-
-# Test correlation between dry soil weight and Cq values
-ggplot(qpcr_stats_all, aes(x = dry_soil_only,
-                           y = mean_cq)) + geom_point()
-cor(qpcr_stats_all$dry_soil_only, qpcr_stats_all$mean_cq)
-# Normalize Cq values based on dried soil weights
-qpcr_soil_standardized <- qpcr_stats_all %>%
-  mutate(dry_soil_norm = (scale(dry_soil_only, center = FALSE))) %>%
-  mutate(cq_normalized = mean_cq * dry_soil_norm)
-
-
 # Test correlation between total Qubit DNA and Cq values
 ggplot(qpcr_stats_all, aes(x = qubit_concentration,
                            y = mean_cq)) + geom_point()
 cor(qpcr_stats_all$qubit_concentration, qpcr_stats_all$mean_cq)
-# Normalize Cq values based on Qubit concentrations
-qpcr_qubit_standardized <- qpcr_stats_all %>%
-  mutate("qubit_norm" = (scale(qubit_concentration, center = FALSE))) %>%
-  mutate("cq_normalized" = mean_cq / qubit_norm)
+# Test correlation between dry soil weight and Cq values
+ggplot(qpcr_stats_all, aes(x = dry_soil_only,
+                           y = mean_cq)) + geom_point()
+cor(qpcr_stats_all$dry_soil_only, qpcr_stats_all$mean_cq)
+####
+
+# Normalize the proportional concentrations and calculate
+# fungal:bacterial ratios
+source("code/functions/qpcr_functions/find_fung_bact_ratio.R")
+ratios_all <- calc_ratios(concentrations_all, dried_wts_qubit)
+ratios_no_extreme <- calc_ratios(concentrations_no_extreme, dried_wts_qubit)
+ratios_no_moderate <- calc_ratios(concentrations_no_moderate, dried_wts_qubit)
+
+# Map samples to all treatment conditions and get summary statistics
+source("code/functions/qpcr_functions/calc_treatment_stats.R")
+treatment_stats_all <- calc_treatment_stats(ratios_all, all_treatments)
+treatment_stats_no_ext <- calc_treatment_stats(ratios_no_extreme, all_treatments)
+treatment_stats_no_mod <- calc_treatment_stats(ratios_no_moderate, all_treatments)
+
+# Plot ratios
+source("code/functions/qpcr_functions/plot_fung_bact_ratios.R")
+all_data_ratio_plot <- plot_dna(treatment_stats_all, "ratio")
+all_data_bact_plot <- plot_dna(treatment_stats_all, "bacterial")
+all_data_fung_plot <- plot_dna(treatment_stats_all, "fungal")
+
+no_extreme_ratio_plot <- plot_dna(treatment_stats_no_ext, "ratio")
+no_extreme_bact_plot <- plot_dna(treatment_stats_no_ext, "bacterial")
+no_extreme_fung_plot <- plot_dna(treatment_stats_no_ext, "fungal")
+
+no_moderate_plot <- plot_dna(treatment_stats_no_mod, "ratio")
+no_moderate_plot <- plot_dna(treatment_stats_no_mod, "bacterial")
+no_moderate_plot <- plot_dna(treatment_stats_no_mod, "fungal")
+
+all_plots <- list(all_data_ratio_plot, all_data_bact_plot, all_data_fung_plot,
+               no_extreme_ratio_plot, no_extreme_bact_plot, no_extreme_fung_plot,
+               no_moderate_plot, no_moderate_plot, no_moderate_plot)
+
+invisible(mapply(ggsave, file=paste0("output/2022/qpcr_plots/",
+                                     names(all_plots), ".png"), plot=all_plots))
 
 
+ggsave(plot = all_data_plot,
+       filename = "output/2022/qpcr_plots/ratio_all_data_plot.png")
+ggsave(plot = no_extreme_plot,
+       filename = "output/2022/qpcr_plots/ratio_no_extreme_plot.png")
+ggsave(plot = no_moderate_plot,
+       filename = "output/2022/qpcr_plots/ratio_no_mod_plot.png")
 
+# Plot proportional concentrations
 
-# Plot
-dna_plot_grid <- qpcr_stats_treatment %>%
-  group_by(pre_post_wet, cc_treatment, drying_treatment) %>%
-  ggplot(aes(x = pre_post_wet,
-             y = mean_mean_cq,
-             fill = cc_treatment)) +
-  geom_col(position = position_dodge()) +
-  facet_grid(. ~ factor(drying_treatment,
-                        levels = c("initial", "one_wk", "two_wk",
-                                   "four_wk", "all_dry"))) +
-  geom_errorbar(aes(ymax = mean_mean_cq + sd_mean_cq,
-                    ymin = mean_mean_cq - sd_mean_cq),
-                size = 0.25,
-                width = 0.2,
-                position = position_dodge(0.9)) +
-  coord_cartesian(ylim=c(0, 40)) +
-  scale_x_discrete(limits = c("all_dry", "initial", "cw", "pre", "post"))
-,
-                   labels = c("All Dry", "Constant Water", "Pre Wetting",
-                              "Post Wetting"))
-
-
-+
   coord_cartesian(ylim=c(0, 8)) +
   labs(title = "DNA concentrations in Samples With and Without Cover Crop\n",
                      " Residue in Soil Extracts",
@@ -177,31 +200,18 @@ dna_plot_grid <- qpcr_stats_treatment %>%
 
 
 
-# BACTERIAL
 
 
-clean_bacterial_all <- left_join(clean_bacterial_data_1, clean_bacterial_data_2) %>%
-  rename("sample_no_full" = Sample, "cq" = Cq) %>%
-  mutate("sample_no" = as.numeric(str_sub(sample_no_full, end = 3))) %>%
-  mutate("rep_no" = as.numeric(str_sub(sample_no_full, start = -1)))
 
-clean_bacterial_stats <- clean_bacterial_all %>%
-  select(sample_no, cq) %>%
-  group_by(sample_no) %>%
-  filter(!(is.na(cq))) %>%
-  filter(!(cq > 30)) %>%
-  summarize(cq,
-    mean_cq = mean(cq),
-            sd_cq = sd(cq)) %>%
-  mutate(flag = case_when(cq > 5+mean_cq ~ "yes"))
+# Use mean / Cq for normalization of dry soil weight
+# Plot, normalize, and plot -> should be a flat line
+# 2^-Cq = proportional starting concentration
+# Proportional starting concentration * 2^-Cq = 1
+# Normalize with starting proportion and then normalize to dry soil weight
 
-na_only_bacterial <- clean_bacterial_stats %>%
-  filter(cq == "NaN" | cq > mean_cq + 2*sd_cq | cq < mean_cq - 2*sd_cq)
-
-# Map to jar assignments and calculate stats per treatment
-bacterial_stats_treatment <- clean_bacterial_stats %>%
-  filter(is.na(flag)) %>%
-  left_join(all_treatments) %>%
-  group_by(pre_post_wet, cc_treatment, drying_treatment) %>%
-  summarize(mean_mean_cq = mean(mean_cq),
-            sd_mean_cq = sd(mean_cq))
+# Use median to calculate outliers
+# Throw out outliers beyond 1.5*inner quartile range
+# IQR()
+# > 1.5 is mild outlier, > 3 is extreme outlier
+# Run analyses with everything, talk about it
+# Run analyses with extreme outliers removed, talk about it
