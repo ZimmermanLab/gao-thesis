@@ -7,6 +7,7 @@
 
 library("ggplot2")
 library("tidyverse")
+library("dplyr")
 
 # Get file list
 file_list <- paste0("data/raw_data/SmartChem_N_extractions/2022_samples/",
@@ -17,26 +18,26 @@ file_list <- paste0("data/raw_data/SmartChem_N_extractions/2022_samples/",
 # Source and run function to clean N data
 source("code/functions/n_functions/n_clean_n_data.R")
 # Read all csv files in the folder and create a compiled dataframe
-n_data_clean <- clean_n_data(file_list) %>%
-  relocate(sample_no, rep_no)
+n_data_clean <- clean_n_data(file_list)
 
-# Find means and SDs per sample
-n_all_stats <- n_data_clean %>%
-  # Filter out the previous runs of samples that I reran on 6/30/22
-  filter(!(sample_no == 3 & run_time != "06/30/2022"
-           & sample_type == "leachate"),
-         !(sample_no == 21 & run_time != "06/30/2022"
-           & sample_type == "leachate"),
-         !(sample_no == 121 & run_time != "06/30/2022"
-           & sample_type == "leachate"),
-         !(sample_no == 132 & run_time != "06/30/2022"
-           & sample_type == "leachate")) %>%
-  group_by(sample_no, sample_type) %>%
-  summarize(mean_nh3 = mean(nh3),
-            sd_nh3 = sd(nh3),
-            mean_no2_no3 = mean(no2_no3),
-            sd_no2_no3 = sd(no2_no3),
-            run_time = run_time)
+# Flag outliers
+# > 1.5x IQR = moderate, > 3x IQR = extreme
+source("code/functions/n_functions/flag_outliers.R")
+flagged_outliers <- n_data_clean %>%
+  filter(!is.na(nh3), !is.na(no2_no3)) %>%
+  flag_outliers()
+
+# Find means and SDs per sample at each outlier threshold
+source("code/functions/n_functions/summarize_samples.R")
+samples_stats_all <- flagged_outliers %>%
+  summarize_samples()
+samples_stats_no_ext <- flagged_outliers %>%
+  filter(outlier_flag == "moderate" |
+           is.na(outlier_flag)) %>%
+  summarize_samples()
+samples_stats_no_mod <- flagged_outliers %>%
+  filter(is.na(outlier_flag)) %>%
+  summarize_samples()
 
 # Pull samples that need to be rerun based on weirdo replicates or because
 # they overshot 20 mg/L thresholds (set to 19 here)
@@ -50,29 +51,22 @@ n_all_stats <- n_data_clean %>%
 #  summarize()
 
 # Save this list out
-write_csv(n_reruns, paste0("output/2022/", Sys.Date(), "_n_reruns.csv"))
-
-no2_stds <- n_data_clean %>%
-  filter(sample_type == "no2_standard" | sample_type == "no3_standard") %>%
-  arrange(run_time) %>%
-  mutate(run_no = c(2,2,3,3,4,4,5,5,6,6,7,7,8,8,9,9,10,10)) %>%
-  select(-c(sample_no, rep_no, nh3)) %>%
-  filter(no2_no3 != 0) %>%
-  ggplot(aes(x = run_no, y = no2_no3, group = sample_type)) +
-  geom_line(aes(linetype= sample_type)) +
-  geom_point() +
-  labs(x = "Run Number", y = "Concentration (mg/L)")
-
-ggsave(plot = no2_stds, filename = "output/2022/no2_standards_plot.png",
-       device = "png", width = 6, height = 3)
+# write_csv(n_reruns, paste0("output/2022/", Sys.Date(), "_n_reruns.csv"))
 
 # Get list of jar assignments from 2022
 all_treatments <- readr::read_csv("output/2022/jar_assignments/master_list.csv")
 
 # Map data to assignments and find mean + SDs of all samples
-source("code/functions/n_functions/run_n_stats.R")
-n_data_stats <- run_n_stats(n_data_clean, all_treatments)
+source("code/functions/n_functions/treatment_stats.R")
+treatment_stats_all <- summarize_treat_stats(samples_stats_all, all_treatments)
+treatment_stats_no_ext <- summarize_treat_stats(
+  samples_stats_no_ext, all_treatments)
+treatment_stats_no_mod <- summarize_treat_stats(
+  samples_stats_no_mod, all_treatments)
 
+# Bring in leachate water weights to determine leachate concentrations
+
+# Find ratio of leachate:total N
 
 #############
 
