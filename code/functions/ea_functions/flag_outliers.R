@@ -17,7 +17,7 @@ flag_outliers <- function(clean_data, type) {
              median_c = median(c_mg),
              iqr_n = IQR(n_mg),
              iqr_c = IQR(c_mg)) %>%
-      mutate(outlier_flags = case_when(n_mg > (median_n + 3 * iqr_n) |
+      mutate(outlier_flags_per = case_when(n_mg > (median_n + 3 * iqr_n) |
              n_mg < (median_n - 3 * iqr_n) |
              c_mg > (median_c + 3 * iqr_c) |
              c_mg < (median_c - 3 * iqr_c) ~ "extreme",
@@ -30,7 +30,7 @@ flag_outliers <- function(clean_data, type) {
       group_by(sample_no) %>%
       mutate(median_cn = median(c_n_ratio),
              iqr_cn = IQR(c_n_ratio)) %>%
-      mutate(outlier_flags = case_when(c_n_ratio > (median_cn + 3 * iqr_cn) |
+      mutate(outlier_flags_ratio = case_when(c_n_ratio > (median_cn + 3 * iqr_cn) |
                                          c_n_ratio < (median_cn - 3 * iqr_cn)
                                        ~ "extreme",
                                        c_n_ratio > (median_cn + 1.5 * iqr_cn) |
