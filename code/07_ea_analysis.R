@@ -31,7 +31,7 @@ percent_flags <- flag_outliers(cn_percent_clean, "percent")
 
 # Save out outliers only
 percent_outliers <- percent_flags %>%
-  filter(!(is.na(outlier_flags)))
+  filter(!(is.na(outlier_flags_per)))
 
 # SRMs
 # Examine the SRM data to see if there was any drift / trend
@@ -41,7 +41,14 @@ percent_outliers <- percent_flags %>%
 # for all SRM samples
 # From Calla: RSDs for both N and C should be 5-10%
 source("code/functions/ea_functions/ea_calculate_srm_stats.R")
-srm_stats <- calculate_srm_stats(cn_percent_clean)
+srm_stats_all <- calculate_srm_stats(percent_flags)
+srm_stats_no_ext <- percent_flags %>%
+  filter(outlier_flags_per == "moderate" |
+           is.na(outlier_flags_per)) %>%
+  calculate_srm_stats()
+srm_stats_no_mod <- percent_flags %>%
+  filter(is.na(outlier_flags_per)) %>%
+  calculate_srm_stats()
 
 ############
 
@@ -56,31 +63,35 @@ cn_ratio_clean <- clean_ea_data(files_ratio)
 # Flag outliers
 ratio_flags <- flag_outliers(cn_ratio_clean, "ratio")
 
-# Calculate means and RSDs for each sample at each outlier threshold
+# Join with percentage data
+cn_clean_all <- ratio_flags %>%
+  left_join(percent_flags)
+
+# Calculate means and RSDs for each sample at each outlier threshold for ratios
 source("code/functions/ea_functions/ea_calculate_sample_stats.R")
-ratio_stats_all <- calculate_sample_stats(ratio_flags)
-ratio_stats_no_ext <- ratio_flags %>%
-  filter(outlier_flags == "moderate" |
-           is.na(outlier_flags)) %>%
+stats_all <- calculate_sample_stats(cn_clean_all)
+stats_no_ext <- cn_clean_all %>%
+  filter(outlier_flags_ratio == "moderate" |
+           is.na(outlier_flags_ratio)) %>%
   calculate_sample_stats()
-ratio_stats_no_mod <- ratio_flags %>%
-  filter(is.na(outlier_flags)) %>%
+stats_no_mod <- cn_clean_all %>%
+  filter(is.na(outlier_flags_ratio)) %>%
   calculate_sample_stats()
 
-# Save out outlier list separately
-ratio_outliers_only <- ratio_flags %>%
-  filter(!(is.na(outlier_flags)))
+# Save out ratio outliers separately
+ratio_outliers_only <- cn_clean_all %>%
+  filter(!(is.na(outlier_flags_ratio)))
 
 # Map samples and results to master list of treatments for all outlier
 # thresholds
 all_treatments <- read_csv("output/2022/jar_assignments/master_list.csv") %>%
   transform(sample_no = as.numeric(sample_no))
 
-mapped_all <- ratio_stats_all %>%
+mapped_all <- stats_all %>%
   left_join(all_treatments)
-mapped_no_ext <- ratio_stats_no_ext %>%
+mapped_no_ext <- stats_no_ext %>%
   left_join(all_treatments)
-mapped_no_mod <- ratio_stats_no_mod %>%
+mapped_no_mod <- stats_no_mod %>%
   left_join(all_treatments)
 
 # Compile across treatment replicates
@@ -89,106 +100,75 @@ treatments_all <- summarize_treatments(mapped_all)
 treatments_no_ext <- summarize_treatments(mapped_no_ext)
 treatments_no_mod <- summarize_treatments(mapped_no_mod)
 
-# Create a plot comparing C:N ratios with all factors
+# Create plots comparing C:N ratios
 source("code/functions/ea_functions/create_ratio_plots.R")
 ratio_plot_all <- create_ratio_plot(treatments_all)
 ratio_plot_no_ext <- create_ratio_plot(treatments_no_ext)
-c_n_plot_all <- compiled_results %>%
-  filter(pre_post_wet != "no_soil") %>%
-  group_by(pre_post_wet, cc_treatment, drying_treatment) %>%
-  ggplot(aes(x = pre_post_wet)) +
-  geom_col(aes(y = mean_mean_cn,
-               fill = cc_treatment),
-           position = position_dodge()) +
-  geom_errorbar(aes(ymax = mean_mean_cn + sd_mean_cn,
-                    ymin = mean_mean_cn - sd_mean_cn,
-                    group = cc_treatment),
-                position = position_dodge()) +
-  coord_cartesian(ylim = c(16, 23)) +
-  facet_grid(. ~ factor(drying_treatment,
-                        levels = c("initial", "one_wk", "two_wk",
-                                   "four_wk", "all_dry"))) +
-  scale_x_discrete(limits = c("all_dry","initial", "cw", "pre", "post"),
-                   labels = c("All-Dry", "Initial", "Constant",
-                              "Pre-Wet", "Post-Wet"))
+ratio_plot_no_mod <- create_ratio_plot(treatments_no_mod)
 
-# Subset data to look at changes over time in constantly watered samples
-constant_time <- compiled_results %>%
-  filter(pre_post_wet != "no_soil") %>%
-  filter(pre_post_wet == "initial" |
-           pre_post_wet == "pre") %>%
-  filter(drying_treatment == "initial" |
-           drying_treatment == "one_wk" |
-           drying_treatment == "two_wk" |
-           drying_treatment == "four_wk")
-constant_time_plot <- constant_time  %>%
-  group_by(pre_post_wet, cc_treatment, drying_treatment) %>%
-  ggplot(aes(x = pre_post_wet)) +
-  geom_col(aes(y = mean_mean_cn,
-               fill = cc_treatment),
-           position = position_dodge()) +
-  geom_errorbar(aes(ymax = mean_mean_cn + sd_mean_cn,
-                    ymin = mean_mean_cn - sd_mean_cn,
-                    group = cc_treatment),
-                position = position_dodge()) +
-  labs(title = "Constantly Watered Samples Over Time") +
-  coord_cartesian(ylim = c(16, 23)) +
-  facet_grid(. ~ factor(drying_treatment,
-                        levels = c("initial", "one_wk", "two_wk",
-                                   "four_wk", "all_dry")))
+# Create plots comparing C and N percentages
+source("code/functions/ea_functions/create_percentage_plots.R")
+nper_plot_all <- create_per_plot(treatments_all)[1]
+cper_plot_all <- create_per_plot(treatments_all)[2]
+nper_plot_no_ext <- create_per_plot(treatments_no_ext)[1]
+cper_plot_no_ext <- create_per_plot(treatments_no_ext)[2]
+nper_plot_no_mod <- create_per_plot(treatments_no_mod)[1]
+cper_plot_no_mod <- create_per_plot(treatments_no_mod)[2]
 
-# Subset data to look at effect of rewetting by comparing changes
-# at one, two, and four weeks between pre and post wet samples
-pre_post_diff <- compiled_results %>%
-  filter(pre_post_wet != "no_soil") %>%
-  filter(pre_post_wet == "pre" |
-           pre_post_wet == "post") %>%
-  filter(drying_treatment == "one_wk" |
-           drying_treatment == "two_wk" |
-           drying_treatment == "four_wk")
-pre_post_diff_plot <- pre_post_diff %>%
-  group_by(pre_post_wet, cc_treatment, drying_treatment) %>%
-  ggplot(aes(x = pre_post_wet)) +
-  geom_col(aes(y = mean_mean_cn,
-               fill = cc_treatment),
-           position = position_dodge()) +
-  geom_errorbar(aes(ymax = mean_mean_cn + sd_mean_cn,
-                    ymin = mean_mean_cn - sd_mean_cn,
-                    group = cc_treatment),
-                position = position_dodge()) +
-  labs(title = "Effect of Rewetting Across Time") +
-  coord_cartesian(ylim = c(16, 23)) +
-  facet_grid(. ~ factor(drying_treatment,
-                        levels = c("one_wk", "two_wk",
-                                   "four_wk", "all_dry"))) +
-  scale_x_discrete(limits = c("pre", "post"),
-                   labels = c("Pre-Wet", "Post-Wet"))
+# Look at changes over time in constantly watered samples
+source("code/functions/ea_functions/examine_constant_water_time.R")
+ratio_cw_plot_all <- examine_cw_time(treatments_all, "ratio")[1]
+ratio_cw_stats_all <- examine_cw_time(treatments_all, "ratio")[2]
+nper_cw_plot_all <- examine_cw_time(treatments_all, "nper")[1]
+nper_cw_stats_all <- examine_cw_time(treatments_all, "nper")[2]
+cper_cw_plot_all <- examine_cw_time(treatments_all, "cper")[1]
+cper_cw_stats_all <- examine_cw_time(treatments_all, "cper")[2]
 
-# Subset data to look at effect of drying over time by looking at
-# only dried samples
-drying_diff <- compiled_results %>%
-  filter(pre_post_wet != "no_soil") %>%
-  filter(pre_post_wet == "initial" |
-           pre_post_wet == "pre" |
-           pre_post_wet == "all_dry") %>%
-  filter(drying_treatment == "one_wk" |
-           drying_treatment == "two_wk" |
-           drying_treatment == "four_wk" |
-           drying_treatment == "all_dry")
-drying_diff_plot %>% drying_diff %>%
-  group_by(pre_post_wet, cc_treatment, drying_treatment) %>%
-  ggplot(aes(x = pre_post_wet)) +
-  geom_col(aes(y = mean_mean_cn,
-               fill = cc_treatment),
-           position = position_dodge()) +
-  geom_errorbar(aes(ymax = mean_mean_cn + sd_mean_cn,
-                    ymin = mean_mean_cn - sd_mean_cn,
-                    group = cc_treatment),
-                position = position_dodge()) +
-  labs(title = "Effect of Drying Over Time") +
-  coord_cartesian(ylim = c(16, 23)) +
-  facet_grid(. ~ factor(drying_treatment,
-                        levels = c("one_wk", "two_wk",
-                                   "four_wk", "all_dry"))) +
-  scale_x_discrete(limits = c("pre", "post", "all_dry"),
-                   labels = c("Pre-Wet", "Post-Wet", "All-Dry"))
+ratio_cw_plot_no_ext <- examine_cw_time(treatments_no_ext, "ratio")[1]
+ratio_cw_stats_no_ext <- examine_cw_time(treatments_no_ext, "ratio")[2]
+nper_cw_plot_no_ext <- examine_cw_time(treatments_no_ext, "nper")[1]
+nper_cw_stats_no_ext <- examine_cw_time(treatments_no_ext, "nper")[2]
+cper_cw_plot_no_ext <- examine_cw_time(treatments_no_ext, "cper")[1]
+cper_cw_stats_no_ext <- examine_cw_time(treatments_no_ext, "cper")[2]
+# Note that there is no difference in C:N ratio data between the extreme and
+# moderate outliers subsetted datasets
+nper_cw_plot_no_mod <- examine_cw_time(treatments_no_mod, "nper")[1]
+nper_cw_stats_no_mod <- examine_cw_time(treatments_no_mod, "nper")[2]
+cper_cw_plot_no_mod <- examine_cw_time(treatments_no_mod, "cper")[1]
+cper_cw_stats_no_mod <- examine_cw_time(treatments_no_mod, "cper")[2]
+
+# Look at effect of rewetting and cc by comparing changes at one,
+# two, and four weeks between pre and post wet samples
+source("code/functions/ea_functions/compare_rewetting.R")
+ratio_rewet_plot_all <- compare_rewetting(treatments_all, "ratio")[1]
+ratio_rewet_stats_all <- compare_rewetting(treatments_all, "ratio")[2]
+nper_rewet_plot_all <- compare_rewetting(treatments_all, "nper")[1]
+nper_rewet_stats_all <- compare_rewetting(treatments_all, "nper")[2]
+cper_rewet_plot_all <- compare_rewetting(treatments_all, "cper")[1]
+cper_rewet_stats_all <- compare_rewetting(treatments_all, "cper")[2]
+# Note that there is no difference between the extreme and
+# moderate outliers subsetted datasets
+ratio_rewet_plot_no_ext <- compare_rewetting(treatments_no_ext, "ratio")[1]
+ratio_rewet_stats_no_ext <- compare_rewetting(treatments_no_ext, "ratio")[2]
+nper_rewet_plot_all <- compare_rewetting(treatments_no_ext, "nper")[1]
+nper_rewet_stats_all <- compare_rewetting(treatments_no_ext, "nper")[2]
+cper_rewet_plot_all <- compare_rewetting(treatments_no_ext, "cper")[1]
+cper_rewet_stats_all <- compare_rewetting(treatments_no_ext, "cper")[2]
+
+# Look at effect of drying over time by looking at only dried samples
+source("code/functions/ea_functions/compare_drying.R")
+ratio_drying_plot_all <- compare_drying(treatments_all, "ratio")[1]
+ratio_drying_stats_all <- compare_drying(treatments_all, "ratio")[2]
+nper_drying_plot_all <- compare_drying(treatments_all, "nper")[1]
+nper_drying_stats_all <- compare_drying(treatments_all, "nper")[2]
+cper_drying_plot_all <- compare_drying(treatments_all, "cper")[1]
+cper_drying_stats_all <- compare_drying(treatments_all, "cper")[2]
+# Note that there is no difference between the extreme and
+# moderate outliers subsetted datasets
+ratio_drying_plot__no_ext <- compare_drying(treatments_no_ext, "ratio")[1]
+ratio_drying_stats_no_ext <- compare_drying(treatments_no_ext, "ratio")[2]
+nper_drying_plot__no_ext <- compare_drying(treatments_no_ext, "nper")[1]
+nper_drying_stats_no_ext <- compare_drying(treatments_no_ext, "nper")[2]
+cper_drying_plot__no_ext <- compare_drying(treatments_no_ext, "cper")[1]
+cper_drying_stats_no_ext <- compare_drying(treatments_no_ext, "cper")[2]
+
