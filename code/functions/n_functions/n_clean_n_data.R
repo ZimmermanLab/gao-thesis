@@ -28,12 +28,15 @@ n_data_clean <- read_delim(input_files, delim = ";", col_names = FALSE) %>%
   # Filter out standards
   filter(sample_no_full != "NO2E6",
          sample_no_full != "NO3E6",
-         str_detect(sample_no_full, "Blank") == FALSE) %>%
+         sample_no_full != "NH3E",
+         str_detect(sample_no_full, "Blank") == FALSE,
+         str_detect(sample_no_full, "BLANK") == FALSE) %>%
   group_by(sample_no_full) %>%
   pivot_wider(names_from = "type", values_from = "concentration_mg_l") %>%
   ungroup(sample_no_full) %>%
-  rename("nh3" = "WNHR",
-         "no2_no3" = "WNO6") %>%
+  unite(c(WNH3, WNHR), col = "nh3", na.rm = TRUE, remove = FALSE) %>%
+  select(-c(WNH3, WNHR)) %>%
+  rename("no2_no3" = "WNO6") %>%
   # Add column to show sample type
   mutate("sample_type" = case_when(
     grepl("^[0-9]{3}E", sample_no_full) == TRUE ~ "extract",
@@ -48,8 +51,10 @@ n_data_clean <- read_delim(input_files, delim = ";", col_names = FALSE) %>%
   select(-c(sample_no_full)) %>%
   relocate(c(sample_no, rep_no))
 
-# Replace all negative values with 0
+# Replace all NAs and negative values with 0
+n_data_clean$nh3 <- as.double(n_data_clean$nh3)
 n_data_clean[n_data_clean < 0] <- 0
+n_data_clean[is.na(n_data_clean)] <- 0
 
 return(n_data_clean)
 }
