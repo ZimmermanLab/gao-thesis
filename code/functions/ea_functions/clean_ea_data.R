@@ -23,11 +23,11 @@ clean_ea_data <- function(input_file_list) {
   yes = ea_results_clean <- ea_results_raw %>%
     select("...2", "...4", "...6", "...12", "...13") %>%
     rename("sample_no" = "...2", "date" = "...4", "type" = "...6",
-           "n_mg" = "...12", "c_mg" = "...13") %>%
+           "n_per" = "...12", "c_per" = "...13") %>%
     drop_na() %>%
     # Filter out any samples and/or SRM runs that were 0
-    filter(!(str_detect(sample_no, "SG") & n_mg == 0)) %>%
-    filter(!(str_detect(sample_no, "SRM") & n_mg == 0)),
+    filter(!(str_detect(sample_no, "SG") & n_per == 0)) %>%
+    filter(!(str_detect(sample_no, "SRM") & n_per == 0)),
   no = ea_results_clean <- ea_results_raw %>%
       select("...2", "...4", "...6", "...13") %>%
       rename("sample_no" = "...2", "date" = "...4", "type" = "...6",
