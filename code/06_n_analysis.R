@@ -39,6 +39,52 @@ samples_stats_no_mod <- flagged_outliers %>%
   filter(is.na(outlier_flag)) %>%
   summarize_samples()
 
+# Bring in leachate water weights to determine leachate concentrations
+data_sheets_files <- dir_ls(path = "data/raw_data/data_sheets/", recurse = 0) %>%
+  # Filter out the data sheet that has extra columns for dried soil weights
+  path_filter(glob = "*dried_wts.csv", invert = TRUE)
+raw_data_sheets <- read_csv(data_sheets_files)
+clean_data_sheets <- raw_data_sheets %>%
+  select(sample_no, n_extraction_soil_mass,
+         n_leachate_soil_mass_pre,water_leachate) %>%
+  arrange(sample_no)
+
+# Join data sheets weights with N data and calculate leachate:extract ratios
+sample_stats_all_wts <- samples_stats_all %>%
+  left_join(clean_data_sheets) %>%
+  mutate(norm_factor = (n_extraction_soil_mass / 40) *
+           (water_leachate/n_leachate_soil_mass_pre)) %>%
+  pivot_wider(names_from = sample_type, values_from = c(mean_nh3, mean_no2_no3,
+                                                        sd_nh3, sd_no2_no3)) %>%
+  select(-c(sd_nh3_leachate, sd_no2_no3_leachate)) %>%
+  mutate(norm_leach_mean_nh3 = norm_factor * mean_nh3_leachate,
+         norm_leach_mean_no2_no3 = norm_factor * mean_no2_no3_leachate) %>%
+  mutate(leach_extract_ratio_nh3 = norm_leach_mean_nh3 / mean_nh3_extract,
+         leach_extract_ratio_no2_no3 =
+           norm_leach_mean_no2_no3 / mean_no2_no3_extract)
+
+
+
+
+# Test correlation between amount of water in leachate and N concentrations
+leachate_only_all<- sample_stats_all_wts %>%
+  filter(sample_type == "leachate")
+cor(leachate_only_all$mean_nh3, leachate_only_all$water_leachate)
+cor(leachate_only_all$mean_no2_no3, leachate_only_all$water_leachate)
+
+leachate_only_all %>% ggplot(aes(x = water_leachate,
+                                 y = mean_nh3)) +
+  geom_point() +
+  geom_smooth(method = "lm")
+leachate_only_all %>% ggplot(aes(x = water_leachate,
+                                 y = mean_no2_no3)) +
+  geom_point() +
+  geom_smooth(method = "lm")
+# This shows that there is low correlation between how dry the soil is and
+# the concentration of N that is leached out.
+
+# Does
+
 # Pull samples that need to be rerun based on weirdo replicates or because
 # they overshot 20 mg/L thresholds (set to 19 here)
 # Set a dilution flag to "yes" if they overshot and need to be diluted
@@ -64,7 +110,6 @@ treatment_stats_no_ext <- summarize_treat_stats(
 treatment_stats_no_mod <- summarize_treat_stats(
   samples_stats_no_mod, all_treatments)
 
-# Bring in leachate water weights to determine leachate concentrations
 
 # Find ratio of leachate:total N
 
