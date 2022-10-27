@@ -13,18 +13,18 @@ flag_outliers <- function(clean_data, type) {
   if(type == "percent"){
     outlier_flags <- clean_data %>%
       group_by(sample_no) %>%
-      mutate(median_n = median(n_mg),
-             median_c = median(c_mg),
-             iqr_n = IQR(n_mg),
-             iqr_c = IQR(c_mg)) %>%
-      mutate(outlier_flags_per = case_when(n_mg > (median_n + 3 * iqr_n) |
-             n_mg < (median_n - 3 * iqr_n) |
-             c_mg > (median_c + 3 * iqr_c) |
-             c_mg < (median_c - 3 * iqr_c) ~ "extreme",
-             n_mg > (median_n + 1.5 * iqr_n) |
-             n_mg < (median_n - 1.5 * iqr_n) |
-             c_mg > (median_c + 1.5 * iqr_c) |
-             c_mg < (median_c - 1.5 * iqr_c) ~ "moderate"))
+      mutate(median_n = median(n_per),
+             median_c = median(c_per),
+             iqr_n = IQR(n_per),
+             iqr_c = IQR(c_per)) %>%
+      mutate(outlier_flags_per = case_when(n_per > (median_n + 3 * iqr_n) |
+             n_per < (median_n - 3 * iqr_n) |
+             c_per > (median_c + 3 * iqr_c) |
+             c_per < (median_c - 3 * iqr_c) ~ "extreme",
+             n_per > (median_n + 1.5 * iqr_n) |
+             n_per < (median_n - 1.5 * iqr_n) |
+             c_per > (median_c + 1.5 * iqr_c) |
+             c_per < (median_c - 1.5 * iqr_c) ~ "moderate"))
   } else if(type == "ratio"){
     outlier_flags <- clean_data %>%
       group_by(sample_no) %>%
