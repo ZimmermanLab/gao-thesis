@@ -140,6 +140,46 @@ fung_rewet_stats_no_cc <- analyze_plot_dna(fung_treatment_all, "no_cc")[1]
 fung_rewet_plot_no_cc <- analyze_plot_dna(fung_treatment_all, "no_cc")[2]
 fung_rewet_med_no_cc <- analyze_plot_dna(fung_treatment_all,"no_cc")[3]
 
+# Run test at every time point to compare differences before and after
+# Bacteria no cc
+bact_no_cc_one_wk <- bact_treatment_all %>%
+  filter(cc_treatment == "no_cc",
+         drying_treatment == "one_wk",
+         pre_post_wet != "cw")
+bact_no_cc_one_wk %>%
+  kruskal.test(data = ., prop_conc_norm ~ pre_post_wet)
+bact_no_cc_two_wk <- bact_treatment_all %>%
+  filter(cc_treatment == "no_cc",
+         drying_treatment == "two_wk",
+         pre_post_wet != "cw")
+bact_no_cc_two_wk %>%
+  kruskal.test(data = .,  prop_conc_norm ~ pre_post_wet)
+bact_no_cc_four_wk <- bact_treatment_all %>%
+  filter(cc_treatment == "no_cc",
+         drying_treatment == "four_wk",
+         pre_post_wet != "cw")
+bact_no_cc_four_wk %>%
+  kruskal.test(data = .,  prop_conc_norm ~ pre_post_wet)
+
+# Bacteria w cc
+bact_w_cc_one_wk <- bact_treatment_all %>%
+  filter(cc_treatment == "w_cc",
+         drying_treatment == "one_wk",
+         pre_post_wet != "cw")
+bact_w_cc_one_wk %>%
+  kruskal.test(data = ., prop_conc_norm ~ pre_post_wet)
+bact_w_cc_two_wk <- bact_treatment_all %>%
+  filter(cc_treatment == "w_cc",
+         drying_treatment == "two_wk",
+         pre_post_wet != "cw")
+bact_w_cc_two_wk %>%
+  kruskal.test(data = .,  prop_conc_norm ~ pre_post_wet)
+bact_w_cc_four_wk <- bact_treatment_all %>%
+  filter(cc_treatment == "w_cc",
+         drying_treatment == "four_wk",
+         pre_post_wet != "cw")
+bact_w_cc_four_wk %>%
+  kruskal.test(data = .,  prop_conc_norm ~ pre_post_wet)
 
 # Make plot and run Kruskal-Wallis test to see effect of rewetting on
 # bacterial DNA quantities in samples with cc
