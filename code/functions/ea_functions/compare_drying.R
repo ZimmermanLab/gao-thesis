@@ -46,11 +46,8 @@ compare_drying <- function(treatment_stats, type) {
 
     # Run statistics on effect of cc_treatment and time
     drying_ratio_stats <- drying_diff %>%
-      lm(data = ., mean_mean_cn ~ cc_treatment) %>%
-      anova() %>%
-      rbind(drying_diff %>%
-              lm(data = ., mean_mean_cn ~ drying_treatment) %>%
-              anova())
+      lm(data = ., mean_mean_cn ~ drying_treatment) %>%
+      anova()
 
     # Create list to return multiple things
     return_list <- list("ratio_plot" = drying_ratio_plot,
@@ -85,11 +82,8 @@ compare_drying <- function(treatment_stats, type) {
 
     # Run statistics on effect of cc_treatment and time
     drying_nper_stats <- drying_diff %>%
-      lm(data = ., mean_mean_nper ~ cc_treatment) %>%
-      anova() %>%
-      rbind(drying_diff %>%
-              lm(data = ., mean_mean_nper ~ drying_treatment) %>%
-              anova())
+      lm(data = ., mean_mean_nper ~ drying_treatment) %>%
+      anova()
 
     # Create list to return multiple things
     return_list <- list("nper_plot" = drying_nper_plot,
@@ -124,11 +118,8 @@ compare_drying <- function(treatment_stats, type) {
 
     # Run statistics on effect of cc_treatment and time
     drying_cper_stats <- drying_diff %>%
-      lm(data = ., mean_mean_cper ~ cc_treatment) %>%
-      anova() %>%
-      rbind(drying_diff %>%
-              lm(data = ., mean_mean_cper ~ drying_treatment) %>%
-              anova())
+      lm(data = ., mean_mean_cper ~ drying_treatment) %>%
+      anova()
 
     # Create list to return multiple things
     return_list <- list("cper_plot" = drying_cper_plot,

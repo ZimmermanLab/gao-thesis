@@ -46,11 +46,10 @@ examine_cw_time <- function(treatment_stats, type) {
 
   # Run ANOVA statistics on C:N ratio to test effect of time
   constant_time_ratio_stats <- constant_time %>%
+    select(-c(pre_post_wet)) %>%
+    filter(cc_treatment == "no_cc") %>%
     lm(data = ., mean_mean_cn ~ drying_treatment) %>%
-    anova() %>%
-    rbind(constant_time %>%
-            lm(data = ., mean_mean_cn ~ cc_treatment) %>%
-            anova())
+    anova()
 
   # Create list to return multiple things
   return_list <- list(
@@ -84,10 +83,8 @@ examine_cw_time <- function(treatment_stats, type) {
     # Run ANOVA statistics on %N to test effect of time
     constant_time_nper_stats <- constant_time %>%
       lm(data = ., mean_mean_nper ~ drying_treatment) %>%
-      anova() %>%
-      rbind(constant_time %>%
-              lm(data = ., mean_mean_nper ~ cc_treatment) %>%
-              anova())
+      anova()
+
     # Create list to return multiple things
     return_list <- list(
       "nper_plot" = constant_time_nper_plot,
@@ -120,10 +117,7 @@ examine_cw_time <- function(treatment_stats, type) {
     # Run ANOVA statistics to test effect of time
     constant_time_cper_stats <- constant_time %>%
       lm(data = ., mean_mean_cper ~ drying_treatment) %>%
-      anova() %>%
-      rbind(constant_time %>%
-              lm(data = ., mean_mean_cper ~ cc_treatment) %>%
-              anova())
+      anova()
 
     # Create list to return multiple things
     return_list <- list(
