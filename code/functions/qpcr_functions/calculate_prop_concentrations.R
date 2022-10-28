@@ -11,7 +11,6 @@ library("dplyr")
 
 calc_prop_conc <- function(stats_data){
   prop_conc <- stats_data %>%
-    mutate(concentration_bacterial = 2 ^ (- bacterial_mean_cq),
-           concentration_fungal = 2 ^ (-fungal_mean_cq))
+    mutate(prop_concentration = 2 ^ (- median_cq))
   return(prop_conc)
 }

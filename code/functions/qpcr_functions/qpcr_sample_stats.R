@@ -10,10 +10,9 @@ library("dplyr")
 library("readr")
 
 qpcr_sample_stats <- function(clean_data) {
-  # Calculate means and SDs per sample
+  # Calculate medians per sample
     qpcr_stats <- clean_data %>%
       group_by(sample_no) %>%
-      summarize(mean_cq = mean(cq),
-             sd_cq = sd(cq))
+      summarize(median_cq = median(cq))
     return(qpcr_stats)
 }
