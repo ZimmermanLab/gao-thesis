@@ -19,23 +19,36 @@ clean_ea_data <- function(input_file_list) {
 
   # FOR PERCENTAGE DATA:
   # Select only sample number, type of sample, and n and c percentages
-  ifelse(stri_detect_fixed(input_file_list, "percent"),
-  yes = ea_results_clean <- ea_results_raw %>%
-    select("...2", "...4", "...6", "...12", "...13") %>%
-    rename("sample_no" = "...2", "date" = "...4", "type" = "...6",
-           "n_per" = "...12", "c_per" = "...13") %>%
-    drop_na() %>%
-    # Filter out any samples and/or SRM runs that were 0
-    filter(!(str_detect(sample_no, "SG") & n_per == 0)) %>%
-    filter(!(str_detect(sample_no, "SRM") & n_per == 0)),
-  no = ea_results_clean <- ea_results_raw %>%
-      select("...2", "...4", "...6", "...13") %>%
+  if (stri_detect_fixed(input_file_list[1], "percent") == TRUE) {
+    ea_results_clean <- ea_results_raw %>%
+      select("...2", "...4", "...6", "...12", "...13") %>%
       rename("sample_no" = "...2", "date" = "...4", "type" = "...6",
-             "c_n_ratio" = "...13") %>%
+             "n_per" = "...12", "c_per" = "...13") %>%
       drop_na() %>%
-    # Filter out any samples and/or SRM runs that were 0
-    filter(!(str_detect(sample_no, "SG") & c_n_ratio == 0)) %>%
-    filter(!(str_detect(sample_no, "SRM") & c_n_ratio == 0)))
+      # Filter out any samples and/or SRM runs that were 0
+      filter(!(str_detect(sample_no, "SG") & n_per == 0)) %>%
+      filter(!(str_detect(sample_no, "SRM") & n_per == 0))
+
+  } else if (stri_detect_fixed(input_file_list[1], "ratio") == TRUE) {
+      ea_results_clean <- ea_results_raw %>%
+        select("...2", "...4", "...6", "...13") %>%
+        rename("sample_no" = "...2", "date" = "...4", "type" = "...6",
+               "c_n_ratio" = "...13") %>%
+        drop_na() %>%
+      # Filter out any samples and/or SRM runs that were 0
+      filter(!(str_detect(sample_no, "SG") & c_n_ratio == 0)) %>%
+      filter(!(str_detect(sample_no, "SRM") & c_n_ratio == 0))
+  }
+  ea_results_clean <- ea_results_clean %>%
+    filter(!(sample_no == "SRM" |
+             sample_no == "BLANK" |
+             sample_no == "Blank" |
+             str_detect("Blank", sample_no) |
+             sample_no == "Bypass")) %>%
+    filter(!str_detect(sample_no, "^ASP"))
+  # Clean up sample names
+  ea_results_clean$sample_no <- as.numeric(str_sub(
+    ea_results_clean$sample_no, start = -3))
 
   return(ea_results_clean)
 }

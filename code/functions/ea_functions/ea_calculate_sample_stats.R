@@ -30,9 +30,6 @@ calculate_sample_stats <- function(cleaned_ea_data) {
               sd_cn = sd(c_n_ratio),
               mean_nper = mean(n_per),
               mean_cper = mean(c_per))
-  # Clean up sample names
-  ea_stats$sample_no <- as.numeric(str_sub(
-    ea_stats$sample_no, start = -3))
 
 return(ea_stats)
 }
