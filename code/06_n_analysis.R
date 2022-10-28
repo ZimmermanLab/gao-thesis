@@ -67,23 +67,12 @@ sample_stats_all_wts <- samples_stats_all %>%
 
 
 # Test correlation between amount of water in leachate and N concentrations
-leachate_only_all<- sample_stats_all_wts %>%
-  filter(sample_type == "leachate")
-cor(leachate_only_all$mean_nh3, leachate_only_all$water_leachate)
-cor(leachate_only_all$mean_no2_no3, leachate_only_all$water_leachate)
-
-leachate_only_all %>% ggplot(aes(x = water_leachate,
-                                 y = mean_nh3)) +
-  geom_point() +
-  geom_smooth(method = "lm")
-leachate_only_all %>% ggplot(aes(x = water_leachate,
-                                 y = mean_no2_no3)) +
-  geom_point() +
-  geom_smooth(method = "lm")
+sample_stats_leach <- sample_stats_all_wts %>% filter(sample_no != 12)
+cor(sample_stats_leach$mean_nh3_leachate, sample_stats_leach$water_leachate)
+cor(sample_stats_leach$mean_no2_no3_leachate, sample_stats_leach$water_leachate)
 # This shows that there is low correlation between how dry the soil is and
 # the concentration of N that is leached out.
 
-# Does
 
 # Pull samples that need to be rerun based on weirdo replicates or because
 # they overshot 20 mg/L thresholds (set to 19 here)
@@ -109,7 +98,6 @@ treatment_stats_no_ext <- summarize_treat_stats(
   samples_stats_no_ext, all_treatments)
 treatment_stats_no_mod <- summarize_treat_stats(
   samples_stats_no_mod, all_treatments)
-
 
 # Find ratio of leachate:total N
 
