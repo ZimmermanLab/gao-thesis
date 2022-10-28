@@ -15,14 +15,14 @@ analyze_plot_dna <- function(treatment_mapped, cc_type) {
   if (cc_type == "w_cc") {
     rewet_subset <- treatment_mapped %>%
       # Select only pre-wet and post-wet data at 1, 2, and 4 weeks
-      filter(cc_treatment == "w_cc" &&
+      filter(cc_treatment == "w_cc",
                pre_post_wet == "pre" |
                pre_post_wet == "post")
 
   } else if (cc_type == "no_cc") {
     rewet_subset <- treatment_mapped %>%
       # Select only pre-wet and post-wet data at 1, 2, and 4 weeks
-      filter(cc_treatment == "no_cc" &&
+      filter(cc_treatment == "no_cc",
                pre_post_wet == "pre" |
                pre_post_wet == "post")
   }
@@ -37,9 +37,9 @@ analyze_plot_dna <- function(treatment_mapped, cc_type) {
     prop_conc_norm ~ pre_post_wet, data = rewet_subset)
 
   # Reorder pre/post wet for ggplot
-  rewet_subset$pre_post_wet <- factor(rewet_subset$pre_post_wet,
-                                           levels = c("pre", "post"),
-                                           ordered = T)
+  # rewet_subset$pre_post_wet <- factor(rewet_subset$pre_post_wet,
+                                           # levels = c("pre", "post"),
+                                           # ordered = T)
 
   # Create a boxpot of DNA quantities pre/post rewetting at each time point
   rewet_plot <- rewet_subset %>%
