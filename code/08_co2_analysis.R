@@ -73,7 +73,11 @@ treatments_all <- samples_mapped
 treatments_no_mod <- samples_mapped %>%
   filter(is.na(outlier_flag))
 
-# Get stats for post rewetting only to see effect of drying treatment on
+# Set plot theme
+source("code/functions/set_plot_themes.R")
+set_theme()
+
+# Analyze + plot post rewetting only to see effect of drying treatment on
 # peak respiration
 treat_no_cc <- treatments_all %>%
   filter(pre_post_wet == "post") %>%
@@ -87,7 +91,14 @@ treat_no_cc_plot <- treat_no_cc %>%
   ggplot(aes(x = factor(drying_treatment,
                         level = c("one_wk", "two_wk", "four_wk")),
              y = total_auc)) +
-  geom_boxplot()
+  geom_boxplot(fill = "#16B4FF", color = "#097CB2") +
+  scale_x_discrete(labels = c("One Week", "Two Weeks", "Four Weeks")) +
+  labs(x = "Drying Time",
+       y = "Peak CO2 (ppm)",
+       title = paste("Peak CO2 After Rewetting Without Cover Crop"))
+# Save out plot
+ggsave(treat_no_cc_plot, filename = "output/2022/co2/no_cc_all_plot.png",
+       width = 10, height = 8, units = "in")
 
 treat_w_cc <- treatments_all %>%
   filter(pre_post_wet == "post") %>%
@@ -101,7 +112,14 @@ treat_w_cc_plot <- treat_w_cc %>%
   ggplot(aes(x = factor(drying_treatment,
                         level = c("one_wk", "two_wk", "four_wk")),
              y = total_auc)) +
-  geom_boxplot()
+  geom_boxplot(fill = "#34980D", color = "#195004") +
+  scale_x_discrete(labels = c("One Week", "Two Weeks", "Four Weeks")) +
+  labs(x = "Drying Time",
+       y = "Peak CO2 (ppm)",
+       title = paste("Peak CO2 After Rewetting With Cover Crop"))
+# Save out plot
+ggsave(treat_w_cc_plot, filename = "output/2022/co2/w_cc_all_plot.png",
+       width = 10, height = 8, units = "in")
 
 # Try again with outliers filtered out
 treat_no_cc_nomod <- treatments_no_mod %>%
@@ -141,8 +159,20 @@ cc_compare_all_plot <- cc_compare_all %>%
   ggplot(aes(x = factor(drying_treatment,
                         level = c("one_wk", "two_wk", "four_wk")),
              y = total_auc,
-             fill = cc_treatment)) +
-  geom_boxplot()
+             fill = cc_treatment,
+             color = cc_treatment)) +
+  geom_boxplot() +
+  scale_fill_manual(name = NULL, values = c("#16B4FF", "#34980D"),
+                    labels = c("Without cover crop", "With cover crop")) +
+  scale_color_manual(name = NULL, values = c("#097CB2", "#195004"),
+                     labels = c("Without cover crop", "With cover crop")) +
+  scale_x_discrete(labels = c("One Week", "Two Weeks", "Four Weeks")) +
+  labs(x = "Drying Time",
+       y = "Peak CO2 (ppm)",
+       title = paste("Peak CO2 After Rewetting"))
+# Save out plot
+ggsave(cc_compare_all_plot, filename = "output/2022/co2/cc_compare_all_plot.png",
+       width = 10, height = 8, units = "in")
 
 # Same but w/o outliers
 cc_compare_nomod <- treatments_no_mod %>%
