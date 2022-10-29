@@ -26,6 +26,13 @@ for(f in 1:length(files_list)) {
   auc_summary <- find_peaks(files_list[f])
   auc_summary_all <- rbind(auc_summary_all, auc_summary)
 }
+# Save this out because it takes a long time to generate
+write_csv(auc_summary_all, "output/2022/co2/auc_summary_all.txt")
+
+####### START HERE IF ALREADY SAVED OUT SUMMARY #######
+
+# Read in summary
+auc_summary_all <- read_csv("output/2022/co2/auc_summary_all.txt")
 
 # Create separate list of standards
 auc_stds <- auc_summary_all %>%
@@ -66,4 +73,85 @@ treatments_all <- samples_mapped
 treatments_no_mod <- samples_mapped %>%
   filter(is.na(outlier_flag))
 
+# Get stats for post rewetting only to see effect of drying treatment on
+# peak respiration
+treat_no_cc <- treatments_all %>%
+  filter(pre_post_wet == "post") %>%
+  filter(cc_treatment == "no_cc") %>%
+  group_by(sample_no, drying_treatment)
+summarize(group_by(treat_no_cc, drying_treatment),
+          median = median(total_auc), iqr = IQR(total_auc))
+treat_no_cc_stats <- treat_no_cc %>%
+  kruskal.test(data = ., total_auc ~ drying_treatment)
+treat_no_cc_plot <- treat_no_cc %>%
+  ggplot(aes(x = factor(drying_treatment,
+                        level = c("one_wk", "two_wk", "four_wk")),
+             y = total_auc)) +
+  geom_boxplot()
 
+treat_w_cc <- treatments_all %>%
+  filter(pre_post_wet == "post") %>%
+  filter(cc_treatment == "w_cc") %>%
+  group_by(sample_no, drying_treatment)
+summarize(group_by(treat_w_cc, drying_treatment),
+          median = median(total_auc), iqr = IQR(total_auc))
+treat_w_cc_stats <- treat_w_cc %>%
+  kruskal.test(data = ., total_auc ~ drying_treatment)
+treat_w_cc_plot <- treat_w_cc %>%
+  ggplot(aes(x = factor(drying_treatment,
+                        level = c("one_wk", "two_wk", "four_wk")),
+             y = total_auc)) +
+  geom_boxplot()
+
+# Try again with outliers filtered out
+treat_no_cc_nomod <- treatments_no_mod %>%
+  filter(pre_post_wet == "post") %>%
+  filter(cc_treatment == "no_cc") %>%
+  group_by(sample_no, drying_treatment)
+summarize(group_by(treat_no_cc_nomod, drying_treatment),
+          median = median(total_auc), iqr = IQR(total_auc))
+treat_no_cc_nomod_stats <- treat_no_cc_nomod %>%
+  kruskal.test(data = ., total_auc ~ drying_treatment)
+treat_no_cc_nomod_plot <- treat_no_cc_nomod %>%
+  ggplot(aes(x = factor(drying_treatment,
+                        level = c("one_wk", "two_wk", "four_wk")),
+             y = total_auc)) +
+  geom_boxplot()
+
+treat_w_cc_nomod <- treatments_no_mod %>%
+  filter(pre_post_wet == "post") %>%
+  filter(cc_treatment == "w_cc") %>%
+  group_by(sample_no, drying_treatment)
+summarize(group_by(treat_w_cc_nomod, drying_treatment),
+          median = median(total_auc), iqr = IQR(total_auc))
+treat_w_cc_nomod_stats <- treat_w_cc_nomod %>%
+  kruskal.test(data = ., total_auc ~ drying_treatment)
+treat_w_cc_nomod_plot <- treat_w_cc_nomod %>%
+  ggplot(aes(x = factor(drying_treatment,
+                        level = c("one_wk", "two_wk", "four_wk")),
+             y = total_auc)) +
+  geom_boxplot()
+
+# Compare peak C loss as respiration between with and without cc
+cc_compare_all <- treatments_all %>%
+  group_by(cc_treatment, drying_treatment)
+cc_compare_all_stats <- cc_compare_all %>%
+  kruskal.test(data = ., total_auc ~ cc_treatment)
+cc_compare_all_plot <- cc_compare_all %>%
+  ggplot(aes(x = factor(drying_treatment,
+                        level = c("one_wk", "two_wk", "four_wk")),
+             y = total_auc,
+             fill = cc_treatment)) +
+  geom_boxplot()
+
+# Same but w/o outliers
+cc_compare_nomod <- treatments_no_mod %>%
+  group_by(cc_treatment, drying_treatment)
+cc_compare_nomod_stats <- cc_compare_nomod %>%
+  kruskal.test(data = ., total_auc ~ cc_treatment)
+cc_compare_nomod_plot <- cc_compare_nomod %>%
+  ggplot(aes(x = factor(drying_treatment,
+                        level = c("one_wk", "two_wk", "four_wk")),
+             y = total_auc,
+             fill = cc_treatment)) +
+  geom_boxplot()
