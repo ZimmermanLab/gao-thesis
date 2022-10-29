@@ -1,2 +1,0 @@
-System_Date_(Y-M-D)	System_Time_(h:m:s)	CO₂_(µmol_mol⁻¹)	H₂O_(mmol_mol⁻¹)	H₂O_(°C)	Cell_Temperature_(°C)	Cell_Pressure_(kPa)	CO₂_Absorption	H₂O_Absorption	Input_Voltage_(V)	Flow_Rate_(L_min⁻¹)	
-2022-02-15	14:37:56	6.47910e-1	1.43907e-1	-4.16150e1	5.15634e1	1.10442e2	2.1475553e-4	1.4742016e-3	1.2033631e1	1.0491342	
