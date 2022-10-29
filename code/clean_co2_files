@@ -1,0 +1,24 @@
+# This script takes in CO2 .txt data and removes the weird unnecessary header
+# so that it can be read into and analyzed for AUC.
+
+# Sarah Gao
+# October 28, 2022
+# hellosarahgao@gmail.com
+
+# Checks for a directory path argument
+if [ $# -eq 0 ]
+then
+	echo "Please include the path of the directory where the files you"\
+		"want to clean up are located."
+	exit 1
+fi
+
+# Recursively loops through directory
+shopt -s globstar
+for file in "$1"/**/*;
+	do
+	tail -n +2 "$file" > "data/cleaned_data/LICOR/$(basename "${file%.*}")_no_head.txt"
+done
+
+
+
