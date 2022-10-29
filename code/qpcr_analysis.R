@@ -15,29 +15,11 @@ library("fs")
 # Source data cleaning function
 source("code/functions/qpcr_functions/clean_qpcr_data.R")
 
-# Compile list of file paths for fungal data
-files_fungal <- dir_ls(path = "data/raw_data/qPCR/",
-                recurse = 1,
-                regex = "fungal -  Quantification Cq Results.csv")
+# Get clean fungal data
+clean_fungal <- clean_qpcr_data(files_fungal, "fungal")
 
-# Clean fungal data
-clean_fungal <- clean_qpcr_data(files_fungal)
-
-# Compile list of file paths for bacterial data (full csv files from machine 1)
-files_bacterial_full <- dir_ls(path = "data/raw_data/qPCR/",
-                            recurse = 1,
-                            regex =
-                              "bacterial -  Quantification Cq Results.csv$")
-
-# Compile list of file paths for bacterial data (short csv files from machine 2)
-files_bacterial_short <- dir_ls(path = "data/raw_data/qPCR/",
-                            recurse = 1,
-                            regex =
-                              "bacterial.csv$")
-
-# Get clean bacterial data using function
-clean_bacterial <- clean_qpcr_data(files_bacterial_full) %>%
-  rbind(clean_qpcr_data(files_bacterial_short))
+# Get clean bacterial data
+clean_bacterial <- clean_qpcr_data(files_bacterial_full, "bacterial")
 
 # Filter out NA values and store them separately
 na_only_fungal <- clean_fungal %>%
@@ -46,16 +28,6 @@ na_only_fungal <- clean_fungal %>%
 na_only_bacterial <- clean_bacterial %>%
   filter(cq == "NaN") %>%
   select(sample_no, rep_no, cq)
-
-# Remove NA samples from the datasets
-clean_bacterial_no_na <- clean_bacterial %>%
-  filter(!(is.na(cq))) %>%
-  select(sample_no, rep_no, cq) %>%
-  arrange(sample_no)
-clean_fungal_no_na <- clean_fungal %>%
-  filter(!(is.na(cq))) %>%
-  select(sample_no, rep_no, cq) %>%
-  arrange(sample_no)
 
 # Bring in treatment mapping and get water only soil numbers
 all_treatments <- read_csv("output/2022/jar_assignments/master_list.csv")
@@ -130,15 +102,17 @@ fung_treatment_no_mod <- fung_norm_no_mod %>%
 # Make plot and run Kruskal-Wallis test to see effect of rewetting on
 # bacterial DNA quantities in samples without cc
 source("code/functions/qpcr_functions/analyze_plot_dna.R")
-bact_rewet_stats_no_cc <- analyze_plot_dna(bact_treatment_all, "no_cc")[1]
-bact_rewet_plot_no_cc <- analyze_plot_dna(bact_treatment_all, "no_cc")[2]
-bact_rewet_med_no_cc <- analyze_plot_dna(bact_treatment_all, "no_cc")[3]
+bact_rewet_no_cc <- analyze_plot_dna(bact_treatment_all, "no_cc")
+bact_rewet_stats_no_cc <- bact_rewet_no_cc[1]
+bact_rewet_plot_no_cc <- bact_rewet_no_cc[2]
+bact_rewet_med_no_cc <- bact_rewet_no_cc[3]
 
 # Make plot and run Kruskal-Wallis test to see effect of rewetting on
 # fungal DNA quantities in samples without cc
-fung_rewet_stats_no_cc <- analyze_plot_dna(fung_treatment_all, "no_cc")[1]
-fung_rewet_plot_no_cc <- analyze_plot_dna(fung_treatment_all, "no_cc")[2]
-fung_rewet_med_no_cc <- analyze_plot_dna(fung_treatment_all,"no_cc")[3]
+fung_rewet_no_cc <- analyze_plot_dna(fung_treatment_all, "no_cc")
+fung_rewet_stats_no_cc <- fung_rewet_no_cc[1]
+fung_rewet_plot_no_cc <- fung_rewet_no_cc[2]
+fung_rewet_med_no_cc <- fung_rewet_no_cc[3]
 
 # Run test at every time point to compare differences before and after
 # Bacteria no cc
@@ -161,7 +135,13 @@ bact_no_cc_four_wk <- bact_treatment_all %>%
 bact_no_cc_four_wk %>%
   kruskal.test(data = .,  prop_conc_norm ~ pre_post_wet)
 
-# Bacteria w cc
+# Make plot and run Kruskal-Wallis test to see effect of rewetting on
+# bacterial DNA quantities in samples with cc
+bact_rewet_w_cc <- analyze_plot_dna(bact_treatment_all, "w_cc")
+bact_rewet_stats_w_cc <- bact_rewet_w_cc[1]
+bact_rewet_plot_w_cc <- bact_rewet_w_cc[2]
+bact_rewet_med_w_cc <- bact_rewet_w_cc[3]
+# Every time point in bacteria w cc
 bact_w_cc_one_wk <- bact_treatment_all %>%
   filter(cc_treatment == "w_cc",
          drying_treatment == "one_wk",
@@ -182,16 +162,10 @@ bact_w_cc_four_wk %>%
   kruskal.test(data = .,  prop_conc_norm ~ pre_post_wet)
 
 # Make plot and run Kruskal-Wallis test to see effect of rewetting on
-# bacterial DNA quantities in samples with cc
-bact_rewet_stats_w_cc <- analyze_plot_dna(bact_treatment_all, "w_cc")[1]
-# Effect is more pronounced with no outliers
-bact_rewet_plot_w_cc <- analyze_plot_dna(bact_treatment_all, "w_cc")[2]
-bact_rewet_med_w_cc <- analyze_plot_dna(bact_treatment_all, "w_cc")[3]
-
-# Make plot and run Kruskal-Wallis test to see effect of rewetting on
 # fungal DNA quantities in samples with cc
-fung_rewet_stats_w_cc <- analyze_plot_dna(fung_treatment_all, "w_cc")[1]
-fung_rewet_plot_w_cc <- analyze_plot_dna(fung_treatment_all, "w_cc")[2]
-fung_rewet_med_w_cc <- analyze_plot_dna(fung_treatment_all, "w_cc")[3]
+fung_rewet_w_cc <- analyze_plot_dna(fung_treatment_all, "w_cc")
+fung_rewet_stats_w_cc <- fung_rewet_w_cc[1]
+fung_rewet_plot_w_cc <- fung_rewet_w_cc[2]
+fung_rewet_med_w_cc <- fung_rewet_w_cc[3]
 
 
