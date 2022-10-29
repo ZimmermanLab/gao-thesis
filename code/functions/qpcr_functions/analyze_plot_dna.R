@@ -36,27 +36,43 @@ analyze_plot_dna <- function(treatment_mapped, cc_type) {
   rewet_stats <- kruskal.test(
     prop_conc_norm ~ pre_post_wet, data = rewet_subset)
 
-  # Reorder pre/post wet for ggplot
-  # rewet_subset$pre_post_wet <- factor(rewet_subset$pre_post_wet,
-                                           # levels = c("pre", "post"),
-                                           # ordered = T)
+  # Set plot themes
+  source("code/functions/set_plot_themes.R")
+  set_theme()
+
+  # Take name of input
+  input_name <- deparse(substitute(treatment_mapped))
+  # Get "bacterial" or "fungal" from input name
+  micro_type = ifelse(
+    str_detect(input_name, "bact") == TRUE, "Bacterial", "Fungal")
+  # Get title descriptors from argument
+  cc_title = ifelse(cc_type == "w_cc", "With Cover Crop", "Without Cover Crop")
 
   # Create a boxpot of DNA quantities pre/post rewetting at each time point
   rewet_plot <- rewet_subset %>%
     ggplot(aes(x = drying_treatment,
                y = prop_conc_norm,
-               fill = pre_post_wet)) +
+               # Reorder to have pre first then post
+               fill = factor(pre_post_wet, level = c("pre", "post")))) +
     geom_boxplot() +
-    scale_x_discrete(limits = c("one_wk", "two_wk", "four_wk"))
+    # scale_fill_discrete(breaks= c("pre", "post")) +
+    scale_x_discrete(limits = c("one_wk", "two_wk", "four_wk"),
+                     labels = c("One Week", "Two Weeks", "Four Weeks")) +
+    scale_fill_manual(name = NULL, limits = c("pre", "post"),
+                      values = c("#16B4FF", "#34980D"),
+                      labels = c("Pre-Wet", "Post-Wet")) +
+    scale_color_manual(name = NULL, values = c("#097CB2", "#195004"),
+                       labels = c("Pre-Wet", "Post-Wet")) +
+    labs(x = "Drying Time",
+         y = "Proportional Concentration",
+         title = paste(micro_type, "DNA Changes From Rewetting\n", cc_title))
 
-  # Take name of input
-  outlier_type <-deparse(substitute(treatment_mapped))
   # Save out the plot
   ggsave(file = paste0("output/2022/qpcr_plots/",
-                       str_sub(outlier_type, end = 4), "_rewet_",
+                       str_sub(input_name, end = 4), "_rewet_",
                        cc_type, ".png"),
          plot = rewet_plot,
-         width = 15, height = 8, units = "in")
+         width = 10, height = 8, units = "in")
 
   # Create a list to return both stats and plot
   return_list <- list("stats" = rewet_stats, "plot" = rewet_plot,
