@@ -259,6 +259,7 @@ write_csv(all_pooled_stats, "output/2022/co2/auc_sum_norm_pooled")
               median_norm = median(auc_norm),
               iqr_norm = IQR(auc_norm))
 
-  # SAVE THIS OUT
+  # SAVE THESE OUT
+  write_csv(output_all, "output/2022/co2/au_norm_date")
   write_csv(summary.stats, "output/2022/co2/auc_sum_norm_date")
-}
+
