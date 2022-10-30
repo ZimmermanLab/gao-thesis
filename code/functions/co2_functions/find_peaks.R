@@ -81,7 +81,7 @@ find_peaks <- function(file_path, cut.off = 2) {
       # Finds area at the beginning of the curve
       if(test.3$Value[i] == FALSE & test.3$Value[i+1] == TRUE){
         test.3$Area[i] <- (time * diff[i+1])/2
-        # Finds are between curves
+        # Finds area between curves
       } else if(test.3$Value[i] == FALSE & test.3$Value[i+1] == FALSE){
         test.3$Area[i] <- (time * diff[i])/2
       } else if(test.3$Value[i] == TRUE){
