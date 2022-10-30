@@ -18,6 +18,7 @@ analyze_plot_dna <- function(treatment_mapped, cc_type) {
       filter(cc_treatment == "w_cc",
                pre_post_wet == "pre" |
                pre_post_wet == "post")
+    cc_title = "With Cover Crop"
 
   } else if (cc_type == "no_cc") {
     rewet_subset <- treatment_mapped %>%
@@ -25,12 +26,24 @@ analyze_plot_dna <- function(treatment_mapped, cc_type) {
       filter(cc_treatment == "no_cc",
                pre_post_wet == "pre" |
                pre_post_wet == "post")
-  }
+    cc_title = "Without Cover Crop"
+
+  } else if (cc_type == "all") {
+      rewet_subset <- treatment_mapped %>%
+        filter(pre_post_wet == "pre" |
+                 pre_post_wet == "post")
+      cc_title = "In All Samples"
+    }
 
   rewet_med <- rewet_subset %>%
+    group_by(sample_no, drying_treatment, pre_post_wet) %>%
+    # Find medians per sample first
+    summarize(median = median(prop_conc_norm)) %>%
     group_by(drying_treatment, pre_post_wet) %>%
-    summarize(median = median(prop_conc_norm),
-            iqr = IQR(prop_conc_norm))
+    # Find medians per treatment level
+    summarize(med_median = median(median),
+            iqr = IQR(median)) %>%
+    arrange(drying_treatment == "one_wk")
 
   # Use Kruskal-Wallis test to see effect of rewetting
   rewet_stats <- kruskal.test(
@@ -45,8 +58,6 @@ analyze_plot_dna <- function(treatment_mapped, cc_type) {
   # Get "bacterial" or "fungal" from input name
   micro_type = ifelse(
     str_detect(input_name, "bact") == TRUE, "Bacterial", "Fungal")
-  # Get title descriptors from argument
-  cc_title = ifelse(cc_type == "w_cc", "With Cover Crop", "Without Cover Crop")
 
   # Create a boxpot of DNA quantities pre/post rewetting at each time point
   rewet_plot <- rewet_subset %>%
@@ -69,8 +80,9 @@ analyze_plot_dna <- function(treatment_mapped, cc_type) {
 
   # Save out the plot
   ggsave(file = paste0("output/2022/qpcr_plots/",
+                       # Account for microbial and outlier type in file name
                        str_sub(input_name, end = 4), "_rewet_",
-                       cc_type, ".png"),
+                       cc_type, "_", str_sub(input_name, start = 16),".png"),
          plot = rewet_plot,
          width = 10, height = 8, units = "in")
 

@@ -16,6 +16,6 @@ norm_conc <- function(prop_conc_data, soil_wt){
     select(-c(extraction_soil_wt_mg, qubit_concentration)) %>%
     mutate(wt_norm = mean_soil_wt / dry_soil_only,
            prop_conc_norm = prop_concentration * wt_norm) %>%
-    select(-c(3:8))
+    select(sample_no, cq, prop_conc_norm, outlier_flag)
   return(norm_conc)
 }
