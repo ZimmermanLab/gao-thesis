@@ -31,54 +31,182 @@ write_csv(auc_summary_all, "output/2022/co2/auc_summary_all.txt")
 
 ####### START HERE IF ALREADY SAVED OUT SUMMARY #######
 
-# Read in summary
-auc_summary_all <- read_csv("output/2022/co2/auc_summary_all.txt")
+# Read in summary of standardized data
+auc_all <- read_csv("output/2022/co2/auc_norm_date")
 
-# Create separate list of standards
-auc_stds <- auc_summary_all %>%
-  filter(str_detect(sample, "[0-9]{3}_[0-9]{2}") == FALSE)
-
-# Separate out replicate number from sample number
-auc_samples <- auc_summary_all %>%
-  # Select samples (non-stds) only
-  filter(str_detect(sample, "[0-9]{3}_[0-9]{2}") == TRUE) %>%
-  mutate(sample_no = str_sub(sample, end = 3)) %>%
-  mutate(rep_no = str_sub(sample, start = -2)) %>%
-  select(-sample) %>%
-  relocate(sample_no, total_auc)
+# Filter out standards
+# By date standardization
+samples <- auc_all_date %>%
+  filter(str_detect(sample_no, "ppm") == FALSE)
 
 # Determine outliers in sample reps
-samples_outliers <- auc_samples %>%
+samp_outliers <- samples %>%
   group_by(sample_no, date) %>%
-  mutate(median = median(total_auc),
-            iqr = IQR(total_auc)) %>%
-  mutate(outlier_flag = case_when(total_auc > median + (1.5 * iqr) |
-                                    total_auc < median - (1.5 * iqr)
+  mutate(median = median(auc_norm),
+            iqr = IQR(auc_norm)) %>%
+  mutate(outlier_flag = case_when(auc_norm > median + (1.5 * iqr) |
+                                    auc_norm < median - (1.5 * iqr)
                                   ~ "moderate",
-                                  total_auc > median + (3 * iqr) |
-                                    total_auc < median - (3 * iqr)
+                                  auc_norm > median + (3 * iqr) |
+                                    auc_norm < median - (3 * iqr)
                                   ~ "extreme")) %>%
   arrange(sample_no, date)
 
-samples_outliers$sample_no <- as.double(samples_outliers$sample_no)
+samp_outliers$date <- as.character(samp_outliers$date)
 
 # Bring in all treatment assignments
 all_treatments <- read_csv("output/2022/jar_assignments/master_list.csv")
 # Map to samples
-samples_mapped <- samples_outliers %>%
+samp_outliers$sample_no <- as.double(samp_outliers$sample_no)
+samp_outliers$date <- as.character(samp_outliers$date)
+samp_mapped <- samp_outliers %>%
   left_join(all_treatments)
 
-treatments_all <- samples_mapped
 # Filter out outliers
-treatments_no_mod <- samples_mapped %>%
+samp_mapped_nomod <- samp_mapped %>%
   filter(is.na(outlier_flag))
+
 
 # Set plot theme
 source("code/functions/set_plot_themes.R")
 set_theme()
 
-# Analyze + plot post rewetting only to see effect of drying treatment on
-# peak respiration
+# Map all samples to treatments
+samp_medians <- samp_mapped %>%
+  # Filters out the CO2 tests "post_co2"
+  filter(pre_post_wet == "post") %>%
+  # Make sure to group by sampling date!
+  group_by(sample_no, drying_treatment, date) %>%
+  summarize(median = median(auc_norm),
+            iqr = IQR(auc_norm))
+
+
+#### CO2 TRIALS ####
+# Plot the CO2 tests
+initial_dates <- c("2022-02-15", "2022-02-16", "2022-02-17", "2022-02-18",
+                   "2022-02-19")
+# Find medians per sample per day
+co2_tests_medians <- samp_mapped  %>%
+  filter(pre_post_wet == "post_co2") %>%
+  # Account for the fact that I used the two_wk drying set as the set I
+  # first measured prior to any rewetting during that first week
+  # IE These measurements reflect CO2 levels during the first week of drying
+  mutate(drying_treatment = case_when(date %in% initial_dates ~
+                                        "initial_dry",
+                                      !(date %in% initial_dates)
+                                      ~ drying_treatment)) %>%
+  # Column for days elapsed since rewetting. Day 0 means the
+  # CO2 measurement right before rewetting.
+  mutate(day_elapsed = case_when(date == "2022-02-22" |
+                                   date == "2022-03-08" |
+                                   date == "2022-03-15" ~
+                                   "0",
+                                 date == "2022-02-23" |
+                                   date == "2022-03-09" |
+                                   date == "2022-03-16" ~
+                                   "1",
+                                 date == "2022-02-24" |
+                                   date == "2022-03-10" |
+                                   date == "2022-03-17" ~
+                                   "2",
+                                 date == "2022-02-25" |
+                                   date == "2022-03-11" |
+                                   date == "2022-03-18" ~
+                                   "3",
+                                 date == "2022-02-26" |
+                                   date == "2022-03-12" |
+                                   date == "2022-03-19" ~
+                                   "4")) %>%
+  group_by(sample_no, drying_treatment, date, cc_treatment) %>%
+  summarize(median = median(auc_norm),
+            iqr = IQR(auc_norm))
+# Plot by time
+facet_names <- as_labeller(c("one_wk" = "One Week",
+                             "two_wk" = "Two Weeks",
+                             "four_wk" = "Four Weeks"))
+co2_tests_plot_all <- co2_tests_medians %>%
+  filter(drying_treatment != "initial_dry") %>%
+  ggplot(aes(x = day_elapsed,
+             y = median)) +
+  geom_boxplot(fill = "#16B4FF", color = "#097CB2") +
+  facet_grid(~ factor(drying_treatment,
+                      levels = c("one_wk", "two_wk", "four_wk")),
+             labeller = facet_names) +
+  labs(x = "Days After Rewetting",
+       y = "CO2 (ppm)",
+       title = "CO2 Levels After Rewetting By Drying Duration")
+# Save plot
+ggsave(co2_tests_plot_all, filename = "output/2022/co2/co2_trials_time.png",
+       width = 10, height = 8, units = "in")
+
+# See if days elapsed has an effect on respiration
+co2_elapsed_stats <- co2_tests_medians %>%
+  filter(drying_treatment != "initial_dry") %>%
+  kruskal.test(data = ., median ~ day_elapsed)
+
+
+
+
+
+#### PEAK RESPIRATION BY DRYING TIME ####
+
+# Find the peak for each sample between the days of sampling
+samp_peaks <- samp_medians %>%
+  group_by(sample_no, drying_treatment) %>%
+  summarize(peak_co2 = max(median))
+samp_peaks_plot <- samp_peaks %>%
+  ggplot(aes(x = drying_treatment,
+             y = peak_co2)) +
+  geom_boxplot(fill = "#16B4FF", color = "#097CB2") +
+  labs(x = "Drying Time",
+       y = "Peak Co2 (ppm)",
+       title = "Peak CO2 in Dried Soils") +
+  scale_x_discrete(limits = c("one_wk", "two_wk", "four_wk"),
+                   labels = c("One Week", "Two Weeks", "Four Weeks"))
+# Save out plot
+ggsave(samp_peaks_plot, filename = "output/2022/co2/co2_peaks_by_drying.png",
+       width = 10, height = 8, units = "in")
+# Calculate median + IQR
+samp_peaks_med <- samp_peaks %>%
+  group_by(drying_treatment) %>%
+  summarize(med_co2 = median(peak_co2), iqr = IQR(peak_co2))
+# Calculate stats
+samp_peak_stats <- samp_peaks %>%
+  kruskal.test(data = ., peak_co2 ~ drying_treatment)
+
+
+# Try without outliers
+samp2_medians_nomod <- samp2_mapped_nomod %>%
+  # Filters out the CO2 tests "post_co2"
+  filter(pre_post_wet == "post") %>%
+  # Make sure to group by sampling date!
+  group_by(sample_no, drying_treatment, date) %>%
+  summarize(median = median(auc_norm),
+            iqr = IQR(auc_norm))
+
+samp2_peaks_nomod <- samp2_medians_nomod %>%
+  group_by(sample_no, drying_treatment) %>%
+  # Find the peak for each sample between the two days of sampling
+  summarize(peak_co2 = max(median)) %>%
+  group_by(drying_treatment) %>%
+  summarize(med_co2 = median(peak_co2), iqr = IQR(peak_co2))
+
+# Run stats
+treat_all_stats <- samp_medians %>%
+  kruskal.test(data = ., median ~ drying_treatment)
+treat_all_plot <- samp_medians %>%
+  ggplot(aes(x = drying_treatment,
+             y = median)) +
+  geom_boxplot(fill = "#16B4FF", color = "#097CB2") +
+  scale_x_discrete(labels = c("One Week", "Two Weeks", "Four Weeks")) +
+  labs(x = "Drying Time",
+       y = "Peak CO2 (ppm)",
+       title = paste("Peak CO2 After Rewetting in All Samples"))
+# Save out plot
+ggsave(treat_all_plot, filename = "output/2022/co2/co2_all_plot.png",
+       width = 10, height = 8, units = "in")
+
+# No cc only
 treat_no_cc <- treatments_all %>%
   filter(pre_post_wet == "post") %>%
   filter(cc_treatment == "no_cc") %>%
