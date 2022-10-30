@@ -252,7 +252,8 @@ write_csv(all_pooled_stats, "output/2022/co2/auc_sum_norm_pooled")
 
 
   # Create summary
-  summary.stats <- output_all %>%
+  summary.stats <- output %>%
+    filter(is.na(auc_norm) == FALSE) %>%
     group_by(sample_no, date) %>%
     summarise(mean_norm = mean(auc_norm),
               sd_norm = sd(auc_norm),
@@ -260,6 +261,6 @@ write_csv(all_pooled_stats, "output/2022/co2/auc_sum_norm_pooled")
               iqr_norm = IQR(auc_norm))
 
   # SAVE THESE OUT
-  write_csv(output_all, "output/2022/co2/au_norm_date")
+  write_csv(output, "output/2022/co2/auc_norm_date")
   write_csv(summary.stats, "output/2022/co2/auc_sum_norm_date")
 
