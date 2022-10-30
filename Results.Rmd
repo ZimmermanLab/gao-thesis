@@ -1,0 +1,99 @@
+---
+title: "Results"
+author: "Sarah Gao"
+date: "2022-10-29"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+```{r load-functions-and-packages}
+
+library("ggplot2")
+library("dplyr")
+library("tidyr")
+library("readr")
+library("stringr")
+library("stringi")
+library("fs")
+library("knitr")
+
+```
+
+```{r dna-rewet}
+
+# Source data cleaning function
+source("code/functions/qpcr_functions/clean_qpcr_data.R")
+
+# Get clean fungal data
+clean_fungal <- clean_qpcr_data("data/raw_data/qPCR/", "fungal")
+# Get clean bacterial data
+clean_bacterial <- clean_qpcr_data("data/raw_data/qPCR/", "bacterial")
+
+# Bring in treatment mapping
+all_treatments <- read_csv("output/2022/jar_assignments/master_list.csv")
+
+# Flag outliers from the datasets
+source("code/functions/qpcr_functions/flag_outliers.R")
+bacterial_outlier_flags <- flag_outliers(clean_bacterial)
+fungal_outlier_flags <- flag_outliers(clean_fungal)
+
+# Find proportional starting concentrations using 2^-Cq
+source("code/functions/qpcr_functions/calculate_prop_concentrations.R")
+bact_concentrations <- calc_prop_conc(bacterial_outlier_flags)
+fung_concentrations <- calc_prop_conc(fungal_outlier_flags)
+
+# Bring in dried soil weights and Qubit concentrations
+dried_wts_qubit <- read_csv("data/raw_data/qPCR/2022_DNA.csv") %>%
+  select(sample_no, extraction_soil_wt_mg,
+         qubit_concentration, dry_soil_only) %>%
+  filter(sample_no != "bacteria-control") %>%
+  filter(!(is.na(dry_soil_only)))
+dried_wts_qubit$sample_no <- as.double(dried_wts_qubit$sample_no)
+dried_wts_qubit$qubit_concentration <-as.double(
+  dried_wts_qubit$qubit_concentration)
+
+# Normalize the proportional concentrations
+source("code/functions/qpcr_functions/normalize_prop_concentration.R")
+bact_norm_all <- norm_conc(bact_concentrations, dried_wts_qubit)
+fung_norm_all <- norm_conc(fung_concentrations, dried_wts_qubit)
+
+# Map samples to all treatment conditions
+bact_treatment_all <- bact_norm_all %>%
+  left_join(all_treatments)
+fung_treatment_all <- fung_norm_all %>%
+  left_join(all_treatments)
+
+# Make plot and run Kruskal-Wallis test to see effect of rewetting on
+# bacterial DNA quantities in samples without cc
+source("code/functions/qpcr_functions/analyze_plot_dna.R")
+bact_rewet_no_cc <- analyze_plot_dna(bact_treatment_all, "no_cc")
+bact_rewet_stats_no_cc <- bact_rewet_no_cc[1]
+bact_rewet_plot_no_cc <- bact_rewet_no_cc[2]
+bact_rewet_med_no_cc <- bact_rewet_no_cc[3]
+
+# Make plot and run Kruskal-Wallis test to see effect of rewetting on
+# fungal DNA quantities in samples without cc
+fung_rewet_no_cc <- analyze_plot_dna(fung_treatment_all, "no_cc")
+fung_rewet_stats_no_cc <- fung_rewet_no_cc[1]
+fung_rewet_plot_no_cc <- fung_rewet_no_cc[2]
+fung_rewet_med_no_cc <- fung_rewet_no_cc[3]
+
+# Run test at every time point to compare differences before and after
+source("code/functions/qpcr_functions/compare_rewet_each_wk.R")
+bact_wk_no_cc_all <- compare_rewet_time(bact_treatment_all, "no_cc")
+bact_wk_w_cc_all <- compare_rewet_time(bact_treatment_all, "w_cc")
+fung_wk_no_cc_all <- compare_rewet_time(fung_treatment_all, "no_cc")
+fung_wk_w_cc_all <- compare_rewet_time(fung_treatment_all, "w_cc")
+
+```
+
+# How do microbes respond to drying and rewetting stress?
+
+Both fungal and bacterial DNA quantities increased at each time point after rewetting as compared to pre-wetting DNA concentrations (Figure 3, Table 2). The effect of rewetting had a significant effect on both bacterial and fungal DNA quantities among samples without cover crops, with (p = `r bact_rewet_stats_no_cc$stats$p.value` χ² = 40.949, df = 1) for bacterial and p < 0.001 (χ² = 38.625, df = 1) for fungal (Kruskal-Wallis Rank Sum Test).
+
+
+```{r test-table}
+
+```
