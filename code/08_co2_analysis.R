@@ -336,3 +336,7 @@ ggsave(init_dry_all_plot,
        filename = "output/2022/co2/figures/co2_drying_wk.png",
        width = 14, height = 8, units = "in")
 
+median(init_dry_wcc_stats$median_co2)
+IQR(init_dry_wcc_stats$median_co2)
+median(init_dry_nocc_stats$median_co2)
+IQR(init_dry_nocc_stats$median_co2)
