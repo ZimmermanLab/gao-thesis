@@ -172,17 +172,81 @@ co2_tests_plot_wcc <- co2_tests_wcc %>%
 ggsave(co2_tests_plot_wcc,
        filename = "output/2022/co2/figures/co2_time_wcc.png",
        width = 12, height = 8, units = "in")
+# Testing significance of secondary peaks
+co2_tests_medians %>%
+  filter(drying_treatment == "four_wk") %>%
+  filter(cc_treatment == "w_cc") %>%
+  filter(day_elapsed == "3" | day_elapsed == "4"|
+           day_elapsed == "2") %>%
+  kruskal.test(data = ., median ~ day_elapsed)
 
-#### PEAK RESPIRATION BY DRYING TIME ####
+#### FIND PEAK RESPIRATION BY DRYING TIME ####
 
 # No cc only
-# Compile data from post CO2 trials and  all samples
+# Compile data from post CO2 trials and all samples
 all_no_cc <- samp_medians %>%
-  filter(cc_treatment == "no_cc")
+  filter(cc_treatment == "no_cc") %>%
+  filter(drying_treatment != "initial_dry")
+
+wk_peaks_no_cc <- all_no_cc %>%
+  group_by(drying_treatment, sample_no) %>%
+  summarize(wk_peak = max(median))
+
+wk_peaks_no_cc_plot <- wk_peaks_no_cc %>%
+  ggplot(aes(x = drying_treatment,
+             y = wk_peak)) +
+  geom_boxplot(fill = "#16B4FF", color = "#097CB2") +
+  scale_x_discrete(limits = c("one_wk", "two_wk", "four_wk"),
+                   labels = c("One Week", "Two Weeks", "Four Weeks")) +
+  labs(x = "Drying Time",
+       y = "Peak Co2 (ppm)",
+       title = "Post Rewetting Peak CO2 in Samples Without Cover Crop")
+ggsave(wk_peaks_no_cc_plot, filename = "output/2022/co2/figures/peak_no_cc.png",
+       width = 10, height = 8, units = "in")
+
+# Check stats of this difference
+kruskal.test(data = wk_peaks_no_cc, wk_peak ~ drying_treatment)
+
+# Medians of peaks at each week of drying CO2 jars only
+co2_nocc_med <- co2_tests_nocc %>%
+  group_by(drying_treatment, day_elapsed) %>%
+  mutate(day_median = median(median)) %>%
+  group_by(drying_treatment) %>%
+  summarize(wk_peak = max(day_median), wk_iqr = IQR(day_median))
+kruskal.test(data = co2_tests_wcc, median ~ drying_treatment)
+# Check medians of all samples
+all_wk_peaks_nocc <- wk_peaks_no_cc %>%
+  group_by(drying_treatment) %>%
+  summarise(med_wk_peak = median(wk_peak), iqr_wk = IQR(wk_peak))
 
 
+# With cc only
+# Compile data from post CO2 trials and all samples
+all_w_cc <- samp_medians %>%
+  filter(cc_treatment == "w_cc") %>%
+  filter(drying_treatment != "initial_dry")
 
-# Medians of peaks at each week of drying
+wk_peaks_w_cc <- all_w_cc %>%
+  group_by(drying_treatment, sample_no) %>%
+  summarize(wk_peak = max(median))
+
+wk_peaks_w_cc_plot <- wk_peaks_w_cc %>%
+  ggplot(aes(x = drying_treatment,
+             y = wk_peak)) +
+  geom_boxplot(fill = "#34980D", color = "#195004") +
+  scale_x_discrete(limits = c("one_wk", "two_wk", "four_wk"),
+                   labels = c("One Week", "Two Weeks", "Four Weeks")) +
+  scale_y_continuous(labels = label_comma()) +
+  labs(x = "Drying Time",
+       y = "Peak Co2 (ppm)",
+       title = "Post Rewetting Peak CO2 in Samples With Cover Crop")
+ggsave(wk_peaks_w_cc_plot, filename = "output/2022/co2/figures/peak_w_cc.png",
+       width = 10, height = 8, units = "in")
+
+# Check stats of this difference
+kruskal.test(data = wk_peaks_w_cc, wk_peak ~ drying_treatment)
+
+# Medians of peaks at each week of drying for CO2 only
 co2_wcc_med <- co2_tests_wcc %>%
   group_by(drying_treatment, day_elapsed) %>%
   mutate(day_median = median(median)) %>%
@@ -190,112 +254,66 @@ co2_wcc_med <- co2_tests_wcc %>%
   summarize(wk_peak = max(day_median), wk_iqr = IQR(day_median))
 kruskal.test(data = co2_tests_wcc, median ~ drying_treatment)
 
+all_wk_peaks_wcc <- wk_peaks_w_cc %>%
+  group_by(drying_treatment) %>%
+  summarise(med_wk_peak = median(wk_peak), iqr_wk = IQR(wk_peak))
 
 
-treat_no_cc <- samp_medians
-  filter(pre_post_wet == "post" |
-           pre_post_wet == "post_co2") %>%
-  filter(cc_treatment == "no_cc") %>%
-  group_by(sample_no, drying_treatment)
-summarize(group_by(treat_no_cc, drying_treatment),
-          median = median(total_auc), iqr = IQR(total_auc))
-treat_no_cc_stats <- treat_no_cc %>%
-  kruskal.test(data = ., total_auc ~ drying_treatment)
-treat_no_cc_plot <- treat_no_cc %>%
-  ggplot(aes(x = factor(drying_treatment,
-                        level = c("one_wk", "two_wk", "four_wk")),
-             y = total_auc)) +
+
+#### EFFECT OF DRYING ON RESPIRATION ####
+# initial_dry set only!
+initial_dry_all <- samp_medians %>%
+  filter(drying_treatment == "initial_dry")
+
+# No cc
+initial_dry_no_cc <- initial_dry_all %>%
+  filter(cc_treatment == "no_cc")
+init_dry_nocc_stats <- initial_dry_no_cc %>%
+  arrange(date) %>%
+  group_by(date) %>%
+  summarize(median_co2 = median(median), iqr_co2 = IQR(median))
+init_dry_nocc_plot <- initial_dry_no_cc %>%
+  ggplot(aes(x = date,
+             y = median)) +
   geom_boxplot(fill = "#16B4FF", color = "#097CB2") +
-  scale_x_discrete(labels = c("One Week", "Two Weeks", "Four Weeks")) +
-  labs(x = "Drying Time",
-       y = "Peak CO2 (ppm)",
-       title = paste("Peak CO2 After Rewetting Without Cover Crop"))
-# Save out plot
-ggsave(treat_no_cc_plot, filename = "output/2022/co2/no_cc_all_plot.png",
-       width = 10, height = 8, units = "in")
+  labs(x = "Day of Drying",
+       y = "CO2 Concentration (ppm)",
+       title = "CO2 Concentrations During Drying Without Cover Crops") +
+  scale_x_discrete(labels = c("1", "2", "3", "4,", "5"))
+kruskal.test(data = initial_dry_no_cc, median ~ date)
 
-treat_w_cc <- treatments_all %>%
-  filter(pre_post_wet == "post") %>%
+# W cc
+init_dry_wcc_stats <- initial_dry_all %>%
   filter(cc_treatment == "w_cc") %>%
-  group_by(sample_no, drying_treatment)
-summarize(group_by(treat_w_cc, drying_treatment),
-          median = median(total_auc), iqr = IQR(total_auc))
-treat_w_cc_stats <- treat_w_cc %>%
-  kruskal.test(data = ., total_auc ~ drying_treatment)
-treat_w_cc_plot <- treat_w_cc %>%
-  ggplot(aes(x = factor(drying_treatment,
-                        level = c("one_wk", "two_wk", "four_wk")),
-             y = total_auc)) +
-  geom_boxplot(fill = "#34980D", color = "#195004") +
-  scale_x_discrete(labels = c("One Week", "Two Weeks", "Four Weeks")) +
-  labs(x = "Drying Time",
-       y = "Peak CO2 (ppm)",
-       title = paste("Peak CO2 After Rewetting With Cover Crop"))
-# Save out plot
-ggsave(treat_w_cc_plot, filename = "output/2022/co2/w_cc_all_plot.png",
-       width = 10, height = 8, units = "in")
+  arrange(date) %>%
+  group_by(date) %>%
+  summarize(median_co2 = median(median), iqr_co2 = IQR(median))
 
-# Try again with outliers filtered out
-treat_no_cc_nomod <- treatments_no_mod %>%
-  filter(pre_post_wet == "post") %>%
-  filter(cc_treatment == "no_cc") %>%
-  group_by(sample_no, drying_treatment)
-summarize(group_by(treat_no_cc_nomod, drying_treatment),
-          median = median(total_auc), iqr = IQR(total_auc))
-treat_no_cc_nomod_stats <- treat_no_cc_nomod %>%
-  kruskal.test(data = ., total_auc ~ drying_treatment)
-treat_no_cc_nomod_plot <- treat_no_cc_nomod %>%
-  ggplot(aes(x = factor(drying_treatment,
-                        level = c("one_wk", "two_wk", "four_wk")),
-             y = total_auc)) +
-  geom_boxplot()
-
-treat_w_cc_nomod <- treatments_no_mod %>%
-  filter(pre_post_wet == "post") %>%
-  filter(cc_treatment == "w_cc") %>%
-  group_by(sample_no, drying_treatment)
-summarize(group_by(treat_w_cc_nomod, drying_treatment),
-          median = median(total_auc), iqr = IQR(total_auc))
-treat_w_cc_nomod_stats <- treat_w_cc_nomod %>%
-  kruskal.test(data = ., total_auc ~ drying_treatment)
-treat_w_cc_nomod_plot <- treat_w_cc_nomod %>%
-  ggplot(aes(x = factor(drying_treatment,
-                        level = c("one_wk", "two_wk", "four_wk")),
-             y = total_auc)) +
-  geom_boxplot()
-
-# Compare peak C loss as respiration between with and without cc
-cc_compare_all <- treatments_all %>%
-  group_by(cc_treatment, drying_treatment)
-cc_compare_all_stats <- cc_compare_all %>%
-  kruskal.test(data = ., total_auc ~ cc_treatment)
-cc_compare_all_plot <- cc_compare_all %>%
-  ggplot(aes(x = factor(drying_treatment,
-                        level = c("one_wk", "two_wk", "four_wk")),
-             y = total_auc,
+# Set facet names
+facet_cc_names <- as_labeller(c("no_cc" = "Without Cover Crop",
+                                "w_cc" = "With Cover Crop"))
+# Plot side by side
+init_dry_all_plot <- initial_dry_all %>%
+  ggplot(aes(x = date,
+             y = median,
              fill = cc_treatment,
              color = cc_treatment)) +
   geom_boxplot() +
-  scale_fill_manual(name = NULL, values = c("#16B4FF", "#34980D"),
-                    labels = c("Without cover crop", "With cover crop")) +
-  scale_color_manual(name = NULL, values = c("#097CB2", "#195004"),
-                     labels = c("Without cover crop", "With cover crop")) +
-  scale_x_discrete(labels = c("One Week", "Two Weeks", "Four Weeks")) +
-  labs(x = "Drying Time",
-       y = "Peak CO2 (ppm)",
-       title = paste("Peak CO2 After Rewetting"))
-# Save out plot
-ggsave(cc_compare_all_plot, filename = "output/2022/co2/cc_compare_all_plot.png",
-       width = 10, height = 8, units = "in")
+  labs(x = "Day of Drying",
+       y = "CO2 Concentration (ppm)",
+       title = "CO2 Concentrations In Drying Soils") +
+  facet_wrap(~ cc_treatment, scales = "free",
+             labeller = facet_cc_names) +
+  scale_x_discrete(labels = c("1", "2", "3", "4,", "5")) +
+  theme(legend.position = "none") +
+  scale_color_manual(limits = c("no_cc", "w_cc"),
+                     values = c("#097CB2", "#195004")) +
+  scale_fill_manual(limits = c("no_cc", "w_cc"),
+                    values = c("#16B4FF", "#34980D")) +
+  scale_y_continuous(labels = label_comma()) +
+  theme(panel.spacing = unit(2, "lines"))
+# Save plot
+ggsave(init_dry_all_plot,
+       filename = "output/2022/co2/figures/co2_drying_wk.png",
+       width = 14, height = 8, units = "in")
 
-# Same but w/o outliers
-cc_compare_nomod <- treatments_no_mod %>%
-  group_by(cc_treatment, drying_treatment)
-cc_compare_nomod_stats <- cc_compare_nomod %>%
-  kruskal.test(data = ., total_auc ~ cc_treatment)
-cc_compare_nomod_plot <- cc_compare_nomod %>%
-  ggplot(aes(x = factor(drying_treatment,
-                        level = c("one_wk", "two_wk", "four_wk")),
-             y = total_auc,
-             fill = cc_treatment)) +
-  geom_boxplot()
