@@ -184,6 +184,7 @@ co2_tests_medians %>%
 
 # No cc only
 # Compile data from post CO2 trials and all samples
+# Find peak CO2 per sample per week
 all_samp <- samp_medians %>%
   filter(drying_treatment != "initial_dry") %>%
   group_by(drying_treatment, sample_no, cc_treatment) %>%

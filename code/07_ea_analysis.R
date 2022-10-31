@@ -58,161 +58,64 @@ srm_stats_no_mod <- percent_flags %>%
 files_ratio <- dir_ls(path = "data/raw_data/EA_CN/2022/",
                       recurse = 1,
                       regex = "\\w+_Run\\d_(repeat_)*(\\d{2}_)*ratio.(xls|XLS)")
-cn_ratio_clean <- clean_ea_data(files_ratio)
+cn_ratio_clean <- clean_ea_data(files_ratio) %>%
+  filter(!str_detect(sample_no, "SRM")) %>%
+  mutate(sample_no = as.numeric(sample_no))
 
 # Flag outliers
 ratio_flags <- flag_outliers(cn_ratio_clean, "ratio")
 
 # Join with percentage data
-cn_clean_all <- ratio_flags %>%
-  left_join(percent_flags)
+cn_clean_all <- percent_flags %>%
+  filter(!str_detect(sample_no, "SRM")) %>%
+  mutate(sample_no = as.numeric(sample_no)) %>%
+  left_join(ratio_flags)
 
-# Save out ratio outliers separately
-ratio_outliers_only <- cn_clean_all %>%
-  filter(!(is.na(outlier_flags_ratio)))
-
-# Map samples and results to master list of treatments for all outlier
-# thresholds
+# Map samples and results to master list of treatments
 all_treatments <- read_csv("output/2022/jar_assignments/master_list.csv")
 
 mapped_all <- cn_clean_all %>%
   left_join(all_treatments)
-mapped_no_ext <- cn_clean_all %>%
-  filter(outlier_flags_ratio == "moderate" |
-           is.na(outlier_flags_ratio) |
-           outlier_flags_per == "moderate" |
-           is.na(outlier_flags_per)) %>%
-  left_join(all_treatments)
-mapped_no_mod <- cn_clean_all %>%
-  filter(is.na(outlier_flags_ratio) |
-           is.na(outlier_flags_per)) %>%
-  left_join(all_treatments)
 
-# Examine the effects of cc on %N by comparing w_cc and no_cc across all
-# samples
-n_compare_cc_all <- mapped_all %>%
-  select(cc_treatment, n_per, sample_no) %>%
-  filter(!is.na(sample_no))
-
-n_compare_cc_all %>% group_by(cc_treatment) %>%
-  summarize(median = median(n_per),
-            iqr = IQR(n_per))
-
-n_compare_cc_stats_all <- n_compare_cc_all %>%
-  kruskal.test(data = ., n_per ~ cc_treatment)
-
-n_compare_cc_all %>% ggplot(aes(x = cc_treatment,
-                          y = n_per)) +
-  geom_boxplot()
-
-compare_cc_no_mod <- mapped_no_mod %>%
-  select(cc_treatment, n_per, sample_no) %>%
-  filter(!is.na(sample_no))
-compare_cc_stats_no_mod <- compare_cc_no_mod %>%
-  kruskal.test(data = ., n_per ~ cc_treatment)
-compare_cc_no_mod %>% ggplot(aes(x = cc_treatment,
-                              y = n_per)) +
-  geom_boxplot()
-
-
-# Compile across treatment replicates
-source("code/functions/ea_functions/summarize_treatments.R")
-treatments_all <- summarize_treatments(mapped_all)
-treatments_no_ext <- summarize_treatments(mapped_no_ext)
-treatments_no_mod <- summarize_treatments(mapped_no_mod)
-
-# Create plots comparing C:N ratios
-source("code/functions/ea_functions/create_ratio_plots.R")
-ratio_plot_all <- create_ratio_plot(treatments_all)
-ratio_plot_no_ext <- create_ratio_plot(treatments_no_ext)
-ratio_plot_no_mod <- create_ratio_plot(treatments_no_mod)
-
-# Overall effect of cc
-treatments_all %>% lm(mean_mean_cper ~ cc_treatment, .) %>%
-  anova()
-treatments_no_ext %>% lm(mean_mean_nper ~ cc_treatment, .) %>%
-  anova()
-
-
-# Create plots comparing C and N percentages
-source("code/functions/ea_functions/create_percentage_plots.R")
-nper_plot_all <- create_per_plot(treatments_all)[1]
-cper_plot_all <- create_per_plot(treatments_all)[2]
-nper_plot_no_ext <- create_per_plot(treatments_no_ext)[1]
-cper_plot_no_ext <- create_per_plot(treatments_no_ext)[2]
-nper_plot_no_mod <- create_per_plot(treatments_no_mod)[1]
-cper_plot_no_mod <- create_per_plot(treatments_no_mod)[2]
-
-#### 2. CONSTANT WATER ANALYSES
-# Look at changes over time in constantly watered samples
-source("code/functions/ea_functions/examine_constant_water_time.R")
-ratio_cw_plot_all <- examine_cw_time(treatments_all, "ratio")[1]
-ratio_cw_stats_all <- examine_cw_time(treatments_all, "ratio")[2]
-nper_cw_plot_all <- examine_cw_time(treatments_all, "nper")[1]
-nper_cw_stats_all <- examine_cw_time(treatments_all, "nper")[2]
-cper_cw_plot_all <- examine_cw_time(treatments_all, "cper")[1]
-cper_cw_stats_all <- examine_cw_time(treatments_all, "cper")[2]
-
-ratio_cw_plot_no_ext <- examine_cw_time(treatments_no_ext, "ratio")[1]
-ratio_cw_stats_no_ext <- examine_cw_time(treatments_no_ext, "ratio")[2]
-nper_cw_plot_no_ext <- examine_cw_time(treatments_no_ext, "nper")[1]
-nper_cw_stats_no_ext <- examine_cw_time(treatments_no_ext, "nper")[2]
-cper_cw_plot_no_ext <- examine_cw_time(treatments_no_ext, "cper")[1]
-cper_cw_stats_no_ext <- examine_cw_time(treatments_no_ext, "cper")[2]
-# Note that there is no difference in C:N ratio data between the extreme and
-# moderate outliers subsetted datasets
-nper_cw_plot_no_mod <- examine_cw_time(treatments_no_mod, "nper")[1]
-nper_cw_stats_no_mod <- examine_cw_time(treatments_no_mod, "nper")[2]
-cper_cw_plot_no_mod <- examine_cw_time(treatments_no_mod, "cper")[1]
-cper_cw_stats_no_mod <- examine_cw_time(treatments_no_mod, "cper")[2]
-
-
-
-# Look at effect of rewetting and cc by comparing changes at one,
-# two, and four weeks between pre and post wet samples
-source("code/functions/ea_functions/compare_rewetting.R")
-ratio_rewet_plot_all <- compare_rewetting(treatments_all, "ratio")[1]
-ratio_rewet_stats_all <- compare_rewetting(treatments_all, "ratio")[2]
-nper_rewet_plot_all <- compare_rewetting(treatments_all, "nper")[1]
-nper_rewet_stats_all <- compare_rewetting(treatments_all, "nper")[2]
-cper_rewet_plot_all <- compare_rewetting(treatments_all, "cper")[1]
-cper_rewet_stats_all <- compare_rewetting(treatments_all, "cper")[2]
-# Note that there is no difference between the extreme and
-# moderate outliers subsetted datasets
-ratio_rewet_plot_no_ext <- compare_rewetting(treatments_no_ext, "ratio")[1]
-ratio_rewet_stats_no_ext <- compare_rewetting(treatments_no_ext, "ratio")[2]
-nper_rewet_plot_all <- compare_rewetting(treatments_no_ext, "nper")[1]
-nper_rewet_stats_all <- compare_rewetting(treatments_no_ext, "nper")[2]
-cper_rewet_plot_all <- compare_rewetting(treatments_no_ext, "cper")[1]
-cper_rewet_stats_all <- compare_rewetting(treatments_no_ext, "cper")[2]
-
-# Moderate significance of rewetting on w/cc %C:
-cper_rewet_w_cc <- treatments_all %>%
-  filter(pre_post_wet != "no_soil") %>%
+# Examine the effects of cc on %N by comparing w_cc and no_cc when dried
+# ie initial + pre-wet samples only
+# Calculate medians per sample
+n_dry_samp_sum_all <- mapped_all %>%
   filter(pre_post_wet == "pre" |
-           pre_post_wet == "post") %>%
-  filter(drying_treatment == "four_wk" |
-           drying_treatment == "one_wk" |
-           drying_treatment == "two_wk" ) %>%
-    filter(cc_treatment == "w_cc") %>%
-    group_by(drying_treatment)
-cper_rewet_w_cc %>% lm(data = ., mean_mean_cper ~ pre_post_wet) %>%
-  anova()
+           pre_post_wet == "initial") %>%
+  group_by(sample_no, cc_treatment, drying_treatment) %>%
+  summarize(samp_median = median(n_per))
+# Calculate medians per treatment level
+n_dry_treat_sum_all <- n_dry_samp_sum_all %>%
+  group_by(cc_treatment, drying_treatment) %>%
+  summarize(treat_median = median(samp_median),
+            treat_iqr = IQR(samp_median))
 
-# Look at effect of drying over time by looking at only dried samples
-source("code/functions/ea_functions/compare_drying.R")
-ratio_drying_plot_all <- compare_drying(treatments_all, "ratio")[1]
-ratio_drying_stats_all <- compare_drying(treatments_all, "ratio")[2]
-nper_drying_plot_all <- compare_drying(treatments_all, "nper")[1]
-nper_drying_stats_all <- compare_drying(treatments_all, "nper")[2]
-cper_drying_plot_all <- compare_drying(treatments_all, "cper")[1]
-cper_drying_stats_all <- compare_drying(treatments_all, "cper")[2]
-# Note that there is no difference between the extreme and
-# moderate outliers subsetted datasets
-ratio_drying_plot__no_ext <- compare_drying(treatments_no_ext, "ratio")[1]
-ratio_drying_stats_no_ext <- compare_drying(treatments_no_ext, "ratio")[2]
-nper_drying_plot__no_ext <- compare_drying(treatments_no_ext, "nper")[1]
-nper_drying_stats_no_ext <- compare_drying(treatments_no_ext, "nper")[2]
-cper_drying_plot__no_ext <- compare_drying(treatments_no_ext, "cper")[1]
-cper_drying_stats_no_ext <- compare_drying(treatments_no_ext, "cper")[2]
-
+# Plot
+facet_drying_labels <- as_labeller(c("one_wk" = "One Week",
+                                     "two_wk" = "Two Weeks",
+                                     "four_wk" = "Four Weeks",
+                                     "initial" = "Initial"))
+n_dry_plot_all <- n_dry_samp_sum_all %>%
+  ggplot(aes(x = factor(cc_treatment, levels = c("no_cc", "w_cc")),
+             y = samp_median,
+             fill = cc_treatment,
+             color = cc_treatment)) +
+  geom_boxplot() +
+  facet_grid(~ factor(drying_treatment,
+                      levels = c("initial", "one_wk", "two_wk", "four_wk")),
+             labeller = facet_drying_labels)  +
+  scale_fill_manual(name = NULL, limits = c("no_cc", "w_cc"),
+                    values = c("#16B4FF", "#34980D"),
+                    labels = c("No Cover Crop", "With Cover Crop")) +
+  scale_color_manual(name = NULL, limits = c("no_cc", "w_cc"),
+                     values = c("#097CB2", "#195004"),
+                     labels = c("No Cover Crop", "With Cover Crop")) +
+  theme(axis.text.x = element_blank(),
+        axis.title.x = element_blank(),
+        axis.ticks.x = element_blank(),
+        legend.position = "bottom") +
+  labs(y = "Percent Nitrogen",
+       title = "Nitrogen Percentage in Drying Soils")
+ggsave(n_dry_plot_all, filename = "output/2022/ea_plots/nper_cc_drying.png",
+       width = 14, height = 8, units = "in")
