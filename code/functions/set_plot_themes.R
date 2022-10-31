@@ -48,6 +48,8 @@ set_theme <- function() {
     legend.margin = margin(8, 8, 8, 8),
     legend.box.spacing = unit(20, "pt"),
     legend.key.size = unit(10, "pt"),
-    legend.spacing.y = unit(0, "pt")
+    legend.spacing.y = unit(0, "pt"),
+    legend.key = element_blank(),
+    strip.text.x = element_text(size = 12)
 )
 }
