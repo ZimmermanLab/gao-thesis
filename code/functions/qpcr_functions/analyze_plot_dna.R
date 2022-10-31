@@ -64,7 +64,8 @@ analyze_plot_dna <- function(treatment_mapped, cc_type) {
     ggplot(aes(x = drying_treatment,
                y = prop_conc_norm,
                # Reorder to have pre first then post
-               fill = factor(pre_post_wet, level = c("pre", "post")))) +
+               fill = factor(pre_post_wet, level = c("pre", "post")),
+               color = pre_post_wet)) +
     geom_boxplot() +
     # scale_fill_discrete(breaks= c("pre", "post")) +
     scale_x_discrete(limits = c("one_wk", "two_wk", "four_wk"),
@@ -72,8 +73,10 @@ analyze_plot_dna <- function(treatment_mapped, cc_type) {
     scale_fill_manual(name = NULL, limits = c("pre", "post"),
                       values = c("#16B4FF", "#34980D"),
                       labels = c("Pre-Wet", "Post-Wet")) +
-    scale_color_manual(name = NULL, values = c("#097CB2", "#195004"),
+    scale_color_manual(name = NULL, limits = c("pre", "post"),
+                       values = c("#097CB2", "#195004"),
                        labels = c("Pre-Wet", "Post-Wet")) +
+    theme(legend.key = element_blank()) +
     labs(x = "Drying Time",
          y = "Proportional Concentration",
          title = paste(micro_type, "DNA Changes From Rewetting\n", cc_title))
