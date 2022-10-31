@@ -35,19 +35,26 @@ analyze_plot_dna <- function(treatment_mapped, cc_type) {
       cc_title = "In All Samples"
     }
 
-  rewet_med <- rewet_subset %>%
+  # Find medians per sample first across all tech reps
+  samp_sum <- rewet_subset %>%
     group_by(sample_no, drying_treatment, pre_post_wet) %>%
-    # Find medians per sample first
-    summarize(median = median(prop_conc_norm)) %>%
+    summarize(samp_median = median(prop_conc_norm))
+  # Find medians + IQRs across all treatment levels
+  treat_sum <- samp_sum %>%
     group_by(drying_treatment, pre_post_wet) %>%
     # Find medians per treatment level
-    summarize(med_median = median(median),
-            iqr = IQR(median)) %>%
+    summarize(treat_median = median(samp_median),
+            treat_iqr = IQR(samp_median)) %>%
     arrange(drying_treatment == "one_wk")
 
   # Use Kruskal-Wallis test to see effect of rewetting
-  rewet_stats <- kruskal.test(
-    prop_conc_norm ~ pre_post_wet, data = rewet_subset)
+  stats_rewet <- kruskal.test(samp_median ~ pre_post_wet,
+                              data = samp_sum)
+  # Use Kruskal-Wallis test to see effect of drying in pre only
+  stats_drying <- samp_sum %>%
+    filter(pre_post_wet == "pre") %>%
+    kruskal.test(samp_median ~ drying_treatment,
+                              data = .,)
 
   # Set plot themes
   source("code/functions/set_plot_themes.R")
@@ -60,24 +67,30 @@ analyze_plot_dna <- function(treatment_mapped, cc_type) {
     str_detect(input_name, "bact") == TRUE, "Bacterial", "Fungal")
 
   # Create a boxpot of DNA quantities pre/post rewetting at each time point
-  rewet_plot <- rewet_subset %>%
-    ggplot(aes(x = drying_treatment,
-               y = prop_conc_norm,
+  # Set facet labels
+  facet_drying_labels <- as_labeller(c("one_wk" = "One Week",
+                                       "two_wk" = "Two Weeks",
+                                       "four_wk" = "Four Weeks"))
+  rewet_plot <- samp_sum %>%
+    ggplot(aes(x = factor(pre_post_wet, levels = c("pre", "post")),
+               y = samp_median,
                # Reorder to have pre first then post
-               fill = factor(pre_post_wet, level = c("pre", "post")),
+               fill = pre_post_wet,
                color = pre_post_wet)) +
     geom_boxplot() +
-    # scale_fill_discrete(breaks= c("pre", "post")) +
-    scale_x_discrete(limits = c("one_wk", "two_wk", "four_wk"),
-                     labels = c("One Week", "Two Weeks", "Four Weeks")) +
+    facet_wrap(~ factor(drying_treatment,
+                        levels = c("one_wk", "two_wk", "four_wk")),
+               labeller = facet_drying_labels)  +
+    scale_x_discrete(labels = c("Pre-Wet", "Post-Wet")) +
     scale_fill_manual(name = NULL, limits = c("pre", "post"),
                       values = c("#16B4FF", "#34980D"),
                       labels = c("Pre-Wet", "Post-Wet")) +
     scale_color_manual(name = NULL, limits = c("pre", "post"),
                        values = c("#097CB2", "#195004"),
                        labels = c("Pre-Wet", "Post-Wet")) +
-    theme(legend.key = element_blank()) +
-    labs(x = "Drying Time",
+    theme(legend.position = "none",
+          strip.text = element_text(size = 12)) +
+    labs(x = element_blank(),
          y = "Proportional Concentration",
          title = paste(micro_type, "DNA Changes From Rewetting\n", cc_title))
 
@@ -90,7 +103,9 @@ analyze_plot_dna <- function(treatment_mapped, cc_type) {
          width = 10, height = 8, units = "in")
 
   # Create a list to return both stats and plot
-  return_list <- list("stats" = rewet_stats, "plot" = rewet_plot,
-                      "median" = rewet_med)
+  return_list <- list("rewet_stats" = stats_rewet,
+                      "drying_stats" = stats_drying,
+                      "plot" = rewet_plot,
+                      "median" = treat_sum)
   return(return_list)
 }
