@@ -40,15 +40,15 @@ clean_ea_data <- function(input_file_list) {
       filter(!(str_detect(sample_no, "SRM") & c_n_ratio == 0))
   }
   ea_results_clean <- ea_results_clean %>%
-    filter(!(sample_no == "SRM" |
-             sample_no == "BLANK" |
-             sample_no == "Blank" |
-             str_detect("Blank", sample_no) |
-             sample_no == "Bypass")) %>%
+    filter(!str_detect(sample_no, "BLANK")) %>%
+    filter(!str_detect(sample_no, "Blank")) %>%
+    filter(!str_detect(sample_no, "Bypass")) %>%
     filter(!str_detect(sample_no, "^ASP"))
   # Clean up sample names
-  ea_results_clean$sample_no <- as.numeric(str_sub(
-    ea_results_clean$sample_no, start = -3))
+  ea_results_clean$sample_no <- case_when(
+    str_detect(ea_results_clean$sample_no, "SG") ~
+      str_sub(ea_results_clean$sample_no, start = -3),
+    str_detect(ea_results_clean$sample_no, "SRM") ~ ea_results_clean$sample_no)
 
   return(ea_results_clean)
 }
