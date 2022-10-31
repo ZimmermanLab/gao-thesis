@@ -205,7 +205,7 @@ ggsave(wk_peaks_no_cc_plot, filename = "output/2022/co2/figures/peak_no_cc.png",
        width = 10, height = 8, units = "in")
 
 # Check stats of this difference
-kruskal.test(data = wk_peaks_no_cc, wk_peak ~ drying_treatment)
+kruskal.test(data = all_no_cc, wk_peak ~ drying_treatment)
 
 # Medians of peaks at each week of drying CO2 jars only
 co2_nocc_med <- co2_tests_nocc %>%
