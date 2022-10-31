@@ -63,7 +63,7 @@ samp_rep_ratio_all <- bact_ratio_all %>%
   left_join(fung_ratio_all) %>%
   left_join(all_treatments)
 
-# Find median per sample
+# Find median per sample (all included)
 samp_all <- samp_rep_ratio_all %>%
   group_by(sample_no, cc_treatment, drying_treatment, pre_post_wet) %>%
   summarize(samp_med_bact = median(conc_norm_bact),
@@ -84,7 +84,8 @@ samp_ratio_nocc <- samp_ratio_all %>%
 treat_ratio_nocc_sum <- samp_ratio_nocc %>%
   group_by(cc_treatment, drying_treatment, pre_post_wet) %>%
   summarize(treat_median_ratio = median(samp_ratio),
-            treat_iqr = IQR(samp_ratio))
+            treat_iqr = IQR(samp_ratio)) %>%
+  arrange(drying_treatment == "one_wk")
 
 # Calculate total statistics of rewetting in no cc
 ratio_stats_rewet_nocc <- samp_ratio_nocc %>%
@@ -113,7 +114,7 @@ facet_drying_labels <- as_labeller(c("one_wk" = "One Week",
 # No cc
 ratio_nocc_plot <- samp_ratio_nocc %>%
   ggplot(aes(x = factor(pre_post_wet, levels = c("pre", "post")),
-             y = log(samp_ratio),
+             y = samp_ratio,
              fill = pre_post_wet,
              color = pre_post_wet)) +
   geom_boxplot() +
@@ -127,6 +128,7 @@ ratio_nocc_plot <- samp_ratio_nocc %>%
                      values = c("#097CB2", "#195004"),
                      labels = c("Pre-Wet", "Post-Wet")) +
   scale_x_discrete(labels = c("Pre-Wet", "Post-Wet")) +
+  scale_y_continuous(trans = "log10") +
   theme(legend.position = "none") +
   labs(x = element_blank(),
        y = "Ratios (log scale)",
@@ -134,6 +136,7 @@ ratio_nocc_plot <- samp_ratio_nocc %>%
 ggsave(ratio_nocc_plot,
        filename = "output/2022/qpcr_plots/ratios_all_nocc.png",
        width = 10, height = 8, units = "in")
+
 
 # W CC ONLY
 samp_ratio_wcc <- samp_ratio_all %>%
@@ -144,7 +147,8 @@ samp_ratio_wcc <- samp_ratio_all %>%
 treat_ratio_wcc_sum <- samp_ratio_wcc %>%
   group_by(cc_treatment, drying_treatment, pre_post_wet) %>%
   summarize(treat_median_ratio = median(samp_ratio),
-            treat_iqr = IQR(samp_ratio))
+            treat_iqr = IQR(samp_ratio)) %>%
+  arrange(drying_treatment == "one_wk")
 
 # Calculate total statistics of rewetting in w cc
 ratio_stats_rewet_wcc <- samp_ratio_wcc %>%
@@ -168,7 +172,7 @@ ratio_wcc_four_wk_stats <- samp_ratio_wcc %>%
 # Plot w cc
 ratio_wcc_plot <- samp_ratio_wcc %>%
   ggplot(aes(x = factor(pre_post_wet, levels = c("pre", "post")),
-             y = log(samp_ratio),
+             y = samp_ratio,
              fill = pre_post_wet,
              color = pre_post_wet)) +
   geom_boxplot() +
@@ -182,6 +186,7 @@ ratio_wcc_plot <- samp_ratio_wcc %>%
                      values = c("#097CB2", "#195004"),
                      labels = c("Pre-Wet", "Post-Wet")) +
   scale_x_discrete(labels = c("Pre-Wet", "Post-Wet")) +
+  scale_y_continuous(trans = "log10") +
   theme(legend.position = "none") +
   labs(x = element_blank(),
        y = "Ratios (log scale)",
@@ -189,6 +194,47 @@ ratio_wcc_plot <- samp_ratio_wcc %>%
 ggsave(ratio_wcc_plot,
        filename = "output/2022/qpcr_plots/ratios_all_wcc.png",
        width = 10, height = 8, units = "in")
+
+# NO OUTLIERS
+# Find median per sample (no outliers)
+samp_nomod <- samp_rep_ratio_all %>%
+  filter(is.na(outlier_flag_bact) |
+           is.na(outlier_flag_fung)) %>%
+  group_by(sample_no, cc_treatment, drying_treatment, pre_post_wet) %>%
+  summarize(samp_med_bact = median(conc_norm_bact),
+            samp_med_fung = median(conc_norm_fung))
+
+# Find ratios per sample
+samp_ratio_nomod <- samp_nomod %>%
+  mutate(samp_ratio = samp_med_fung / samp_med_bact) %>%
+  # Removes water only samples that had bacteria but no fungi
+  filter(!is.na(samp_ratio))
+
+# Plot
+samp_ratio_nomod_plot <- samp_ratio_nomod %>%
+  filter(cc_treatment == "w_cc") %>%
+  filter(pre_post_wet == "pre" |
+           pre_post_wet == "post") %>%
+  ggplot(aes(x = factor(pre_post_wet, levels = c("pre", "post")),
+             y = samp_ratio,
+             fill = pre_post_wet,
+             color = pre_post_wet)) +
+  geom_boxplot() +
+  facet_wrap(~ factor(drying_treatment,
+                      levels = c("one_wk", "two_wk", "four_wk")),
+             labeller = facet_drying_labels)  +
+  scale_fill_manual(name = NULL, limits = c("pre", "post"),
+                    values = c("#16B4FF", "#34980D"),
+                    labels = c("Pre-Wet", "Post-Wet")) +
+  scale_color_manual(name = NULL, limits = c("pre", "post"),
+                     values = c("#097CB2", "#195004"),
+                     labels = c("Pre-Wet", "Post-Wet")) +
+  scale_y_continuous(trans = "log10") +
+  scale_x_discrete(labels = c("Pre-Wet", "Post-Wet")) +
+  theme(legend.position = "none")
+## REMOVING ALL OUTLIERS FROM TECH REPS DOES NOT CHANGE EITHER
+# W CC OR W/O CC
+
 
 #### SEPARATE BACTERIAL + FUNGAL ANALYSES ####
 
