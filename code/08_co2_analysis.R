@@ -184,15 +184,15 @@ co2_tests_medians %>%
 
 # No cc only
 # Compile data from post CO2 trials and all samples
-all_no_cc <- samp_medians %>%
-  filter(cc_treatment == "no_cc") %>%
-  filter(drying_treatment != "initial_dry")
-
-wk_peaks_no_cc <- all_no_cc %>%
-  group_by(drying_treatment, sample_no) %>%
+all_samp <- samp_medians %>%
+  filter(drying_treatment != "initial_dry") %>%
+  group_by(drying_treatment, sample_no, cc_treatment) %>%
   summarize(wk_peak = max(median))
 
-wk_peaks_no_cc_plot <- wk_peaks_no_cc %>%
+all_no_cc <- all_samp %>%
+  filter(cc_treatment == "no_cc")
+
+wk_peaks_no_cc_plot <- all_no_cc %>%
   ggplot(aes(x = drying_treatment,
              y = wk_peak)) +
   geom_boxplot(fill = "#16B4FF", color = "#097CB2") +
@@ -222,15 +222,11 @@ all_wk_peaks_nocc <- wk_peaks_no_cc %>%
 
 # With cc only
 # Compile data from post CO2 trials and all samples
-all_w_cc <- samp_medians %>%
-  filter(cc_treatment == "w_cc") %>%
-  filter(drying_treatment != "initial_dry")
+all_w_cc <- all_samp %>%
+  filter(cc_treatment == "w_cc")
 
-wk_peaks_w_cc <- all_w_cc %>%
-  group_by(drying_treatment, sample_no) %>%
-  summarize(wk_peak = max(median))
-
-wk_peaks_w_cc_plot <- wk_peaks_w_cc %>%
+# Plot no cc and w cc in facet
+wk_peaks_w_cc_plot <- all_w_cc %>%
   ggplot(aes(x = drying_treatment,
              y = wk_peak)) +
   geom_boxplot(fill = "#34980D", color = "#195004") +
@@ -258,6 +254,33 @@ all_wk_peaks_wcc <- wk_peaks_w_cc %>%
   group_by(drying_treatment) %>%
   summarise(med_wk_peak = median(wk_peak), iqr_wk = IQR(wk_peak))
 
+# Set cc facet names
+facet_cc_names <- as_labeller(c("no_cc" = "Without Cover Crop",
+                                "w_cc" = "With Cover Crop"))
+# Plot no cc and w cc in facet
+wk_peaks_all_plot <- all_samp %>%
+  ggplot(aes(x = drying_treatment,
+             y = wk_peak,
+             fill = cc_treatment,
+             color = cc_treatment)) +
+  geom_boxplot() +
+  facet_wrap(~ cc_treatment, scales = "free",
+             labeller = facet_cc_names) +
+  scale_x_discrete(limits = c("one_wk", "two_wk", "four_wk"),
+                   labels = c("One Week", "Two Weeks", "Four Weeks")) +
+  theme(legend.position = "none",
+        strip.text = element_text(size = 12)) +
+  scale_color_manual(limits = c("no_cc", "w_cc"),
+                     values = c("#097CB2", "#195004")) +
+  scale_fill_manual(limits = c("no_cc", "w_cc"),
+                    values = c("#16B4FF", "#34980D")) +
+  scale_y_continuous(labels = label_comma()) +
+  theme(panel.spacing = unit(2, "lines")) +
+  labs(x = "Drying Time",
+       y = "Peak Co2 (ppm)",
+       title = "Peak CO2 After Rewetting")
+ggsave(wk_peaks_all_plot, filename = "output/2022/co2/figures/peak_all.png",
+       width = 14, height = 8, units = "in")
 
 
 #### EFFECT OF DRYING ON RESPIRATION ####
@@ -266,21 +289,15 @@ initial_dry_all <- samp_medians %>%
   filter(drying_treatment == "initial_dry")
 
 # No cc
-initial_dry_no_cc <- initial_dry_all %>%
-  filter(cc_treatment == "no_cc")
-init_dry_nocc_stats <- initial_dry_no_cc %>%
+init_dry_nocc_stats <- initial_dry_all %>%
+  filter(cc_treatment == "no_cc") %>%
   arrange(date) %>%
   group_by(date) %>%
   summarize(median_co2 = median(median), iqr_co2 = IQR(median))
-init_dry_nocc_plot <- initial_dry_no_cc %>%
-  ggplot(aes(x = date,
-             y = median)) +
-  geom_boxplot(fill = "#16B4FF", color = "#097CB2") +
-  labs(x = "Day of Drying",
-       y = "CO2 Concentration (ppm)",
-       title = "CO2 Concentrations During Drying Without Cover Crops") +
-  scale_x_discrete(labels = c("1", "2", "3", "4,", "5"))
-kruskal.test(data = initial_dry_no_cc, median ~ date)
+# Test significance
+initial_dry_all %>%
+  filter(cc_treatment == "no_cc") %>%
+  kruskal.test(data = ., median ~ date)
 
 # W cc
 init_dry_wcc_stats <- initial_dry_all %>%
@@ -288,10 +305,11 @@ init_dry_wcc_stats <- initial_dry_all %>%
   arrange(date) %>%
   group_by(date) %>%
   summarize(median_co2 = median(median), iqr_co2 = IQR(median))
+# Test significance
+initial_dry_all %>%
+  filter(cc_treatment == "w_cc") %>%
+  kruskal.test(data = ., median ~ date)
 
-# Set facet names
-facet_cc_names <- as_labeller(c("no_cc" = "Without Cover Crop",
-                                "w_cc" = "With Cover Crop"))
 # Plot side by side
 init_dry_all_plot <- initial_dry_all %>%
   ggplot(aes(x = date,
@@ -304,8 +322,9 @@ init_dry_all_plot <- initial_dry_all %>%
        title = "CO2 Concentrations In Drying Soils") +
   facet_wrap(~ cc_treatment, scales = "free",
              labeller = facet_cc_names) +
-  scale_x_discrete(labels = c("1", "2", "3", "4,", "5")) +
-  theme(legend.position = "none") +
+  scale_x_discrete(labels = c("1", "2", "3", "4", "5")) +
+  theme(legend.position = "none",
+        strip.text = element_text(size = 12)) +
   scale_color_manual(limits = c("no_cc", "w_cc"),
                      values = c("#097CB2", "#195004")) +
   scale_fill_manual(limits = c("no_cc", "w_cc"),
