@@ -59,7 +59,7 @@ fung_treatment_all <- fung_norm_all %>%
 # DNA quantities
 source("code/functions/qpcr_functions/analyze_plot_dna.R")
 # cc agnostic
-bact_rewet_all <- analyze_plot_dna(bact_treatment_all, "all")
+bact_rewet_all <- analyze_plot_dna(bact_treatment_all, "no_cc")
 # Run test at every time point to compare differences before and after
 source("code/functions/qpcr_functions/compare_rewet_each_wk.R")
 bact_wk_all <- compare_rewet_time(bact_treatment_all, "all")
@@ -89,18 +89,11 @@ fung_wk_no_cc_all <- compare_rewet_time(fung_treatment_all, "no_cc")
 # Make plot and run Kruskal-Wallis test to see effect of rewetting on
 # bacterial DNA quantities in samples with cc
 bact_rewet_w_cc <- analyze_plot_dna(bact_treatment_all, "w_cc")
-bact_rewet_stats_w_cc <- bact_rewet_w_cc[1]
-bact_rewet_plot_w_cc <- bact_rewet_w_cc[2]
-bact_rewet_med_w_cc <- bact_rewet_w_cc[3]
+bact_wk_w_cc_all <- compare_rewet_time(bact_treatment_all, "w_cc")
 
 # Make plot and run Kruskal-Wallis test to see effect of rewetting on
 # fungal DNA quantities in samples with cc
 fung_rewet_w_cc <- analyze_plot_dna(fung_treatment_all, "w_cc")
-fung_rewet_stats_w_cc <- fung_rewet_w_cc[1]
-fung_rewet_plot_w_cc <- fung_rewet_w_cc[2]
-fung_rewet_med_w_cc <- fung_rewet_w_cc[3]
-
-bact_wk_w_cc_all <- compare_rewet_time(bact_treatment_all, "w_cc")
 fung_wk_w_cc_all <- compare_rewet_time(fung_treatment_all, "w_cc")
 
 #### Checking outliers ####
