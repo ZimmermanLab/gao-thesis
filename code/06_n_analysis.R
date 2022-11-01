@@ -8,6 +8,8 @@
 library("ggplot2")
 library("tidyverse")
 library("dplyr")
+library("stringr")
+library("stringi")
 
 # Get file list
 file_list <- paste0("data/raw_data/SmartChem_N_extractions/2022_samples/",
@@ -18,50 +20,114 @@ file_list <- paste0("data/raw_data/SmartChem_N_extractions/2022_samples/",
 # Source and run function to clean N data
 source("code/functions/n_functions/n_clean_n_data.R")
 # Read all csv files in the folder and create a compiled dataframe
-n_data_clean <- clean_n_data(file_list)
+n_data_clean <- clean_n_data(file_list) %>%
+  select(-run_time)
 
-# Flag outliers
-# > 1.5x IQR = moderate, > 3x IQR = extreme
-source("code/functions/n_functions/flag_outliers.R")
-flagged_outliers <- n_data_clean %>%
-  filter(!is.na(nh3), !is.na(no2_no3)) %>%
-  flag_outliers()
+# Create column of total leachate based on having added 25mL of CaCl2
+# and total extract based on having added 40mL of KCl
+total_leach_ext <- n_data_clean %>%
+  mutate(leach_nh3_mg = 25 * nh3_leachate,
+         leach_no2_no3_mg = 25 * no2_no3_leachate) %>%
+  mutate(ext_nh3_mg = 40 * nh3_extract,
+         ext_no2_no3_mg = 40 * no2_no3_extract) %>%
+  select(-c(nh3_leachate, no2_no3_leachate, nh3_extract, no2_no3_extract))
 
-# Find means and SDs per sample at each outlier threshold
-source("code/functions/n_functions/summarize_samples.R")
-samples_stats_all <- flagged_outliers %>%
-  summarize_samples()
-samples_stats_no_ext <- flagged_outliers %>%
-  filter(outlier_flag == "moderate" |
-           is.na(outlier_flag)) %>%
-  summarize_samples()
-samples_stats_no_mod <- flagged_outliers %>%
-  filter(is.na(outlier_flag)) %>%
-  summarize_samples()
-
-# Bring in leachate water weights to determine leachate concentrations
-data_sheets_files <- dir_ls(path = "data/raw_data/data_sheets/", recurse = 0) %>%
-  # Filter out the data sheet that has extra columns for dried soil weights
+# Bring in soil weights to determine total mg of leachate
+data_sheets_files <- dir_ls(
+  path = "data/raw_data/data_sheets/", recurse = 0) %>%
+  # Filter out the redundant data sheet that has extra columns for
+  # dried soil weights
   path_filter(glob = "*dried_wts.csv", invert = TRUE)
 raw_data_sheets <- read_csv(data_sheets_files)
 clean_data_sheets <- raw_data_sheets %>%
   select(sample_no, n_extraction_soil_mass,
          n_leachate_soil_mass_pre,water_leachate) %>%
+  select(-water_leachate) %>%
   arrange(sample_no)
 
-# Join data sheets weights with N data and calculate leachate:extract ratios
-sample_stats_all_wts <- samples_stats_all %>%
+# Get list of jar assignments from 2022
+all_treatments <- readr::read_csv(
+  "output/2022/jar_assignments/master_list.csv")
+
+# Join and calculate total extract and total leachate by soil weights
+total_leach_ext_wt <- total_leach_ext %>%
   left_join(clean_data_sheets) %>%
-  mutate(norm_factor = (n_extraction_soil_mass / 40) *
-           (water_leachate/n_leachate_soil_mass_pre)) %>%
-  pivot_wider(names_from = sample_type, values_from = c(mean_nh3, mean_no2_no3,
-                                                        sd_nh3, sd_no2_no3)) %>%
-  select(-c(sd_nh3_leachate, sd_no2_no3_leachate)) %>%
-  mutate(norm_leach_mean_nh3 = norm_factor * mean_nh3_leachate,
-         norm_leach_mean_no2_no3 = norm_factor * mean_no2_no3_leachate) %>%
-  mutate(leach_extract_ratio_nh3 = norm_leach_mean_nh3 / mean_nh3_extract,
-         leach_extract_ratio_no2_no3 =
-           norm_leach_mean_no2_no3 / mean_no2_no3_extract)
+  left_join(all_treatments) %>%
+  # Normalize total extracts and leachates to each sample's fresh soil weight
+  mutate(leach_nh3_per = leach_nh3_mg / n_leachate_soil_mass_pre,
+         leach_no2_no3_per = leach_no2_no3_mg / n_leachate_soil_mass_pre,
+         ext_nh3_per = ext_nh3_mg / n_extraction_soil_mass,
+         ext_no2_no3_per = ext_no2_no3_mg / n_extraction_soil_mass)
+
+# Calculate sample medians compiling tech reps across all N types
+samp_sum <- total_leach_ext_wt %>%
+  select(-c(rep_no, n_extraction_soil_mass, n_leachate_soil_mass_pre)) %>%
+  group_by(sample_no, cc_treatment, drying_treatment, pre_post_wet) %>%
+  summarise(across(everything(),
+                   .f = list(median = median), na.rm = TRUE))
+# Note that Sample 12 was the only one that didn't have its leachate analysed
+# so replaced all NAs with 0's except for Sample #12
+sample_12 <- samp_sum %>%
+  filter(sample_no == "12")
+samp_sum <- samp_sum %>%
+  filter(sample_no != "12") %>%
+  mutate_at(vars(-c(sample_no)), ~ replace(., is.na(.), 0)) %>%
+  rbind(sample_12) %>%
+  arrange(sample_no)
+
+# Create ratio of leachate : extract column
+samp_sum_ratio <- samp_sum %>%
+  mutate(ratio_nh3 = leach_nh3_per_median / ext_nh3_per_median,
+         ratio_no2no3  = leach_no2_no3_per_median / ext_no2_no3_per_median)
+
+# Plot w cc vs no cc at each post-wetting point
+ratio_nh3_plot <- samp_mapped %>%
+  filter(pre_post_wet == "post") %>%
+  ggplot(aes(x = drying_treatment,
+             y = ratio_nh3,
+             fill = cc_treatment)) +
+  geom_boxplot()
+ratio_no2no3_plot <- samp_mapped %>%
+  filter(pre_post_wet == "post") %>%
+  ggplot(aes(x = drying_treatment,
+             y = ratio_no2no3,
+             fill = cc_treatment)) +
+  geom_boxplot()
+
+# Plot Leachate Ns as mg per g of fresh soil
+source("code/functions/n_functions/analyze_plot_n_data.R")
+leach_samp_sum <- samp_sum %>%
+  filter(pre_post_wet == "post")
+leach_nh3_plot <- analyze_plot_n(leach_samp_sum, leach_nh3_per_median, "nh3")
+
+leach_nh3_plot <- samp_sum %>%
+  filter(pre_post_wet == "post") %>%
+  ggplot(aes(x = drying_treatment,
+             y = leach_nh3_per_median,
+             fill = cc_treatment)) +
+  geom_boxplot()
+leach_no2no3_plot <- samp_sum %>%
+  filter(pre_post_wet == "post") %>%
+  ggplot(aes(x = drying_treatment,
+             y = leach_no2_no3_per_median,
+             fill = cc_treatment)) +
+  geom_boxplot()
+
+# Plot Extract Ns as mg per g of fresh soil
+ext_nh3_plot <- samp_sum %>%
+  filter(pre_post_wet == "post") %>%
+  ggplot(aes(x = drying_treatment,
+             y = ext_nh3_per_median,
+             fill = cc_treatment)) +
+  geom_boxplot()
+ext_no2no3_plot <- samp_sum %>%
+  filter(pre_post_wet == "post") %>%
+  ggplot(aes(x = drying_treatment,
+             y = ext_no2_no3_per_median,
+             fill = cc_treatment)) +
+  geom_boxplot()
+
+
 
 
 
@@ -72,24 +138,6 @@ cor(sample_stats_leach$mean_nh3_leachate, sample_stats_leach$water_leachate)
 cor(sample_stats_leach$mean_no2_no3_leachate, sample_stats_leach$water_leachate)
 # This shows that there is low correlation between how dry the soil is and
 # the concentration of N that is leached out.
-
-
-# Pull samples that need to be rerun based on weirdo replicates or because
-# they overshot 20 mg/L thresholds (set to 19 here)
-# Set a dilution flag to "yes" if they overshot and need to be diluted
-# n_reruns <- n_all_stats %>%
-#  filter(sd_nh3 > 1 | sd_no2_no3 > 1) %>%
-#  rbind(n_all_stats %>%
-#          filter(mean_nh3 > 19 | mean_no2_no3 > 19)) %>%
-#  mutate(dilute = (case_when((mean_nh3 > 19 | mean_no2_no3 > 19) ~ "yes"))) %>%
-#  group_by(sample_no, sample_type, dilute) %>%
-#  summarize()
-
-# Save this list out
-# write_csv(n_reruns, paste0("output/2022/", Sys.Date(), "_n_reruns.csv"))
-
-# Get list of jar assignments from 2022
-all_treatments <- readr::read_csv("output/2022/jar_assignments/master_list.csv")
 
 # Map data to assignments and find mean + SDs of all samples
 source("code/functions/n_functions/treatment_stats.R")
