@@ -77,6 +77,77 @@ all_treatments <- read_csv("output/2022/jar_assignments/master_list.csv")
 mapped_all <- cn_clean_all %>%
   left_join(all_treatments)
 
+#### COMPARE %N BETWEEN CC IN CW ####
+# See how adding cc affects %N as it decomposes with cw samples
+# ie initial + cw samples only
+# Calculate medians per sample
+n_cw_samp_sum_all <- mapped_all %>%
+  filter(pre_post_wet == "cw" |
+           pre_post_wet == "initial") %>%
+  group_by(sample_no, cc_treatment, drying_treatment) %>%
+  summarize(samp_median = median(n_per))
+# Calculate medians per treatment level
+n_cw_treat_sum_all <- n_cw_samp_sum_all %>%
+  group_by(cc_treatment, drying_treatment) %>%
+  summarize(treat_median = median(samp_median),
+            treat_iqr = IQR(samp_median)) %>%
+  arrange(factor(drying_treatment,
+                 levels = c("initial", "one_wk", "two_wk", "four_wk")))
+
+# Create facet labels
+facet_drying_labels <- as_labeller(c("one_wk" = "One Week",
+                                     "two_wk" = "Two Weeks",
+                                     "four_wk" = "Four Weeks",
+                                     "initial" = "Initial"))
+# Plot
+n_cw_plot_all <- n_cw_samp_sum_all %>%
+  ggplot(aes(x = factor(cc_treatment, levels = c("no_cc", "w_cc")),
+             y = samp_median,
+             fill = cc_treatment,
+             color = cc_treatment)) +
+  geom_boxplot() +
+  facet_grid(~ factor(drying_treatment,
+                      levels = c("initial", "one_wk", "two_wk", "four_wk")),
+             labeller = facet_drying_labels)  +
+  scale_fill_manual(name = NULL, limits = c("no_cc", "w_cc"),
+                    values = c("#16B4FF", "#34980D"),
+                    labels = c("No Cover Crop", "With Cover Crop")) +
+  scale_color_manual(name = NULL, limits = c("no_cc", "w_cc"),
+                     values = c("#097CB2", "#195004"),
+                     labels = c("No Cover Crop", "With Cover Crop")) +
+  theme(axis.text.x = element_blank(),
+        axis.title.x = element_blank(),
+        axis.ticks.x = element_blank(),
+        legend.position = "bottom") +
+  labs(y = "Percent Nitrogen",
+       title = "Nitrogen Percentage in Consistently Moist Soils")
+ggsave(n_cw_plot_all, filename = "output/2022/ea_plots/nper_cc_cw.png",
+       width = 14, height = 8, units = "in")
+
+# Calculate stats on effect of cc on %N over time in cw
+n_cw_stats_all <- n_cw_samp_sum_all %>%
+  kruskal.test(data = ., samp_median ~ cc_treatment)
+# Calculate stats on effect of drying on %N over time in cw
+n_cw_samp_sum_all %>%
+  kruskal.test(data = ., samp_median ~ drying_treatment)
+
+# Calculate stats for each week between w_cc and no_cc
+cw_wk_stats <- data.frame("drying_treatment" = character(),
+                          "p_value"  = numeric(),
+                          "chi_sq" = numeric())
+weeks <- c("initial", "one_wk", "two_wk", "four_wk")
+for(a in weeks) {
+  cw_stats <- n_cw_samp_sum_all %>%
+    filter(drying_treatment == a) %>%
+    kruskal.test(data = ., samp_median ~ cc_treatment)
+  new <- data.frame("drying_treatment" = a,
+                    "p_value" = cw_stats$p.value,
+                    "chi_sq" = cw_stats$statistic)
+  cw_wk_stats <- rbind(cw_wk_stats, new)
+}
+
+
+####  COMPARE %N BETWEEN CC IN DRYING ####
 # Examine the effects of cc on %N by comparing w_cc and no_cc when dried
 # ie initial + pre-wet samples only
 # Calculate medians per sample
@@ -89,13 +160,11 @@ n_dry_samp_sum_all <- mapped_all %>%
 n_dry_treat_sum_all <- n_dry_samp_sum_all %>%
   group_by(cc_treatment, drying_treatment) %>%
   summarize(treat_median = median(samp_median),
-            treat_iqr = IQR(samp_median))
+            treat_iqr = IQR(samp_median)) %>%
+  arrange(factor(drying_treatment,
+                 levels = c("initial", "one_wk", "two_wk", "four_wk")))
 
 # Plot
-facet_drying_labels <- as_labeller(c("one_wk" = "One Week",
-                                     "two_wk" = "Two Weeks",
-                                     "four_wk" = "Four Weeks",
-                                     "initial" = "Initial"))
 n_dry_plot_all <- n_dry_samp_sum_all %>%
   ggplot(aes(x = factor(cc_treatment, levels = c("no_cc", "w_cc")),
              y = samp_median,
@@ -119,3 +188,25 @@ n_dry_plot_all <- n_dry_samp_sum_all %>%
        title = "Nitrogen Percentage in Drying Soils")
 ggsave(n_dry_plot_all, filename = "output/2022/ea_plots/nper_cc_drying.png",
        width = 14, height = 8, units = "in")
+
+# Calculate stats on effect of cc on %N as soils dry
+n_dry_stats_all <- n_dry_samp_sum_all %>%
+  kruskal.test(data = ., samp_median ~ cc_treatment)
+# Calculate stats on effect of drying on %N as soils dry
+n_dry_samp_sum_all %>%
+  kruskal.test(data = ., samp_median ~ drying_treatment)
+
+# Calculate stats for each week between w_cc and no_cc
+dry_wk_stats <- data.frame("drying_treatment" = character(),
+                          "p_value"  = numeric(),
+                          "chi_sq" = numeric())
+weeks <- c("initial", "one_wk", "two_wk", "four_wk")
+for(a in weeks) {
+  dry_stats <- n_dry_samp_sum_all %>%
+    filter(drying_treatment == a) %>%
+    kruskal.test(data = ., samp_median ~ cc_treatment)
+  new <- data.frame("drying_treatment" = a,
+                    "p_value" = dry_stats$p.value,
+                    "chi_sq" = dry_stats$statistic)
+  dry_wk_stats <- rbind(dry_wk_stats, new)
+}
