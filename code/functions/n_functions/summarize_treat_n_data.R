@@ -1,6 +1,6 @@
-# This function analyzes and plots N data along drying
-# treatments (ie over the course of the one week, two
-# week, and four week experiment)
+# This function analyzes N data along drying
+# treatments (ie over the course of the initial, one week, two
+# week, and four week experiment) and produces a summary with medians and IQRs.
 
 # Sarah Gao
 # October 31, 2022
@@ -9,7 +9,7 @@
 library("ggplot2")
 library("dplyr")
 
-analyze_plot_n <- function(n_data, y_var, n_type) {
+sum_plot_n <- function(n_data, y_var, n_type) {
   # Create facet labels
   facet_drying_labels <- as_labeller(c("one_wk" = "One Week",
                                        "two_wk" = "Two Weeks",
@@ -17,11 +17,32 @@ analyze_plot_n <- function(n_data, y_var, n_type) {
                                        "initial" = "Initial"))
   var_name <- deparse(substitute(y_var))
   if (str_detect(var_name, "leach")) {
-    title_samp_type = "Leachate"
+    title = paste("Leachate", toupper(n_type), "Nitrogen in Post-Wet Soils")
+    y_title = paste0("mg ", toupper(n_type), " / g of Fresh Soil")
+    var_name <- str_sub(var_name, end = -6)
   } else if (str_detect(var_name, "ext")) {
-    title_samp_type = "Total N Extract"
-  }
-  # Plot data
+    title = paste("Total Extractable", toupper(n_type), "in Post-Wet Soils")
+    y_title = paste0("mg ", toupper(n_type), " / g of Fresh Soil")
+    var_name <- str_sub(var_name, end = -6)
+  } else if (str_detect(var_name, "ratio")) {
+    title = paste("Ratio of Leachate to Total Extractable", toupper(n_type),
+                  "in Post-Wet Soils")
+    y_title = paste("Leachate : Total Extractable",
+                    toupper(n_type))
+    }
+  # Plot data as a side by side of leachate and extract per week
+  # Pivot to longer
+
+  wk_initial_plot <- n_data %>%
+
+
+
+
+
+
+
+
+
   n_plot <- n_data %>%
     filter(!is.na(!! sym(y_var))) %>%
     ggplot(aes(x = factor(cc_treatment, levels = c("no_cc", "w_cc")),
@@ -42,12 +63,23 @@ analyze_plot_n <- function(n_data, y_var, n_type) {
           axis.title.x = element_blank(),
           axis.ticks.x = element_blank(),
           legend.position = "bottom") +
-    labs(y = paste(toupper(n_type), "Nitrogen (mg)"),
-         title = paste(toupper(n_type), "Nitrogen Per Gram of Fresh Soil in",
-                       title_samp_type))
+    labs(y = y_title,
+         title = title)
 
   ggsave(n_plot, filename = paste0("output/2022/n_plots/", y_var, ".png"),
          width = 14, height = 8, units = "in")
 
-  return(n_plot)
+# Create median and IQR summary of data
+treat_sum <- n_data %>%
+  group_by(cc_treatment, drying_treatment) %>%
+  summarize(med = median(!! sym(y_var), na.rm = TRUE),
+            iqr = IQR(!! sym(y_var), na.rm = TRUE)) %>%
+  arrange(factor(drying_treatment,
+                 levels = c("initial", "one_wk", "two_wk", "four_wk")))
+
+# Compile results into a list
+return_list <- list("treat_sum" = treat_sum,
+                 "plot" = n_plot)
+
+  return(return_list)
 }
