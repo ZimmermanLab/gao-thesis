@@ -46,7 +46,7 @@ analyze_plot_n <- function(n_data, y_var, n_type) {
          title = paste(toupper(n_type), "Nitrogen Per Gram of Fresh Soil in",
                        title_samp_type))
 
-  ggsave(n_plot, filename = paste0("output/2022/n_plots/", input_name, ".png"),
+  ggsave(n_plot, filename = paste0("output/2022/n_plots/", y_var, ".png"),
          width = 14, height = 8, units = "in")
 
   return(n_plot)

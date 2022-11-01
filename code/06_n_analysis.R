@@ -94,7 +94,7 @@ ratio_no2no3_plot <- samp_mapped %>%
              fill = cc_treatment)) +
   geom_boxplot()
 
-# Plot Leachate Ns as mg per g of fresh soil
+# Plot Leachate and Extract Ns as mg per g of fresh soil
 source("code/functions/n_functions/analyze_plot_n_data.R")
 leach_samp_sum <- samp_sum %>%
   filter(pre_post_wet == "post")
