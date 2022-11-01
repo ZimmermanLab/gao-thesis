@@ -98,20 +98,11 @@ ratio_no2no3_plot <- samp_mapped %>%
 source("code/functions/n_functions/analyze_plot_n_data.R")
 leach_samp_sum <- samp_sum %>%
   filter(pre_post_wet == "post")
-leach_nh3_plot <- analyze_plot_n(leach_samp_sum, leach_nh3_per_median, "nh3")
+leach_nh3_plot <- analyze_plot_n(leach_samp_sum, "leach_nh3_per_median", "nh3")
 
-leach_nh3_plot <- samp_sum %>%
-  filter(pre_post_wet == "post") %>%
-  ggplot(aes(x = drying_treatment,
-             y = leach_nh3_per_median,
-             fill = cc_treatment)) +
-  geom_boxplot()
-leach_no2no3_plot <- samp_sum %>%
-  filter(pre_post_wet == "post") %>%
-  ggplot(aes(x = drying_treatment,
-             y = leach_no2_no3_per_median,
-             fill = cc_treatment)) +
-  geom_boxplot()
+leach_no2no3_plot <- analyze_plot_n(leach_samp_sum, "leach_no2_no3_per_median",
+                                    "no2-no3")
+ext_nh3_plot <- analyze_plot_n(leach_samp_sum, "ext_nh3_per_median", "nh3")
 
 # Plot Extract Ns as mg per g of fresh soil
 ext_nh3_plot <- samp_sum %>%

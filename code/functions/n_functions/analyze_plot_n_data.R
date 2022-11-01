@@ -15,15 +15,17 @@ analyze_plot_n <- function(n_data, y_var, n_type) {
                                        "two_wk" = "Two Weeks",
                                        "four_wk" = "Four Weeks",
                                        "initial" = "Initial"))
-  input_name <- deparse(substitute(n_data))
-  if (str_detect(input_name, "leach")) {
+  var_name <- deparse(substitute(y_var))
+  if (str_detect(var_name, "leach")) {
     title_samp_type = "Leachate"
-  } else if (str_detect(input_name, "ext")) {
+  } else if (str_detect(var_name, "ext")) {
     title_samp_type = "Total N Extract"
   }
   # Plot data
-  n_plot <- ggplot(n_data, aes(x = factor(cc_treatment, levels = c("no_cc", "w_cc")),
-               y = n_data[[y_var]],
+  n_plot <- n_data %>%
+    filter(!is.na(!! sym(y_var))) %>%
+    ggplot(aes(x = factor(cc_treatment, levels = c("no_cc", "w_cc")),
+               y = (!! sym(y_var)),
                fill = cc_treatment,
                color = cc_treatment)) +
     geom_boxplot() +
