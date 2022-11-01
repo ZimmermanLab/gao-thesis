@@ -10,6 +10,7 @@ library("tidyverse")
 library("dplyr")
 library("stringr")
 library("stringi")
+library("fs")
 
 # Get file list
 file_list <- paste0("data/raw_data/SmartChem_N_extractions/2022_samples/",
@@ -80,46 +81,58 @@ samp_sum_ratio <- samp_sum %>%
   mutate(ratio_nh3 = leach_nh3_per_median / ext_nh3_per_median,
          ratio_no2no3  = leach_no2_no3_per_median / ext_no2_no3_per_median)
 
+# Set plot themes
+source("code/functions/set_plot_themes.R")
+set_theme()
+
+
+### PER G FRESH SOIL ###
+# Plot Leachate and Extract Ns as mg per g of fresh soil
+source("code/functions/n_functions/analyze_plot_n_data.R")
+post_samp_sum <- samp_sum %>%
+  filter(pre_post_wet == "post")
+treat_sum <- post_samp_sum %>%
+  group_by(cc_treatment, drying_treatment) %>%
+  summarize(leach_nh3_med = median(leach_nh3_mg_median),
+            leach_nh3_iqr = IQR(leach_nh3_mg_median, na.rm = TRUE),
+            leach_nh3_pg_med = median(leach_nh3_per_median),
+            leach_nh3_pg_iqr = IQR(leach_nh3_per_median, na.rm = TRUE),
+            leach_no2no3_med = median(leach_no2_no3_mg_median),
+            leach_no2no3_iqr = IQR(leach_no2_no3_mg_median, na.rm = TRUE),
+            leach_no2no3_pg_med = median(leach_no2_no3_per_median),
+            leach_no2no3_pg_iqr = IQR(leach_no2_no3_per_median, na.rm = TRUE),
+            ext_nh3_med = median(ext_nh3_mg_median),
+            ext_nh3_iqr = IQR(ext_nh3_mg_median),
+            ext_nh3_pg_med = median(ext_nh3_per_median),
+            ext_nh3_pg_IQR = IQR(ext_nh3_per_median),
+            ext_no2no3_med = median(ext_no2_no3_mg_median),
+            ext_no2no3_iqr = IQR(ext_no2_no3_mg_median),
+            ext_no2no3_pg_med = median(ext_no2_no3_per_median),
+            ext_no2no3_pg_iqr = IQR(ext_no2_no3_per_median))
+
+leach_nh3_plot <- analyze_plot_n(post_samp_sum, "leach_nh3_per_median", "nh3")
+leach_no2no3_plot <- analyze_plot_n(post_samp_sum, "leach_no2_no3_per_median",
+                                    "no2-no3")
+ext_nh3_plot <- analyze_plot_n(post_samp_sum, "ext_nh3_per_median", "nh3")
+ext_no2no3_plot <- analyze_plot_n(post_samp_sum, "ext_no2_no3_per_median",
+                                  "no2-no3")
+
+### LEACHATE:EXTRACT RATIOS ###
 # Plot w cc vs no cc at each post-wetting point
-ratio_nh3_plot <- samp_mapped %>%
-  filter(pre_post_wet == "post") %>%
-  ggplot(aes(x = drying_treatment,
-             y = ratio_nh3,
-             fill = cc_treatment)) +
-  geom_boxplot()
-ratio_no2no3_plot <- samp_mapped %>%
+post_ratio_sum <- samp_sum_ratio %>%
+  filter(pre_post_wet == "post")
+
+ratio_nh3_plot <- analyze_plot_n(post_ratio_sum, "ratio_nh3", "nh3")
+ratio_no2_no3_plot <- analyze_plot_n(post_ratio_sum, "ratio_no2no3", "no2-no3")
+
+
+
+ratio_no2no3_plot <- samp_sum_ratio %>%
   filter(pre_post_wet == "post") %>%
   ggplot(aes(x = drying_treatment,
              y = ratio_no2no3,
              fill = cc_treatment)) +
   geom_boxplot()
-
-# Plot Leachate and Extract Ns as mg per g of fresh soil
-source("code/functions/n_functions/analyze_plot_n_data.R")
-leach_samp_sum <- samp_sum %>%
-  filter(pre_post_wet == "post")
-leach_nh3_plot <- analyze_plot_n(leach_samp_sum, "leach_nh3_per_median", "nh3")
-
-leach_no2no3_plot <- analyze_plot_n(leach_samp_sum, "leach_no2_no3_per_median",
-                                    "no2-no3")
-ext_nh3_plot <- analyze_plot_n(leach_samp_sum, "ext_nh3_per_median", "nh3")
-
-# Plot Extract Ns as mg per g of fresh soil
-ext_nh3_plot <- samp_sum %>%
-  filter(pre_post_wet == "post") %>%
-  ggplot(aes(x = drying_treatment,
-             y = ext_nh3_per_median,
-             fill = cc_treatment)) +
-  geom_boxplot()
-ext_no2no3_plot <- samp_sum %>%
-  filter(pre_post_wet == "post") %>%
-  ggplot(aes(x = drying_treatment,
-             y = ext_no2_no3_per_median,
-             fill = cc_treatment)) +
-  geom_boxplot()
-
-
-
 
 
 
@@ -130,15 +143,6 @@ cor(sample_stats_leach$mean_no2_no3_leachate, sample_stats_leach$water_leachate)
 # This shows that there is low correlation between how dry the soil is and
 # the concentration of N that is leached out.
 
-# Map data to assignments and find mean + SDs of all samples
-source("code/functions/n_functions/treatment_stats.R")
-treatment_stats_all <- summarize_treat_stats(samples_stats_all, all_treatments)
-treatment_stats_no_ext <- summarize_treat_stats(
-  samples_stats_no_ext, all_treatments)
-treatment_stats_no_mod <- summarize_treat_stats(
-  samples_stats_no_mod, all_treatments)
-
-# Find ratio of leachate:total N
 
 #############
 
