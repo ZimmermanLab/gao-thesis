@@ -49,12 +49,15 @@ n_data_clean <- read_delim(input_files, delim = ";", col_names = FALSE) %>%
     grepl("^[0-9]", sample_no_full) == TRUE ~
       as.numeric(str_sub(sample_no_full, start = -1)))) %>%
   select(-c(sample_no_full)) %>%
+  # Pivot wider to have columns for extract Ns and leachate Ns
+  pivot_wider(names_from = sample_type,
+              values_from = c(nh3, no2_no3)) %>%
   relocate(c(sample_no, rep_no))
 
-# Replace all NAs and negative values with 0
-n_data_clean$nh3 <- as.double(n_data_clean$nh3)
+# Converts numbers to numeric and replaces all negative values with 0
+n_data_clean <- n_data_clean %>%
+  mutate_at(c(1:2, 4:6), as.numeric)
 n_data_clean[n_data_clean < 0] <- 0
-n_data_clean[is.na(n_data_clean)] <- 0
 
 return(n_data_clean)
 }
