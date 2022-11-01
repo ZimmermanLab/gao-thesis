@@ -87,52 +87,76 @@ set_theme()
 
 
 ### PER G FRESH SOIL ###
-# Plot Leachate and Extract Ns as mg per g of fresh soil
 source("code/functions/n_functions/analyze_plot_n_data.R")
 post_samp_sum <- samp_sum %>%
-  filter(pre_post_wet == "post")
-treat_sum <- post_samp_sum %>%
-  group_by(cc_treatment, drying_treatment) %>%
-  summarize(leach_nh3_med = median(leach_nh3_mg_median),
-            leach_nh3_iqr = IQR(leach_nh3_mg_median, na.rm = TRUE),
-            leach_nh3_pg_med = median(leach_nh3_per_median),
-            leach_nh3_pg_iqr = IQR(leach_nh3_per_median, na.rm = TRUE),
-            leach_no2no3_med = median(leach_no2_no3_mg_median),
-            leach_no2no3_iqr = IQR(leach_no2_no3_mg_median, na.rm = TRUE),
-            leach_no2no3_pg_med = median(leach_no2_no3_per_median),
-            leach_no2no3_pg_iqr = IQR(leach_no2_no3_per_median, na.rm = TRUE),
-            ext_nh3_med = median(ext_nh3_mg_median),
-            ext_nh3_iqr = IQR(ext_nh3_mg_median),
-            ext_nh3_pg_med = median(ext_nh3_per_median),
-            ext_nh3_pg_IQR = IQR(ext_nh3_per_median),
-            ext_no2no3_med = median(ext_no2_no3_mg_median),
-            ext_no2no3_iqr = IQR(ext_no2_no3_mg_median),
-            ext_no2no3_pg_med = median(ext_no2_no3_per_median),
-            ext_no2no3_pg_iqr = IQR(ext_no2_no3_per_median))
+  filter(pre_post_wet == "post" |
+           pre_post_wet == "initial")
 
-leach_nh3_plot <- analyze_plot_n(post_samp_sum, "leach_nh3_per_median", "nh3")
-leach_no2no3_plot <- analyze_plot_n(post_samp_sum, "leach_no2_no3_per_median",
+# Leachate NH3 per gram plot + medians
+leach_nh3 <- analyze_plot_n(post_samp_sum, "leach_nh3_per_median", "nh3")
+# Calculate weekly statistics
+source("code/functions/n_functions/calculate_weekly_stats.R")
+leach_nh3_wk <- wk_stats(post_samp_sum, "leach_nh3_per_median")
+
+# Try to plot extract and leachate per week next to each other
+wk_initial_plot <- post_samp_sum %>%
+  select(sample_no, cc_treatment, drying_treatment,
+         leach_nh3_per_median, ext_nh3_per_median) %>%
+  pivot_longer(cols = c(leach_nh3_per_median, ext_nh3_per_median),
+               names_to = "samp_type",
+               values_to = "nh3_per")
+
+source("code/functions/n_functions/plot_n_type.R")
+plot_n_data(wk_initial_plot, "nh3_per")
+
+  ggplot(aes(x = factor(cc_treatment, levels = c("no_cc", "w_cc")),
+             y = (nh3_per_g),
+             fill = cc_treatment,
+             color = cc_treatment)) +
+  geom_boxplot() +
+  facet_grid(~ factor(samp_type,
+                      levels = c("leach_nh3_per_median", "ext_nh3_per_median")))  +
+  scale_fill_manual(name = NULL, limits = c("no_cc", "w_cc"),
+                    values = c("#16B4FF", "#34980D"),
+                    labels = c("No Cover Crop", "With Cover Crop")) +
+  scale_color_manual(name = NULL, limits = c("no_cc", "w_cc"),
+                     values = c("#097CB2", "#195004"),
+                     labels = c("No Cover Crop", "With Cover Crop"))
+
+
+
+
+
+
+
+# Leachate NO2-NO3 per gram
+leach_no2no3 <- analyze_plot_n(post_samp_sum, "leach_no2_no3_per_median",
                                     "no2-no3")
-ext_nh3_plot <- analyze_plot_n(post_samp_sum, "ext_nh3_per_median", "nh3")
-ext_no2no3_plot <- analyze_plot_n(post_samp_sum, "ext_no2_no3_per_median",
+leach_no2no3_wk <- wk_stats(post_samp_sum, "leach_no2_no3_per_median")
+
+# Extract NH3 per gram
+ext_nh3 <- analyze_plot_n(post_samp_sum, "ext_nh3_per_median", "nh3")
+ext_nh3_wk <- wk_stats(post_samp_sum, "ext_nh3_per_median")
+
+# Extract NO2-NO3 per gram
+ext_no2no3 <- analyze_plot_n(post_samp_sum, "ext_no2_no3_per_median",
                                   "no2-no3")
+ext_no2no3_wk <- wk_stats(post_samp_sum, "ext_no2_no3_per_median")
 
 ### LEACHATE:EXTRACT RATIOS ###
 # Plot w cc vs no cc at each post-wetting point
 post_ratio_sum <- samp_sum_ratio %>%
-  filter(pre_post_wet == "post")
+  filter(pre_post_wet == "post" |
+           pre_post_wet == "initial")
 
-ratio_nh3_plot <- analyze_plot_n(post_ratio_sum, "ratio_nh3", "nh3")
-ratio_no2_no3_plot <- analyze_plot_n(post_ratio_sum, "ratio_no2no3", "no2-no3")
+# Ratio of L:E in NH3
+ratio_nh3 <- analyze_plot_n(post_ratio_sum, "ratio_nh3", "nh3")
+ratio_nh3_wk <- wk_stats(post_ratio_sum, "ratio_nh3")
 
+# Ratio of L:E in NO2-NO3
+ratio_no2_no3 <- analyze_plot_n(post_ratio_sum, "ratio_no2no3", "no2-no3")
+ratio_no2_no3_wk <- wk_stats(post_ratio_sum, "ratio_no2no3")
 
-
-ratio_no2no3_plot <- samp_sum_ratio %>%
-  filter(pre_post_wet == "post") %>%
-  ggplot(aes(x = drying_treatment,
-             y = ratio_no2no3,
-             fill = cc_treatment)) +
-  geom_boxplot()
 
 
 
