@@ -124,8 +124,8 @@ n_cw_plot_all <- n_cw_samp_sum_all %>%
         axis.title.x = element_blank(),
         axis.ticks.x = element_blank(),
         legend.position = "bottom") +
-  labs(y = "Percent Nitrogen",
-       title = "Nitrogen Percentage in Consistently Moist Soils")
+  labs(y = "% Nitrogen",
+       title = "Nitrogen in Consistently Moist Soils")
 ggsave(n_cw_plot_all, filename = "output/2022/ea_plots/nper_cc_cw.png",
        width = 14, height = 8, units = "in")
 
@@ -225,7 +225,7 @@ n_dry_treat_sum_all <- n_dry_samp_sum_all %>%
 # Plot
 n_dry_plot_all <- n_dry_samp_sum_all %>%
   ggplot(aes(x = factor(cc_treatment, levels = c("no_cc", "w_cc")),
-             y = samp_median,
+             y = samp_n_med,
              fill = cc_treatment,
              color = cc_treatment)) +
   geom_boxplot() +
@@ -242,8 +242,8 @@ n_dry_plot_all <- n_dry_samp_sum_all %>%
         axis.title.x = element_blank(),
         axis.ticks.x = element_blank(),
         legend.position = "bottom") +
-  labs(y = "Percent Nitrogen",
-       title = "Nitrogen Percentage in Drying Soils")
+  labs(y = "% Nitrogen",
+       title = "Nitrogen in Drying Soils")
 ggsave(n_dry_plot_all, filename = "output/2022/ea_plots/nper_cc_drying.png",
        width = 14, height = 8, units = "in")
 
@@ -395,7 +395,7 @@ ggsave(all_ratio_plot, filename = "output/2022/ea_plots/cn_ratio_all_plot.png",
 
 # Stats for each week to see effect of pre/post wet per cc treatment on ratios
 cc_treatments <- list("no_cc", "w_cc")
-all_cc_stats <- data.frame("drying_treatment" = as.character(),
+all_cc_cn_stats <- data.frame("drying_treatment" = as.character(),
                         "cc_treatment" = as.character(),
                         "p_value" = as.numeric(),
                         "chi_sq" = as.numeric())
@@ -414,7 +414,7 @@ for (a in drying_treatments) {
                      "cc_treatment" = b,
                      "p_value" = p_val,
                      "chi_sq" = chi_sq)
-    all_cc_stats <- rbind(all_cc_stats, new_data)
+    all_cc_cn_stats <- rbind(all_cc_cn_stats, new_data)
   }
 }
 
@@ -423,53 +423,24 @@ for (a in drying_treatments) {
 # Effect of cc treatment (Objective 3)
 
 # Summarize treatments across all samples
-ratio_treat_sum <- samp_sum_all %>%
+c_treat_sum <- samp_sum_all %>%
   group_by(cc_treatment, drying_treatment, pre_post_wet) %>%
-  summarize(treat_cn_med = median(samp_cn_med),
-            treat_cn_iqr = IQR(samp_cn_med))
+  summarize(treat_c_med = median(samp_c_med),
+            treat_c_iqr = IQR(samp_c_med))
 # Filter by pre/post only to create summary
-ratio_prepost_sum <- ratio_treat_sum %>%
+c_prepost_sum <- c_treat_sum %>%
   filter(pre_post_wet == "pre" |
            pre_post_wet == "post") %>%
   arrange(factor(cc_treatment, levels = c("no_cc", "w_cc")),
           factor(drying_treatment, levels = c("one_wk", "two_wk", "four_wk")),
           factor(pre_post_wet, levels = c("pre", "post")))
 
-# Plot pre/post between cc at every week
-drying_treatments <- list("one_wk", "two_wk", "four_wk")
-for (a in drying_treatments) {
-  wk_title <- case_when(a == "one_wk" ~ "One Week",
-                        a == "two_wk" ~ "Two Weeks",
-                        a == "four_wk" ~ "Four Weeks")
-  wk_plot <- ratio_samp_sum %>%
-    filter(pre_post_wet == "pre" |
-             pre_post_wet == "post") %>%
-    filter(drying_treatment == a) %>%
-    ggplot(aes(x = factor(pre_post_wet, levels = c("pre", "post")),
-               y = samp_cn_med,
-               fill = cc_treatment,
-               color = cc_treatment)) +
-    geom_boxplot() +
-    scale_fill_manual(name = NULL, limits = c("no_cc", "w_cc"),
-                      values = c("#16B4FF", "#34980D"),
-                      labels = c("No Cover Crop", "With Cover Crop")) +
-    scale_color_manual(name = NULL, limits = c("no_cc", "w_cc"),
-                       values = c("#097CB2", "#195004"),
-                       labels = c("No Cover Crop", "With Cover Crop")) +
-    theme(legend.position = "bottom",
-          axis.title.x = element_blank()) +
-    labs(title = paste0("C:N in Rewet Soils Dried for ", wk_title),
-         y = "C:N Ratio") +
-    scale_x_discrete(labels = c("Pre-Wet", "Post-Wet"))
-  assign(paste0("plot_", a), wk_plot)
-}
-
 # Create faceted plot where drying_treatment are the facets showing pre/post
-all_ratio_plot <- samp_sum_all %>%
+all_c_plot <- samp_sum_all %>%
   filter(pre_post_wet == "pre" |
            pre_post_wet == "post") %>%
   ggplot(aes(x = factor(pre_post_wet, levels = c("pre", "post")),
-             y = (samp_cn_med),
+             y = (samp_c_med),
              fill = cc_treatment,
              color = cc_treatment)) +
   geom_boxplot() +
@@ -485,25 +456,25 @@ all_ratio_plot <- samp_sum_all %>%
   theme(legend.position = "bottom",
         axis.title.x = element_blank()) +
   scale_x_discrete(labels = c("Pre-Wet", "Post-Wet")) +
-  labs(y = "C:N Ratios",
-       title = "C:N Ratios in Pre- and Post-Wet Soils")
-ggsave(all_ratio_plot, filename = "output/2022/ea_plots/cn_ratio_all_plot.png",
+  labs(y = "% Carbon",
+       title = "Carbon in Pre- and Post-Wet Soils")
+ggsave(all_c_plot, filename = "output/2022/ea_plots/c_all_plot.png",
        width = 14, height = 8, units = "in")
 
 # Stats for each week to see effect of pre/post wet per cc treatment on ratios
 cc_treatments <- list("no_cc", "w_cc")
-all_cc_stats <- data.frame("drying_treatment" = as.character(),
+all_cc_c_stats <- data.frame("drying_treatment" = as.character(),
                            "cc_treatment" = as.character(),
                            "p_value" = as.numeric(),
                            "chi_sq" = as.numeric())
 for (a in drying_treatments) {
   for (b in cc_treatments) {
-    wk_stats <- ratio_samp_sum %>%
+    wk_stats <- samp_sum_all %>%
       filter(cc_treatment == b) %>%
       filter(drying_treatment == a) %>%
       filter(pre_post_wet == "pre" |
                pre_post_wet == "post") %>%
-      kruskal.test(data = ., samp_cn_med ~ pre_post_wet)
+      kruskal.test(data = ., samp_c_med ~ pre_post_wet)
     drying_treat <- a
     p_val <- wk_stats$p.value
     chi_sq <- wk_stats$statistic
@@ -511,6 +482,6 @@ for (a in drying_treatments) {
                      "cc_treatment" = b,
                      "p_value" = p_val,
                      "chi_sq" = chi_sq)
-    all_cc_stats <- rbind(all_cc_stats, new_data)
+    all_cc_c_stats <- rbind(all_cc_c_stats, new_data)
   }
 }
