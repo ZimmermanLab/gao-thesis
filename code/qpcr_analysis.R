@@ -45,31 +45,35 @@ dried_wts_qubit$qubit_concentration <-as.double(
 
 # Normalize the proportional concentrations
 source("code/functions/qpcr_functions/normalize_prop_concentration.R")
-bact_norm_all <- norm_conc(bact_concentrations, dried_wts_qubit)
-fung_norm_all <- norm_conc(fung_concentrations, dried_wts_qubit)
+bact_norm_all <- norm_conc(bact_concentrations, dried_wts_qubit) %>%
+  rename(conc_norm_bact = prop_conc_norm,
+         cq_bact = cq,
+         outlier_flag_bact = outlier_flag)
+fung_norm_all <- norm_conc(fung_concentrations, dried_wts_qubit) %>%
+  rename(conc_norm_fung = prop_conc_norm,
+         cq_fung = cq,
+         outlier_flag_fung = outlier_flag)
 
 ### FUNGAL:BACTERIAL RATIOS ###
-# Join bacterial and fungal
-bact_ratio_all <- bact_norm_all %>%
-  rename(conc_norm_bact = prop_conc_norm,
-         outlier_flag_bact = outlier_flag) %>%
-  select(-cq)
-fung_ratio_all <- fung_norm_all %>%
-  rename(conc_norm_fung = prop_conc_norm,
-         outlier_flag_fung = outlier_flag) %>%
-  select(-cq)
-# Join to treatments per tech rep
-samp_rep_ratio_all <- bact_ratio_all %>%
-  left_join(fung_ratio_all) %>%
-  left_join(all_treatments)
+# Find median per sample for bacterial and fungal separately
+samp_rep_fung <- fung_norm_all %>%
+  group_by(sample_no) %>%
+  summarize(samp_rep_med_fung = median(conc_norm_fung))
+samp_rep_bact <- bact_norm_all %>%
+  group_by(sample_no) %>%
+  summarise(samp_rep_med_bact = median(conc_norm_bact))
 
-# Find median per sample (all included)
-samp_all <- samp_rep_ratio_all %>%
+# Find median per sample (all included) and join to treatments
+samp_all <- samp_rep_bact %>%
+  left_join(samp_rep_fung) %>%
+  left_join(all_treatments) %>%
   group_by(sample_no, cc_treatment, drying_treatment, pre_post_wet) %>%
-  summarize(samp_med_bact = median(conc_norm_bact),
-            samp_med_fung = median(conc_norm_fung))
+  summarize(samp_med_bact = median(samp_rep_med_bact),
+            samp_med_fung = median(samp_rep_med_fung))
 
 # Find ratios per sample
+# Note that I did this at the sample level vs the tech rep level since fungal
+# and bacterial tech reps cannot be mapped to each other
 samp_ratio_all <- samp_all %>%
   mutate(samp_ratio = samp_med_fung / samp_med_bact) %>%
   # Removes water only samples that had bacteria but no fungi
