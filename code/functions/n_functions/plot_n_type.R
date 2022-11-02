@@ -46,7 +46,7 @@ plot_n_data <- function(n_data_long, y_var, facet_labels) {
   # Save plot
   ggsave(wk_initial_plot,
          filename = paste0("output/2022/n_plots/", y_var, "_initial.png"),
-         width = 10, height = 8, units = "in")
+         width = 8, height = 6, units = "in")
 
   wk_one_plot <- n_data_long %>%
     filter(drying_treatment == "one_wk") %>%
@@ -74,7 +74,7 @@ plot_n_data <- function(n_data_long, y_var, facet_labels) {
   # Save plot
   ggsave(wk_one_plot,
          filename = paste0("output/2022/n_plots/", y_var, "_wk_one.png"),
-         width = 10, height = 8, units = "in")
+         width = 8, height = 6, units = "in")
 
   wk_two_plot <- n_data_long %>%
     filter(drying_treatment == "two_wk") %>%
@@ -102,7 +102,7 @@ plot_n_data <- function(n_data_long, y_var, facet_labels) {
   # Save plot
   ggsave(wk_two_plot,
          filename = paste0("output/2022/n_plots/", y_var, "_wk_two.png"),
-         width = 10, height = 8, units = "in")
+         width = 8, height = 6, units = "in")
 
   wk_four_plot <- n_data_long %>%
     filter(drying_treatment == "four_wk") %>%
@@ -130,7 +130,7 @@ plot_n_data <- function(n_data_long, y_var, facet_labels) {
   # Save plot
   ggsave(wk_four_plot,
          filename = paste0("output/2022/n_plots/", y_var, "_wk_four.png"),
-         width = 10, height = 8, units = "in")
+         width = 8, height = 6, units = "in")
 
 # Combine plots into a list to return
   all_plots <- list(wk_initial_plot, wk_one_plot, wk_two_plot,
