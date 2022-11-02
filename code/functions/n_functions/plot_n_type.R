@@ -42,7 +42,7 @@ plot_n_data <- function(n_data_long, y_var, facet_labels) {
           axis.ticks.x = element_blank(),
           legend.position = "bottom") +
     labs(title = paste(n_type, "in Initial Soils Before Drying"),
-         y = paste0("mg ", n_type, " / g of Fresh Soil"))
+         y = paste0("\u03bcg ", n_type, " / g of Fresh Soil"))
   # Save plot
   ggsave(wk_initial_plot,
          filename = paste0("output/2022/n_plots/", y_var, "_initial.png"),
@@ -70,7 +70,7 @@ plot_n_data <- function(n_data_long, y_var, facet_labels) {
           legend.position = "bottom") +
     labs(title = paste(n_type,
                        "in Soils Rewet After One Week of Drying"),
-         y = paste0("mg ", n_type, " / g of Fresh Soil"))
+         y = paste0("\u03bcg ", n_type, " / g of Fresh Soil"))
   # Save plot
   ggsave(wk_one_plot,
          filename = paste0("output/2022/n_plots/", y_var, "_wk_one.png"),
@@ -98,7 +98,7 @@ plot_n_data <- function(n_data_long, y_var, facet_labels) {
           legend.position = "bottom") +
     labs(title = paste(n_type,
                        "in Soils Rewet After Two Weeks of Drying"),
-         y = paste0("mg ", n_type, " / g of Fresh Soil"))
+         y = paste0("\u03bcg ", n_type, " / g of Fresh Soil"))
   # Save plot
   ggsave(wk_two_plot,
          filename = paste0("output/2022/n_plots/", y_var, "_wk_two.png"),
@@ -126,7 +126,7 @@ plot_n_data <- function(n_data_long, y_var, facet_labels) {
           legend.position = "bottom") +
     labs(title = paste(n_type,
                        "in Soils Rewet After Four Weeks of Drying"),
-         y = paste0("mg ", n_type, " / g of Fresh Soil"))
+         y = paste0("\u03bcg ", n_type, " / g of Fresh Soil"))
   # Save plot
   ggsave(wk_four_plot,
          filename = paste0("output/2022/n_plots/", y_var, "_wk_four.png"),

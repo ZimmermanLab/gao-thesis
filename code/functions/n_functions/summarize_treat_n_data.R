@@ -18,11 +18,11 @@ sum_plot_n <- function(n_data, y_var, n_type) {
   var_name <- deparse(substitute(y_var))
   if (str_detect(var_name, "leach")) {
     title = paste("Leachate", toupper(n_type), "Nitrogen in Post-Wet Soils")
-    y_title = paste0("mg ", toupper(n_type), " / g of Fresh Soil")
+    y_title = paste0("\u03bcg ", toupper(n_type), " / g of Fresh Soil")
     var_name <- str_sub(var_name, end = -6)
   } else if (str_detect(var_name, "ext")) {
     title = paste("Total Extractable", toupper(n_type), "in Post-Wet Soils")
-    y_title = paste0("mg ", toupper(n_type), " / g of Fresh Soil")
+    y_title = paste0("\u03bcg ", toupper(n_type), " / g of Fresh Soil")
     var_name <- str_sub(var_name, end = -6)
   } else if (str_detect(var_name, "ratio")) {
     title = paste("Ratio of Leachate to Total Extractable", toupper(n_type),
