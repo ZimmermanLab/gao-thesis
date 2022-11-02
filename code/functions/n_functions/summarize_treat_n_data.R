@@ -30,18 +30,6 @@ sum_plot_n <- function(n_data, y_var, n_type) {
     y_title = paste("Leachate : Total Extractable",
                     toupper(n_type))
     }
-  # Plot data as a side by side of leachate and extract per week
-  # Pivot to longer
-
-  wk_initial_plot <- n_data %>%
-
-
-
-
-
-
-
-
 
   n_plot <- n_data %>%
     filter(!is.na(!! sym(y_var))) %>%
