@@ -102,6 +102,9 @@ samp_medians <- samp_mapped %>%
                                  date %in% days_elapsed$day4 ~
                                    "4"))
 
+# Save out samp_medians for correlation tests
+write_csv(samp_medians, "data/cleaned_data/LICOR/samp_medians.csv")
+
 #### CO2 TRIALS ####
 
 # Find medians per sample per day
