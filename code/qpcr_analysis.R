@@ -71,6 +71,9 @@ samp_all <- samp_rep_bact %>%
   summarize(samp_med_bact = median(samp_rep_med_bact),
             samp_med_fung = median(samp_rep_med_fung))
 
+# Save out for correlation tests
+write_csv(samp_all, "data/cleaned_data/qPCR/samp_medians.csv")
+
 # Find ratios per sample
 # Note that I did this at the sample level vs the tech rep level since fungal
 # and bacterial tech reps cannot be mapped to each other
