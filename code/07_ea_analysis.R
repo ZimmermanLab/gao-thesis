@@ -1,5 +1,5 @@
-# This script takes in EA data and evaluates the accuracy
-# and precision of the standards.
+# This script takes in EA data, evaluates standards (SRMs) precision over
+# time, and analyzes + plots CN soil data.
 
 # Sarah Gao
 # July 28, 2021
@@ -76,16 +76,21 @@ all_treatments <- read_csv("output/2022/jar_assignments/master_list.csv")
 
 mapped_all <- cn_clean_all %>%
   left_join(all_treatments)
+# Create sample summary for ratios, %N and %C
+samp_sum_all <- mapped_all %>%
+  group_by(sample_no, cc_treatment, drying_treatment, pre_post_wet) %>%
+  summarize(samp_cn_med = median(c_n_ratio),
+            samp_n_med = median(n_per),
+            samp_c_med = median(c_per))
+
 
 #### COMPARE %N BETWEEN CC IN CW ####
 # See how adding cc affects %N as it decomposes with cw samples
 # ie initial + cw samples only
 # Calculate medians per sample
-n_cw_samp_sum_all <- mapped_all %>%
+n_cw_samp_sum_all <- samp_sum_all %>%
   filter(pre_post_wet == "cw" |
-           pre_post_wet == "initial") %>%
-  group_by(sample_no, cc_treatment, drying_treatment) %>%
-  summarize(samp_median = median(n_per))
+           pre_post_wet == "initial")
 # Calculate medians per treatment level
 n_cw_treat_sum_all <- n_cw_samp_sum_all %>%
   group_by(cc_treatment, drying_treatment) %>%
@@ -131,7 +136,7 @@ n_cw_stats_all <- n_cw_samp_sum_all %>%
 n_cw_samp_sum_all %>%
   kruskal.test(data = ., samp_median ~ drying_treatment)
 
-# Calculate stats for each week between w_cc and no_cc
+# Calculate stats for each week to see effect between w_cc and no_cc
 cw_wk_stats <- data.frame("drying_treatment" = character(),
                           "p_value"  = numeric(),
                           "chi_sq" = numeric())
@@ -147,15 +152,68 @@ for(a in weeks) {
 }
 
 
+#### COMPARE C:N BETWEEN CC IN CW ####
+# Effect of cc on C:N in cw (Objective 2)
+# Summarize cw only data
+ratio_cw_treat_sum <- samp_sum_all %>%
+  filter(pre_post_wet == "cw" |
+           pre_post_wet == "initial") %>%
+  group_by(cc_treatment, drying_treatment) %>%
+  summarize(treat_cn_med = median(samp_cn_med),
+            treat_cn_iqr = IQR(samp_cn_med)) %>%
+  arrange(factor(drying_treatment,
+                 levels = c("initial", "one_wk", "two_wk", "four_wk")))
+# Plot across time
+ratio_cw_plot <- samp_sum_all %>%
+  filter(pre_post_wet == "cw" |
+           pre_post_wet == "initial") %>%
+  ggplot(aes(x = cc_treatment,
+             y = samp_cn_med,
+             fill = cc_treatment,
+             color = cc_treatment)) +
+  geom_boxplot() +
+  facet_grid(~ factor(drying_treatment,
+                      levels = c("initial", "one_wk", "two_wk", "four_wk")),
+             labeller = facet_drying_labels) +
+  scale_fill_manual(name = NULL, limits = c("no_cc", "w_cc"),
+                    values = c("#16B4FF", "#34980D"),
+                    labels = c("No Cover Crop", "With Cover Crop")) +
+  scale_color_manual(name = NULL, limits = c("no_cc", "w_cc"),
+                     values = c("#097CB2", "#195004"),
+                     labels = c("No Cover Crop", "With Cover Crop")) +
+  theme(axis.text.x = element_blank(),
+        axis.title.x = element_blank(),
+        axis.ticks.x = element_blank(),
+        legend.position = "bottom") +
+  labs(y = "C:N Ratios",
+       title = "C:N of Consistently Moist Soils")
+ggsave(ratio_cw_plot, filename = "output/2022/ea_plots/ratio_cn_cw.png",
+       width = 12, height = 8, units = "in")
+
+# Calculate stats per week to see effect of cc treatment
+cw_cn_wk_stats <- data.frame("drying_treatment" = character(),
+                          "p_value"  = numeric(),
+                          "chi_sq" = numeric())
+for(a in weeks) {
+  cw_cn_stats <- samp_sum_all %>%
+    filter(pre_post_wet == "cw" |
+             pre_post_wet == "initial") %>%
+    filter(drying_treatment == a) %>%
+    kruskal.test(data = ., samp_cn_med ~ cc_treatment)
+  new <- data.frame("drying_treatment" = a,
+                    "p_value" = cw_cn_stats$p.value,
+                    "chi_sq" = cw_cn_stats$statistic)
+  cw_cn_wk_stats <- rbind(cw_cn_wk_stats, new)
+}
+
+
 ####  COMPARE %N BETWEEN CC IN DRYING ####
 # Examine the effects of cc on %N by comparing w_cc and no_cc when dried
 # ie initial + pre-wet samples only
 # Calculate medians per sample
-n_dry_samp_sum_all <- mapped_all %>%
+n_dry_samp_sum_all <- samp_sum_all %>%
   filter(pre_post_wet == "pre" |
-           pre_post_wet == "initial") %>%
-  group_by(sample_no, cc_treatment, drying_treatment) %>%
-  summarize(samp_median = median(n_per))
+           pre_post_wet == "initial")
 # Calculate medians per treatment level
 n_dry_treat_sum_all <- n_dry_samp_sum_all %>%
   group_by(cc_treatment, drying_treatment) %>%
@@ -209,4 +267,250 @@ for(a in weeks) {
                     "p_value" = dry_stats$p.value,
                     "chi_sq" = dry_stats$statistic)
   dry_wk_stats <- rbind(dry_wk_stats, new)
+}
+
+#### COMPARE C:N IN DRYING ####
+# Effect of cc on C:N across drying (Objective 2)
+# Summarize cw only data
+ratio_dry_treat_sum <- samp_sum_all %>%
+  filter(pre_post_wet == "pre" |
+           pre_post_wet == "initial") %>%
+  group_by(cc_treatment, drying_treatment) %>%
+  summarize(treat_cn_med = median(samp_cn_med),
+            treat_cn_iqr = IQR(samp_cn_med)) %>%
+  arrange(factor(drying_treatment,
+                 levels = c("initial", "one_wk", "two_wk", "four_wk")))
+# Plot across time
+ratio_dry_plot <- samp_sum_all %>%
+  filter(pre_post_wet == "pre" |
+           pre_post_wet == "initial") %>%
+  ggplot(aes(x = cc_treatment,
+             y = samp_cn_med,
+             fill = cc_treatment,
+             color = cc_treatment)) +
+  geom_boxplot() +
+  facet_grid(~ factor(drying_treatment,
+                      levels = c("initial", "one_wk", "two_wk", "four_wk")),
+             labeller = facet_drying_labels) +
+  scale_fill_manual(name = NULL, limits = c("no_cc", "w_cc"),
+                    values = c("#16B4FF", "#34980D"),
+                    labels = c("No Cover Crop", "With Cover Crop")) +
+  scale_color_manual(name = NULL, limits = c("no_cc", "w_cc"),
+                     values = c("#097CB2", "#195004"),
+                     labels = c("No Cover Crop", "With Cover Crop")) +
+  theme(axis.text.x = element_blank(),
+        axis.title.x = element_blank(),
+        axis.ticks.x = element_blank(),
+        legend.position = "bottom") +
+  labs(y = "C:N Ratios",
+       title = "C:N in Drying Soils")
+ggsave(ratio_dry_plot, filename = "output/2022/ea_plots/ratio_cn_drying.png",
+       width = 12, height = 8, units = "in")
+
+# Calculate stats per week on effect of cc treatment
+dry_cn_wk_stats <- data.frame("drying_treatment" = character(),
+                           "p_value"  = numeric(),
+                           "chi_sq" = numeric())
+for(a in weeks) {
+  dry_cn_stats <- samp_sum_all %>%
+    filter(drying_treatment == a) %>%
+    kruskal.test(data = ., samp_cn_med ~ cc_treatment)
+  new <- data.frame("drying_treatment" = a,
+                    "p_value" = dry_cn_stats$p.value,
+                    "chi_sq" = dry_cn_stats$statistic)
+  dry_cn_wk_stats <- rbind(dry_cn_wk_stats, new)
+}
+
+
+### COMPARE C:N BEFORE/AFTER REWETTING
+# Effect of cc treatment on C:N before / after rewetting (Objective 3)
+
+# Summarize treatments across all samples
+ratio_treat_sum <- samp_sum_all %>%
+  group_by(cc_treatment, drying_treatment, pre_post_wet) %>%
+  summarize(treat_cn_med = median(samp_cn_med),
+            treat_cn_iqr = IQR(samp_cn_med))
+# Filter by pre/post only to create summary
+ratio_prepost_sum <- ratio_treat_sum %>%
+  filter(pre_post_wet == "pre" |
+           pre_post_wet == "post") %>%
+  arrange(factor(cc_treatment, levels = c("no_cc", "w_cc")),
+          factor(drying_treatment, levels = c("one_wk", "two_wk", "four_wk")),
+          factor(pre_post_wet, levels = c("pre", "post")))
+
+# Plot pre/post between cc at every week
+drying_treatments <- list("one_wk", "two_wk", "four_wk")
+for (a in drying_treatments) {
+  wk_title <- case_when(a == "one_wk" ~ "One Week",
+                        a == "two_wk" ~ "Two Weeks",
+                        a == "four_wk" ~ "Four Weeks")
+  wk_plot <- ratio_samp_sum %>%
+    filter(pre_post_wet == "pre" |
+             pre_post_wet == "post") %>%
+    filter(drying_treatment == a) %>%
+    ggplot(aes(x = factor(pre_post_wet, levels = c("pre", "post")),
+               y = samp_cn_med,
+               fill = cc_treatment,
+               color = cc_treatment)) +
+    geom_boxplot() +
+    scale_fill_manual(name = NULL, limits = c("no_cc", "w_cc"),
+                      values = c("#16B4FF", "#34980D"),
+                      labels = c("No Cover Crop", "With Cover Crop")) +
+    scale_color_manual(name = NULL, limits = c("no_cc", "w_cc"),
+                       values = c("#097CB2", "#195004"),
+                       labels = c("No Cover Crop", "With Cover Crop")) +
+    theme(legend.position = "bottom",
+          axis.title.x = element_blank()) +
+    labs(title = paste0("C:N in Rewet Soils Dried for ", wk_title),
+         y = "C:N Ratio") +
+    scale_x_discrete(labels = c("Pre-Wet", "Post-Wet"))
+  assign(paste0("plot_", a), wk_plot)
+}
+
+# Create faceted plot where drying_treatment are the facets showing pre/post
+all_ratio_plot <- samp_sum_all %>%
+  filter(pre_post_wet == "pre" |
+           pre_post_wet == "post") %>%
+  ggplot(aes(x = factor(pre_post_wet, levels = c("pre", "post")),
+         y = (samp_cn_med),
+         fill = cc_treatment,
+         color = cc_treatment)) +
+  geom_boxplot() +
+  facet_wrap(~ factor(drying_treatment,
+                      levels = c("one_wk", "two_wk", "four_wk")),
+             labeller = facet_drying_labels)  +
+  scale_fill_manual(name = NULL, limits = c("no_cc", "w_cc"),
+                    values = c("#16B4FF", "#34980D"),
+                    labels = c("No Cover Crop", "With Cover Crop")) +
+  scale_color_manual(name = NULL, limits = c("no_cc", "w_cc"),
+                     values = c("#097CB2", "#195004"),
+                     labels = c("No Cover Crop", "With Cover Crop")) +
+  theme(legend.position = "bottom",
+        axis.title.x = element_blank()) +
+  scale_x_discrete(labels = c("Pre-Wet", "Post-Wet")) +
+  labs(y = "C:N Ratios",
+       title = "C:N Ratios in Pre- and Post-Wet Soils")
+ggsave(all_ratio_plot, filename = "output/2022/ea_plots/cn_ratio_all_plot.png",
+       width = 14, height = 8, units = "in")
+
+# Stats for each week to see effect of pre/post wet per cc treatment on ratios
+cc_treatments <- list("no_cc", "w_cc")
+all_cc_stats <- data.frame("drying_treatment" = as.character(),
+                        "cc_treatment" = as.character(),
+                        "p_value" = as.numeric(),
+                        "chi_sq" = as.numeric())
+for (a in drying_treatments) {
+  for (b in cc_treatments) {
+    wk_stats <- ratio_samp_sum %>%
+      filter(cc_treatment == b) %>%
+      filter(drying_treatment == a) %>%
+      filter(pre_post_wet == "pre" |
+               pre_post_wet == "post") %>%
+      kruskal.test(data = ., samp_cn_med ~ pre_post_wet)
+    drying_treat <- a
+    p_val <- wk_stats$p.value
+    chi_sq <- wk_stats$statistic
+    new_data <- list("drying_treatment" = drying_treat,
+                     "cc_treatment" = b,
+                     "p_value" = p_val,
+                     "chi_sq" = chi_sq)
+    all_cc_stats <- rbind(all_cc_stats, new_data)
+  }
+}
+
+
+### COMPARE %C BEFORE/AFTER REWETTING
+# Effect of cc treatment (Objective 3)
+
+# Summarize treatments across all samples
+ratio_treat_sum <- samp_sum_all %>%
+  group_by(cc_treatment, drying_treatment, pre_post_wet) %>%
+  summarize(treat_cn_med = median(samp_cn_med),
+            treat_cn_iqr = IQR(samp_cn_med))
+# Filter by pre/post only to create summary
+ratio_prepost_sum <- ratio_treat_sum %>%
+  filter(pre_post_wet == "pre" |
+           pre_post_wet == "post") %>%
+  arrange(factor(cc_treatment, levels = c("no_cc", "w_cc")),
+          factor(drying_treatment, levels = c("one_wk", "two_wk", "four_wk")),
+          factor(pre_post_wet, levels = c("pre", "post")))
+
+# Plot pre/post between cc at every week
+drying_treatments <- list("one_wk", "two_wk", "four_wk")
+for (a in drying_treatments) {
+  wk_title <- case_when(a == "one_wk" ~ "One Week",
+                        a == "two_wk" ~ "Two Weeks",
+                        a == "four_wk" ~ "Four Weeks")
+  wk_plot <- ratio_samp_sum %>%
+    filter(pre_post_wet == "pre" |
+             pre_post_wet == "post") %>%
+    filter(drying_treatment == a) %>%
+    ggplot(aes(x = factor(pre_post_wet, levels = c("pre", "post")),
+               y = samp_cn_med,
+               fill = cc_treatment,
+               color = cc_treatment)) +
+    geom_boxplot() +
+    scale_fill_manual(name = NULL, limits = c("no_cc", "w_cc"),
+                      values = c("#16B4FF", "#34980D"),
+                      labels = c("No Cover Crop", "With Cover Crop")) +
+    scale_color_manual(name = NULL, limits = c("no_cc", "w_cc"),
+                       values = c("#097CB2", "#195004"),
+                       labels = c("No Cover Crop", "With Cover Crop")) +
+    theme(legend.position = "bottom",
+          axis.title.x = element_blank()) +
+    labs(title = paste0("C:N in Rewet Soils Dried for ", wk_title),
+         y = "C:N Ratio") +
+    scale_x_discrete(labels = c("Pre-Wet", "Post-Wet"))
+  assign(paste0("plot_", a), wk_plot)
+}
+
+# Create faceted plot where drying_treatment are the facets showing pre/post
+all_ratio_plot <- samp_sum_all %>%
+  filter(pre_post_wet == "pre" |
+           pre_post_wet == "post") %>%
+  ggplot(aes(x = factor(pre_post_wet, levels = c("pre", "post")),
+             y = (samp_cn_med),
+             fill = cc_treatment,
+             color = cc_treatment)) +
+  geom_boxplot() +
+  facet_wrap(~ factor(drying_treatment,
+                      levels = c("one_wk", "two_wk", "four_wk")),
+             labeller = facet_drying_labels)  +
+  scale_fill_manual(name = NULL, limits = c("no_cc", "w_cc"),
+                    values = c("#16B4FF", "#34980D"),
+                    labels = c("No Cover Crop", "With Cover Crop")) +
+  scale_color_manual(name = NULL, limits = c("no_cc", "w_cc"),
+                     values = c("#097CB2", "#195004"),
+                     labels = c("No Cover Crop", "With Cover Crop")) +
+  theme(legend.position = "bottom",
+        axis.title.x = element_blank()) +
+  scale_x_discrete(labels = c("Pre-Wet", "Post-Wet")) +
+  labs(y = "C:N Ratios",
+       title = "C:N Ratios in Pre- and Post-Wet Soils")
+ggsave(all_ratio_plot, filename = "output/2022/ea_plots/cn_ratio_all_plot.png",
+       width = 14, height = 8, units = "in")
+
+# Stats for each week to see effect of pre/post wet per cc treatment on ratios
+cc_treatments <- list("no_cc", "w_cc")
+all_cc_stats <- data.frame("drying_treatment" = as.character(),
+                           "cc_treatment" = as.character(),
+                           "p_value" = as.numeric(),
+                           "chi_sq" = as.numeric())
+for (a in drying_treatments) {
+  for (b in cc_treatments) {
+    wk_stats <- ratio_samp_sum %>%
+      filter(cc_treatment == b) %>%
+      filter(drying_treatment == a) %>%
+      filter(pre_post_wet == "pre" |
+               pre_post_wet == "post") %>%
+      kruskal.test(data = ., samp_cn_med ~ pre_post_wet)
+    drying_treat <- a
+    p_val <- wk_stats$p.value
+    chi_sq <- wk_stats$statistic
+    new_data <- list("drying_treatment" = drying_treat,
+                     "cc_treatment" = b,
+                     "p_value" = p_val,
+                     "chi_sq" = chi_sq)
+    all_cc_stats <- rbind(all_cc_stats, new_data)
+  }
 }
