@@ -26,11 +26,11 @@ wk_stats <- function(n_data, y_var, time_type) {
                           "ext_med" = as.numeric(),
                           "ext_iqr" = as.numeric())
     for (a in wk_list) {
-      # Initial subset
+      # Subset by week
       wk_sub <- n_data %>%
         filter(drying_treatment == a) %>%
         pivot_wider(names_from = samp_type, values_from = all_of(y_var))
-      # Initial stats
+      # Create stats per week
       y_var_leach <- paste0("leach_", y_var, "_median")
       y_var_ext <- paste0("ext_", y_var, "_median")
       wk_stat_leach <- wk_sub %>%
@@ -45,7 +45,7 @@ wk_stats <- function(n_data, y_var, time_type) {
                               "ext_stat_chi" = wk_stat_ext$statistic)
       all_stats <- rbind(all_stats, new_stats)
 
-      # Initial summary
+      # Create summary
       wk_sum <- wk_sub %>%
         group_by(cc_treatment) %>%
         summarise(leach_med = median(get(y_var_leach)),
