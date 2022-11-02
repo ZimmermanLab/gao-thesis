@@ -83,6 +83,8 @@ samp_sum_all <- mapped_all %>%
             samp_n_med = median(n_per),
             samp_c_med = median(c_per))
 
+# Save out sample summary to use for correlation tests
+write_csv(samp_sum_all, "data/cleaned_data/EA/samp_sum_all.csv")
 
 #### COMPARE %N BETWEEN CC IN CW ####
 # See how adding cc affects %N as it decomposes with cw samples
