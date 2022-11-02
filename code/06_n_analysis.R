@@ -12,6 +12,10 @@ library("stringr")
 library("stringi")
 library("fs")
 
+# Set plot themes
+source("code/functions/set_plot_themes.R")
+set_theme()
+
 # Get file list
 file_list <- paste0("data/raw_data/SmartChem_N_extractions/2022_samples/",
                     list.files(
@@ -81,53 +85,73 @@ samp_sum_ratio <- samp_sum %>%
   mutate(ratio_nh3 = leach_nh3_per_median / ext_nh3_per_median,
          ratio_no2no3  = leach_no2_no3_per_median / ext_no2_no3_per_median)
 
-# Set plot themes
-source("code/functions/set_plot_themes.R")
-set_theme()
+### PER G FRESH SOIL PER WEEK ###
+# Plot extract and leachate by week next to each other
+source("code/functions/n_functions/plot_n_type.R")
 
-
-### PER G FRESH SOIL ###
-source("code/functions/n_functions/analyze_plot_n_data.R")
-post_samp_sum <- samp_sum %>%
-  filter(pre_post_wet == "post" |
-           pre_post_wet == "initial")
-
-# Leachate NH3 per gram plot + medians
-leach_nh3 <- analyze_plot_n(post_samp_sum, "leach_nh3_per_median", "nh3")
-# Calculate weekly statistics
-source("code/functions/n_functions/calculate_weekly_stats.R")
-leach_nh3_wk <- wk_stats(post_samp_sum, "leach_nh3_per_median")
-
-# Try to plot extract and leachate per week next to each other
-wk_initial_plot <- post_samp_sum %>%
+# NH3 for each week
+wk_nh3_sub <- post_samp_sum %>%
   select(sample_no, cc_treatment, drying_treatment,
          leach_nh3_per_median, ext_nh3_per_median) %>%
   pivot_longer(cols = c(leach_nh3_per_median, ext_nh3_per_median),
                names_to = "samp_type",
                values_to = "nh3_per")
+facet_labels_nh3 <- c("leach_nh3_per_median" = "Leachate",
+                      "ext_nh3_per_median" = "Total Extractable N")
+nh3_plots <- plot_n_data(wk_nh3_sub, "nh3_per", facet_labels_nh3)
+# Calculate stats per week to see effect of cover crop on
+# aqueous N
+nh3_stats <- wk_nh3_sub %>%
+  wk_stats(., "nh3_per")
 
-source("code/functions/n_functions/plot_n_type.R")
-plot_n_data(wk_initial_plot, "nh3_per")
-
-  ggplot(aes(x = factor(cc_treatment, levels = c("no_cc", "w_cc")),
-             y = (nh3_per_g),
-             fill = cc_treatment,
-             color = cc_treatment)) +
-  geom_boxplot() +
-  facet_grid(~ factor(samp_type,
-                      levels = c("leach_nh3_per_median", "ext_nh3_per_median")))  +
-  scale_fill_manual(name = NULL, limits = c("no_cc", "w_cc"),
-                    values = c("#16B4FF", "#34980D"),
-                    labels = c("No Cover Crop", "With Cover Crop")) +
-  scale_color_manual(name = NULL, limits = c("no_cc", "w_cc"),
-                     values = c("#097CB2", "#195004"),
-                     labels = c("No Cover Crop", "With Cover Crop"))
+# NO2-NO3 for each week
+wk_no2no3_sub <- post_samp_sum %>%
+  select(sample_no, cc_treatment, drying_treatment,
+         leach_no2_no3_per_median, ext_no2_no3_per_median) %>%
+  pivot_longer(cols = c(leach_no2_no3_per_median, ext_no2_no3_per_median),
+               names_to = "samp_type",
+               values_to = "no2_no3_per")
+facet_labels_no2no3 <- c("leach_no2_no3_per_median" = "Leachate",
+                         "ext_no2_no3_per_median" = "Total Extractable N")
+no2_no3_plots <- plot_n_data(wk_no2no3_sub, "no2_no3_per", facet_labels_no2no3)
+# Calculate stats per week to see effect of cover crop on
+# aqueous N
+no2_no3_stats <- wk_no2no3_sub %>%
+  wk_stats(., "no2_no3_per")
 
 
+# Plot and analyze by time
+source("code/functions/n_functions/summarize_treat_n_data.R")
+# Calculate weekly statistics
+source("code/functions/n_functions/calculate_weekly_stats.R")
+
+### LEACHATE:EXTRACT RATIOS ###
+# Plot w cc vs no cc at each post-wetting point
+# Subset for post-wet and initial sets only
+post_ratio_sum <- samp_sum_ratio %>%
+  filter(pre_post_wet == "post" |
+           pre_post_wet == "initial")
+
+# Ratio of L:E in NH3
+ratio_nh3 <- sum_plot_n(post_ratio_sum, "ratio_nh3", "nh3")
+ratio_nh3_wk <- wk_stats(post_ratio_sum, "ratio_nh3")
+
+# Ratio of L:E in NO2-NO3
+ratio_no2_no3 <- sum_plot_n(post_ratio_sum, "ratio_no2no3", "no2-no3")
+ratio_no2_no3_wk <- wk_stats(post_ratio_sum, "ratio_no2no3")
 
 
 
 
+### THESE NEED TO BE NORMALIZED TO DRY SOIL WEIGHT TO COMPARE ACROSS TIME ###
+# Leachate NH3 per gram plot + medians
+# Subset for post-wet and initial sets only
+post_samp_sum <- samp_sum %>%
+  filter(pre_post_wet == "post" |
+           pre_post_wet == "initial")
+
+leach_nh3 <- analyze_plot_n(post_samp_sum, "leach_nh3_per_median", "nh3")
+leach_nh3_wk <- wk_stats(post_samp_sum, "leach_nh3_per_median")
 
 # Leachate NO2-NO3 per gram
 leach_no2no3 <- analyze_plot_n(post_samp_sum, "leach_no2_no3_per_median",
@@ -143,22 +167,6 @@ ext_no2no3 <- analyze_plot_n(post_samp_sum, "ext_no2_no3_per_median",
                                   "no2-no3")
 ext_no2no3_wk <- wk_stats(post_samp_sum, "ext_no2_no3_per_median")
 
-### LEACHATE:EXTRACT RATIOS ###
-# Plot w cc vs no cc at each post-wetting point
-post_ratio_sum <- samp_sum_ratio %>%
-  filter(pre_post_wet == "post" |
-           pre_post_wet == "initial")
-
-# Ratio of L:E in NH3
-ratio_nh3 <- analyze_plot_n(post_ratio_sum, "ratio_nh3", "nh3")
-ratio_nh3_wk <- wk_stats(post_ratio_sum, "ratio_nh3")
-
-# Ratio of L:E in NO2-NO3
-ratio_no2_no3 <- analyze_plot_n(post_ratio_sum, "ratio_no2no3", "no2-no3")
-ratio_no2_no3_wk <- wk_stats(post_ratio_sum, "ratio_no2no3")
-
-
-
 
 # Test correlation between amount of water in leachate and N concentrations
 sample_stats_leach <- sample_stats_all_wts %>% filter(sample_no != 12)
@@ -167,173 +175,3 @@ cor(sample_stats_leach$mean_no2_no3_leachate, sample_stats_leach$water_leachate)
 # This shows that there is low correlation between how dry the soil is and
 # the concentration of N that is leached out.
 
-
-#############
-
-
-# Create a plot comparing NH3 levels in extracts between groups with and
-# without cover crops across all times
-nh3_extracts_plot <- n_data_stats %>%
-  filter(pre_post_wet != "no_soil",
-         sample_type == "extract") %>%
-  ggplot(aes(x = pre_post_wet,
-             y = mean_mean_nh3,
-             fill = cc_treatment)) +
-  geom_col(position = position_dodge()) +
-  facet_grid(~drying_treatment) +
-  geom_errorbar(aes(ymax = mean_mean_nh3 + sd_mean_nh3,
-                    ymin = mean_mean_nh3 - sd_mean_nh3),
-                size = 0.25,
-                width = 0.2,
-                position = position_dodge(0.9)) +
-  scale_x_discrete(limits = c("all_dry", "cw", "pre", "post"),
-                   labels = c("All Dry", "Constant Water", "Pre Wetting",
-                              "Post Wetting")) +
-  # coord_cartesian(ylim=c(0, 8)) +
-  labs(title = paste("NH3 in Samples With and Without Cover Crop\n",
-                     " Residue in Soil Extracts"),
-       x = "Water Treatments", y = "NH3 (ppm)",
-       fill = "Cover Crop Treatment") +
-  scale_fill_discrete(breaks = c("w_cc", "no_cc"),
-                      labels = c("Without cover crop", "With cover crop")) +
-  # These additions are for creating poster assets
-  scale_fill_manual(values = c("no_cc" = "#00C2FF",
-                               "w_cc" = "#3EA50D")) +
-  theme(legend.position = "none")
-
-# Create a plot comparing NH3 levels in leachates between groups with and
-# without cover crops across all times
-nh3_leach_plot <- n_data_stats %>%
-  filter(pre_post_wet != "no_soil") %>%
-  ggplot(aes(x = pre_post_wet,
-             y = mean_mean_nh3,
-             fill = cc_treatment)) +
-  geom_col(position = position_dodge()) +
-  facet_grid(sample_type ~ factor(drying_treatment, levels = c(
-    "one_wk", "two_wk", "four_wk", "all_dry"))) +
-  geom_errorbar(aes(ymax = mean_mean_nh3 + sd_mean_nh3,
-                    ymin = mean_mean_nh3 - sd_mean_nh3),
-                size = 0.25,
-                width = 0.2,
-                position = position_dodge(0.9)) +
-  scale_x_discrete(limits = c("all_dry", "cw", "pre", "post"),
-                   labels = c("All Dry", "Constant Water", "Pre Wetting",
-                              "Post Wetting")) +
-  coord_cartesian(ylim=c(0, 8)) +
-  labs(title = paste("NH3 in Samples With and Without Cover Crop\n",
-                     " Residue in Soil Leachates"),
-       x = "Water Treatments", y = "NH3 (ppm)",
-       fill = "Cover Crop Treatment") +
-  scale_fill_discrete(breaks = c("w_cc", "no_cc"),
-                      labels = c("Without cover crop", "With cover crop"))
-
-
-# Run statistical analysis on extracts for NH3, excluding cw and no_soil jars
-nh3_stats <- n_data_stats %>%
-  filter(pre_post_wet != "no_soil",
-         pre_post_wet != "cw",
-         sample_type == "extract") %>%
-  lm(data = ., mean_nh3 ~ pre_post_wet * cc_treatment) %>%
-  anova()
-
-# Create a plot comparing NO2 levels between groups with and
-# without cover crops at 4 weeks
-no2_compare_cc_plot <- n_data_stats %>%
-  filter(pre_post_wet != "no soil") %>%
-  ggplot(aes(x = pre_post_wet,
-             y = mean_mean_no2,
-             fill = cc_treatment)) +
-  geom_col(position = position_dodge()) +
-  geom_errorbar(aes(ymax = mean_mean_no2 + sd_mean_no2,
-                    ymin = mean_mean_no2 - sd_mean_no2),
-                size = 0.25,
-                width = 0.2,
-                position = position_dodge(0.9)) +
-  scale_x_discrete(limits = c("cw", "pre", "post"),
-                   labels = c(
-                     "Constant Water", "Pre Wetting", "Post Wetting")) +
-  labs(title = paste("NO2- in Samples With and Without Cover Crop\n",
-                     " Residue After 4 Weeks of Drying"),
-       x = "Water Treatments", y = "NO2 (ppm)",
-       fill = "Cover Crop Treatment") +
-  scale_fill_discrete(breaks = c("w_cc", "no_cc"),
-                      labels = c("Without cover crop", "With cover crop")) +
-  # These additions are for creating poster assets
-  scale_fill_manual(values = c("no_cc" = "#00C2FF",
-                               "w_cc" = "#3EA50D")) +
-  theme(legend.position = "none")
-
-
-# Create a plot comparing NH3 loss as a ratio of NH3 concentration in
-# leachate to total extractable N
-nh3_ratio_plot <- n_data_stats %>%
-  filter(pre_post_wet != "no_soil",
-         sample_type == "extract") %>%
-  group_by(pre_post_wet, cc_treatment, drying_treatment) %>%
-  #IDK HOW TO DO THIS
-  summarize(ratio = case_when())
-  ggplot(aes(x = pre_post_wet,
-             y = mean_mean_nh3,
-             fill = cc_treatment)) +
-  geom_col(position = position_dodge()) +
-  facet_grid(~drying_treatment) +
-  geom_errorbar(aes(ymax = mean_mean_nh3 + sd_mean_nh3,
-                    ymin = mean_mean_nh3 - sd_mean_nh3),
-                size = 0.25,
-                width = 0.2,
-                position = position_dodge(0.9)) +
-  scale_x_discrete(limits = c("all_dry", "cw", "pre", "post"),
-                   labels = c("All Dry", "Constant Water", "Pre Wetting",
-                              "Post Wetting")) +
-  # coord_cartesian(ylim=c(0, 8)) +
-  labs(title = paste("NH3 in Samples With and Without Cover Crop\n",
-                     " Residue in Soil Extracts"),
-       x = "Water Treatments", y = "NH3 (ppm)",
-       fill = "Cover Crop Treatment") +
-  scale_fill_discrete(breaks = c("w_cc", "no_cc"),
-                      labels = c("Without cover crop", "With cover crop"))
-##########
-
-# Run statistical analysis on NO2, excluding cw and no_soil jars
-no2_stats <- n_data_stats %>%
-  filter(pre_post_wet != "no_soil") %>%
-  filter(pre_post_wet != "cw") %>%
-  lm(data = ., mean_no2 ~ pre_post_wet * cc_treatment) %>%
-  anova()
-
-# Create a plot comparing NO3 levels between groups with and
-# without cover crops at 4 weeks
-no3_compare_cc_plot <- n_data_stats %>%
-  filter(pre_post_wet != "no soil") %>%
-  group_by(pre_post_wet, cc_treatment) %>%
-  summarize(mean_mean_no3 = mean(mean_no3),
-            sd_mean_no3 = sd(mean_no3)) %>%
-  ggplot(aes(x = pre_post_wet,
-             y = mean_mean_no3,
-             fill = cc_treatment)) +
-  geom_col(position = position_dodge()) +
-  geom_errorbar(aes(ymax = mean_mean_no3 + sd_mean_no3,
-                    ymin = mean_mean_no3 - sd_mean_no3),
-                size = 0.25,
-                width = 0.2,
-                position = position_dodge(0.9)) +
-  scale_x_discrete(limits = c("cw", "pre", "post"),
-                   labels = c(
-                     "Constant Water", "Pre Wetting", "Post Wetting")) +
-  labs(title = paste("NO3 in Samples With and Without Cover Crop\n",
-                     " Residue After 4 Weeks of Drying"),
-       x = "Water Treatments", y = "NO3 (ppm)",
-       fill = "Cover Crop Treatment") +
-  scale_fill_discrete(breaks = c("w_cc", "no_cc"),
-                      labels = c("Without cover crop", "With cover crop")) +
-  # These additions are for creating poster assets
-  scale_fill_manual(values = c("no_cc" = "#00C2FF",
-                               "w_cc" = "#3EA50D")) +
-  theme(legend.position = "none")
-
-# Run statistical analysis on NO3, excluding cw and no_soil jars
-no3_stats <- n_data_stats %>%
-  filter(pre_post_wet != "no_soil") %>%
-  filter(pre_post_wet != "cw") %>%
-  lm(data = ., mean_no3 ~ pre_post_wet * cc_treatment) %>%
-  anova()
