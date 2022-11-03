@@ -41,28 +41,6 @@ shapiro.test(dna_co2$co2_med)
 ggqqplot(dna_co2$samp_med_bact)
 ggqqplot(dna_co2$co2_med)
 
-# Plot correlation b/w bacterial DNA and CO2 respiration in
-# post wet samples only
-bact_dna_co2_plot <- dna_co2 %>%
-  ggplot(aes(x = samp_med_bact,
-             y = co2_med)) +
-  geom_point(aes(color = "blue")) +
-  geom_smooth(method = "lm", formula = y ~ x,
-              aes(fill = "l_blue", color = "blue"), alpha = 0.25) +
-  scale_fill_manual(values = c(blue = "#097CB2", l_blue = "#16B4FF",
-                               green = "#195004", l_green = "#34980D")) +
-  scale_color_manual(values = c(blue = "#097CB2", l_blue = "#16B4FF",
-                                green = "#195004", l_green = "#34980D")) +
-  labs(y = "CO2 (ppm)",
-       x = "Bacterial DNA (Proportional Concentration)",
-       title = "Respiration vs Bacterial DNA Quantity") +
-  scale_y_continuous(labels = comma) +
-  theme(legend.position = "none")
-# Save out plot
-ggsave(bact_dna_co2_plot,
-       filename = "output/2022/correlations/bact_dna_co2_plot.png",
-       width = 10, height = 8, units = "in")
-
 # Use Kendall rank-based test for non-parametric correlation
 # Tau is correlation coefficient
 # p-value < 0.05 means they are significantly correlated
@@ -74,81 +52,79 @@ bact_dna_co2_stat <- cor.test(
 shapiro.test(dna_co2$samp_med_fung)
 ggqqplot(dna_co2$samp_med_fung)
 
-# Plot correlation b/w fungal DNA and respiration
-fung_dna_co2_plot <- dna_co2 %>%
-  ggplot(aes(x = samp_med_fung,
-             y = co2_med)) +
-  geom_point(aes(color = "green")) +
-  geom_smooth(method = "lm", formula = y ~ x,
-              aes(fill = "l_green", color = "green"), alpha = 0.25) +
-  scale_fill_manual(values = c(blue = "#097CB2", l_blue = "#16B4FF",
-                               green = "#037D1E", l_green = "#03CC23")) +
-  scale_color_manual(values = c(blue = "#097CB2", l_blue = "#16B4FF",
-                                green = "#037D1E", l_green = "#03CC23")) +
-  labs(y = "CO2 (ppm)",
-       x = "Fungal DNA (Proportional Concentration)",
-       title = "Respiration vs Fungal DNA Quantity") +
-  scale_y_continuous(labels = comma) +
-  theme(legend.position = "none")
-ggsave(fung_dna_co2_plot,
-       filename = "output/2022/correlations/fung_dna_co2_plot.png",
-       width = 10, height = 8, units = "in")
-
 # Use Kendall rank-based test for non-parametric correlation
 fung_dna_co2_stat <- cor.test(
   dna_co2$samp_med_fung, dna_co2$co2_med, method = "kendall")
 
-### CN AND CO2 ###
+# Plot correlation b/w DNA and CO2 respiration in
+# post wet samples only
+# Side by side of bacterial and fungal DNA
+dna_co2_plot <- dna_co2 %>%
+  pivot_longer(cols = c(samp_med_bact, samp_med_fung),
+               names_to = "type", values_to = "med") %>%
+  ggplot(aes(x = med,
+             y = co2_med,
+             fill = factor(type),
+             color = factor(type))) +
+  geom_point(aes(color = factor(type))) +
+  geom_smooth(method = "lm", formula = y ~ x,
+              aes(fill = type, color = factor(type)), alpha = 0.25) +
+  facet_wrap(~ type,
+             scales = "free",
+             labeller = facet_type_labels,
+             dir = "h") +
+  scale_fill_manual(values = c("#097CB2", "#03CC23")) +
+  scale_color_manual(values = c("#16B4FF", "#39B708")) +
+  labs(y = "CO2 (ppm)", x = "DNA (Proportional Concentration)",
+       title = "DNA Quantities in Rewet Soils vs CO2 Concentration") +
+  scale_y_continuous(labels = comma) +
+  scale_x_continuous(labels = scientific) +
+  theme(legend.position = "none",
+        panel.spacing = unit(1, "lines"))
+ggsave(dna_co2_plot,
+       filename = "output/2022/correlations/micro_co2_plot.png",
+       width = 12, height = 8, units = "in")
+
+
+#### CN AND CO2 ####
 # Join CO2 and NC data
 nc_co2 <- nc_sum %>%
   left_join(co2_sum) %>%
   filter(!is.na(co2_med))
 
-### Correlation b/w CO2 and soil C ###
+# Correlation b/w CO2 and soil C
 c_co2_stat <- cor.test(
   nc_co2$samp_c_med, nc_co2$co2_med, method = "kendall")
-
-c_co2_plot <- nc_co2 %>%
-  ggplot(aes(x = samp_c_med,
-             y = co2_med)) +
-  geom_point(aes(color = "green")) +
-  geom_smooth(method = "lm", formula = y ~ x,
-              aes(fill = "l_green", color = "green"), alpha = 0.25) +
-  scale_fill_manual(values = c(blue = "#097CB2", l_blue = "#16B4FF",
-                               green = "#037D1E", l_green = "#03CC23")) +
-  scale_color_manual(values = c(blue = "#097CB2", l_blue = "#16B4FF",
-                                green = "#037D1E", l_green = "#03CC23")) +
-  labs(y = "CO2 (ppm)",
-       x = "% Carbon",
-       title = "Respiration vs Total Soil Carbon") +
-  scale_y_continuous(labels = comma) +
-  theme(legend.position = "none")
-ggsave(c_co2_plot,
-       filename = "output/2022/correlations/c_co2_plot.png",
-       width = 10, height = 8, units = "in")
-
-### Correlation b/w CO2 and soil N ###
+# Correlation b/w CO2 and soil N
 n_co2_stat <- cor.test(
   nc_co2$samp_n_med, nc_co2$co2_med, method = "kendall")
 
-n_co2_plot <- nc_co2 %>%
-  ggplot(aes(x = samp_n_med,
-             y = co2_med)) +
-  geom_point(aes(color = "blue")) +
+# Side by side plot of CO2 and %N and %C
+nc_co2_plot <- nc_co2 %>%
+  pivot_longer(cols = c(samp_n_med, samp_c_med),
+               names_to = "type", values_to = "med") %>%
+  ggplot(aes(x = med,
+             y = co2_med,
+             fill = factor(type),
+             color = factor(type))) +
+  geom_point(aes(color = factor(type))) +
   geom_smooth(method = "lm", formula = y ~ x,
-              aes(fill = "l_blue", color = "blue"), alpha = 0.25) +
-  scale_fill_manual(values = c(blue = "#097CB2", l_blue = "#16B4FF",
-                               green = "#037D1E", l_green = "#03CC23")) +
-  scale_color_manual(values = c(blue = "#097CB2", l_blue = "#16B4FF",
-                                green = "#037D1E", l_green = "#03CC23")) +
-  labs(y = "CO2 (ppm)",
-       x = "% Nitrogen",
-       title = "Respiration vs Total Soil Nitrogen") +
+              aes(fill = type, color = factor(type)), alpha = 0.25) +
+  facet_wrap(~ type,
+             scales = "free",
+             labeller = as_labeller(c("samp_n_med" = "Nitrogen",
+                                 "samp_c_med" = "Carbon")),
+             dir = "h") +
+  scale_fill_manual(values = c("#03CC23", "#097CB2")) +
+  scale_color_manual(values = c( "#39B708", "#16B4FF")) +
+  labs(x = "Element %", y = "CO2 (ppm)",
+       title = "CO2 Concentration in Rewet Soils vs Total Soil CN") +
   scale_y_continuous(labels = comma) +
-  theme(legend.position = "none")
-ggsave(n_co2_plot,
-       filename = "output/2022/correlations/n_co2_plot.png",
-       width = 10, height = 8, units = "in")
+  theme(legend.position = "none",
+        panel.spacing = unit(1, "lines"))
+ggsave(nc_co2_plot,
+       filename = "output/2022/correlations/nc_co2_plot.png",
+       width = 12, height = 8, units = "in")
 
 ### Correlation b/w CO2 and soil C:N ###
 cn_co2_stat <- cor.test(
@@ -174,131 +150,173 @@ ggsave(cn_co2_plot,
        width = 10, height = 8, units = "in")
 
 
-### NC AND DNA PRE/POST WET ###
+#### NC AND DNA PRE/POST WET ####
 # Join NC and DNA data and select only pre/post wet
 dna_nc <- nc_sum %>%
-  left_join(dna_sum) %>%
+  left_join(dna_sum)
+
+dna_nc_prepost <- dna_nc %>%
   filter(pre_post_wet == "pre" |
            pre_post_wet == "post")
+dna_nc_pre <- dna_nc %>%
+  filter(pre_post_wet == "pre")
+dna_nc_post <- dna_nc %>%
+  filter(pre_post_wet == "post")
+dna_nc_dry <- dna_nc %>%
+  filter(pre_post_wet == "pre" |
+           pre_post_wet == "all_dry")
 
-### Correlation between bacteria and N ###
+
+ggscatter(dna_nc_dry, x = "samp_med_bact", y = "samp_c_med",
+          add = "reg.line", conf.int = TRUE,
+          cor.coef = TRUE, cor.method = "kendall")
+
+
+
+# Correlation between bacteria and N in pre vs post
 bact_n_stat <- cor.test(
   dna_nc$samp_n_med, dna_nc$samp_med_bact, method = "kendall")
-
-bact_n_plot <- dna_nc %>%
-  ggplot(aes(x = samp_n_med,
-             y = samp_med_bact)) +
-  geom_point(aes(color = "blue")) +
-  geom_smooth(method = "lm", formula = y ~ x,
-              aes(fill = "l_blue", color = "blue"), alpha = 0.25) +
-  scale_fill_manual(values = c(blue = "#097CB2", l_blue = "#16B4FF",
-                               green = "#037D1E", l_green = "#03CC23")) +
-  scale_color_manual(values = c(blue = "#097CB2", l_blue = "#16B4FF",
-                                green = "#037D1E", l_green = "#03CC23")) +
-  labs(y = "Bacterial DNA (Proportional Concentration)",
-       x = "% Nitrogen",
-       title = "Bacteria DNA Quantity vs Total Soil Nitrogen") +
-  scale_y_continuous(labels = comma) +
-  theme(legend.position = "none")
-ggsave(bact_n_plot,
-       filename = "output/2022/correlations/bact_n_plot.png",
-       width = 10, height = 8, units = "in")
-
-### Correlation between bacteria and C ###
-bact_c_stat <- cor.test(
-  dna_nc$samp_c_med, dna_nc$samp_med_bact, method = "kendall")
-
-bact_c_plot <- dna_nc %>%
-  ggplot(aes(x = samp_c_med,
-             y = samp_med_bact)) +
-  geom_point(aes(color = "blue")) +
-  geom_smooth(method = "lm", formula = y ~ x,
-              aes(fill = "l_blue", color = "blue"), alpha = 0.25) +
-  scale_fill_manual(values = c(blue = "#097CB2", l_blue = "#16B4FF",
-                               green = "#037D1E", l_green = "#03CC23")) +
-  scale_color_manual(values = c(blue = "#097CB2", l_blue = "#16B4FF",
-                                green = "#037D1E", l_green = "#03CC23")) +
-  labs(y = "Bacterial DNA (Proportional Concentration)",
-       x = "% Carbon",
-       title = "Bacteria DNA Quantity vs Total Soil Carbon") +
-  scale_y_continuous(labels = comma) +
-  theme(legend.position = "none")
-ggsave(bact_c_plot,
-       filename = "output/2022/correlations/bact_c_plot.png",
-       width = 10, height = 8, units = "in")
-
-### Correlation between fungi and N ###
+bact_n_stat_pre <- cor.test(
+  dna_nc_pre$samp_n_med, dna_nc_pre$samp_med_bact, method = "kendall")
+bact_n_stat_post <- cor.test(
+  dna_nc_post$samp_n_med, dna_nc_post$samp_med_bact, method = "kendall")
+# in dry only
+bact_n_stat_dry <- cor.test(
+  dna_nc_dry$samp_n_med, dna_nc_dry$samp_med_bact, method = "kendall")
+# Correlation between fungi and N in pre vs post
 fung_n_stat <- cor.test(
   dna_nc$samp_n_med, dna_nc$samp_med_fung, method = "kendall")
+fung_n_stat_pre <- cor.test(
+  dna_nc_pre$samp_n_med, dna_nc_pre$samp_med_fung, method = "kendall")
+fung_n_stat_post <- cor.test(
+  dna_nc_post$samp_n_med, dna_nc_post$samp_med_fung, method = "kendall")
+# in dry only
+fung_n_stat_dry <- cor.test(
+  dna_nc_dry$samp_n_med, dna_nc_dry$samp_med_fung, method = "kendall")
 
-fung_n_plot <- dna_nc %>%
+# 4 x 4 Facet plot of bacteria and fungi vs %N in pre vs post
+facet_type_labels <- as_labeller(c("samp_med_bact" = "Bacteria",
+                                   "samp_med_fung" = "Fungi"))
+facet_prepost_labels <- c("b_post" = "Post-Wet", "a_pre" = "Pre-Wet")
+micro_n_plot <- dna_nc_prepost %>%
+  mutate(pre_post_wet =
+           # Terrible hack to reorder facets
+           case_when(str_detect(pre_post_wet, "pre") ~ "a_pre",
+                     str_detect(pre_post_wet, "post") ~ "b_post")) %>%
+  pivot_longer(cols = c(samp_med_bact, samp_med_fung),
+               names_to = "type", values_to = "med") %>%
   ggplot(aes(x = samp_n_med,
-             y = samp_med_fung)) +
-  geom_point(aes(color = "green")) +
+             y = med,
+             fill = factor(type),
+             color = factor(type))) +
+  geom_point(aes(color = factor(type))) +
   geom_smooth(method = "lm", formula = y ~ x,
-              aes(fill = "l_green", color = "green"), alpha = 0.25) +
-  scale_fill_manual(values = c(blue = "#097CB2", l_blue = "#16B4FF",
-                               green = "#037D1E", l_green = "#03CC23")) +
-  scale_color_manual(values = c(blue = "#097CB2", l_blue = "#16B4FF",
-                                green = "#037D1E", l_green = "#03CC23")) +
-  labs(y = "Fungal DNA (Proportional Concentration)",
+              aes(fill = type, color = factor(type)), alpha = 0.25) +
+  facet_grid(type ~ pre_post_wet,
+             scales = "free",
+             labeller = (labeller(type = facet_type_labels,
+                                  pre_post_wet = facet_prepost_labels))) +
+  scale_fill_manual(values = c("#097CB2", "#03CC23")) +
+  scale_color_manual(values = c("#16B4FF", "#39B708")) +
+  labs(y = "DNA (Proportional Concentration)",
        x = "% Nitrogen",
-       title = "Fungal DNA Quantity vs Total Soil Nitrogen") +
-  scale_y_continuous(labels = comma) +
-  theme(legend.position = "none")
-ggsave(fung_n_plot,
-       filename = "output/2022/correlations/fung_n_plot.png",
-       width = 10, height = 8, units = "in")
+       title = "DNA Quantities vs Total Soil Nitrogen in Rewet Soils") +
+  scale_y_continuous(labels = label_scientific(digits = 2)) +
+  theme(legend.position = "none",
+        panel.spacing = unit(1, "lines"))
+ggsave(micro_n_plot,
+       filename = "output/2022/correlations/micro_n_plot.png",
+       width = 10, height = 10, units = "in")
 
-### Correlation between fungi and C ###
+# Correlation between bacteria and C
+bact_c_stat <- cor.test(
+  dna_nc$samp_c_med, dna_nc$samp_med_bact, method = "kendall")
+# pre vs post
+bact_c_stat_pre <- cor.test(
+  dna_nc_pre$samp_c_med, dna_nc_pre$samp_med_bact, method = "kendall")
+bact_c_stat_post <- cor.test(
+  dna_nc_post$samp_c_med, dna_nc_post$samp_med_bact, method = "kendall")
+# in dry only
+bact_c_stat_dry <- cor.test(
+  dna_nc_dry$samp_c_med, dna_nc_dry$samp_med_bact, method = "kendall")
+
+# Correlation between fungi and N
 fung_c_stat <- cor.test(
   dna_nc$samp_c_med, dna_nc$samp_med_fung, method = "kendall")
+# pre vs post
+fung_c_stat_pre <- cor.test(
+  dna_nc_pre$samp_c_med, dna_nc_pre$samp_med_fung, method = "kendall")
+fung_c_stat_post <- cor.test(
+  dna_nc_post$samp_c_med, dna_nc_post$samp_med_fung, method = "kendall")
+# in dry only
+fung_c_stat_dry <- cor.test(
+  dna_nc_dry$samp_c_med, dna_nc_dry$samp_med_fung, method = "kendall")
 
-fung_c_plot <- dna_nc %>%
+
+# 4x4 Facet plot of bacteria and fungi vs %C in pre vs post wet
+micro_c_plot <- dna_nc_prepost %>%
+  mutate(pre_post_wet =
+           # Terrible hack to reorder facets
+           case_when(str_detect(pre_post_wet, "pre") ~ "a_pre",
+                     str_detect(pre_post_wet, "post") ~ "b_post")) %>%
+  pivot_longer(cols = c(samp_med_bact, samp_med_fung),
+               names_to = "type", values_to = "med") %>%
   ggplot(aes(x = samp_c_med,
-             y = samp_med_fung)) +
-  geom_point(aes(color = "green")) +
+             y = med,
+             fill = factor(type),
+             color = factor(type))) +
+  geom_point(aes(color = factor(type))) +
   geom_smooth(method = "lm", formula = y ~ x,
-              aes(fill = "l_green", color = "green"), alpha = 0.25) +
-  scale_fill_manual(values = c(blue = "#097CB2", l_blue = "#16B4FF",
-                               green = "#037D1E", l_green = "#03CC23")) +
-  scale_color_manual(values = c(blue = "#097CB2", l_blue = "#16B4FF",
-                                green = "#037D1E", l_green = "#03CC23")) +
-  labs(y = "Fungal DNA (Proportional Concentration)",
+              aes(fill = type, color = factor(type)), alpha = 0.25) +
+  facet_grid(type ~ pre_post_wet,
+             scales = "free",
+             labeller = (labeller(type = facet_type_labels,
+                                  pre_post_wet = facet_prepost_labels))) +
+  scale_fill_manual(values = c("#097CB2", "#03CC23")) +
+  scale_color_manual(values = c("#16B4FF", "#39B708")) +
+  labs(y = "DNA (Proportional Concentration)",
        x = "% Carbon",
-       title = "Fungal DNA Quantity vs Total Soil Carbon") +
-  scale_y_continuous(labels = comma) +
-  theme(legend.position = "none")
-ggsave(fung_c_plot,
-       filename = "output/2022/correlations/fung_c_plot.png",
-       width = 10, height = 8, units = "in")
+       title = "DNA Quantities vs Total Soil Carbon in Rewet Soils") +
+  scale_y_continuous(labels = label_scientific(digits = 2)) +
+  theme(legend.position = "none",
+        panel.spacing = unit(1, "lines"))
+ggsave(micro_c_plot,
+       filename = "output/2022/correlations/micro_c_plot.png",
+       width = 10, height = 10, units = "in")
 
-### Correlation between bacteria and c:N ###
+# Correlation between bacteria and C:N #
 bact_cn_stat <- cor.test(
   dna_nc$samp_cn_med, dna_nc$samp_med_bact, method = "kendall")
-
-bact_cn_plot <- dna_nc %>%
-  ggplot(aes(x = samp_cn_med,
-             y = samp_med_bact)) +
-  geom_point(aes(color = "blue")) +
-  geom_smooth(method = "lm", formula = y ~ x,
-              aes(fill = "l_blue", color = "blue"), alpha = 0.25) +
-  scale_fill_manual(values = c(blue = "#097CB2", l_blue = "#16B4FF",
-                               green = "#037D1E", l_green = "#03CC23")) +
-  scale_color_manual(values = c(blue = "#097CB2", l_blue = "#16B4FF",
-                                green = "#037D1E", l_green = "#03CC23")) +
-  labs(y = "Bacterial DNA (Proportional Concentration)",
-       x = "C:N Ratio",
-       title = "Bacteria DNA Quantity vs Soil Total C:N") +
-  scale_y_continuous(labels = comma) +
-  theme(legend.position = "none")
-ggsave(bact_cn_plot,
-       filename = "output/2022/correlations/bact_cn_plot.png",
-       width = 10, height = 8, units = "in")
-
-### Correlation between fungi and C:N ###
+# Correlation between fungi and C:N #
 fung_cn_stat <- cor.test(
   dna_nc$samp_cn_med, dna_nc$samp_med_fung, method = "kendall")
+
+# Side by side plot of bacteria and fungi vs C:N
+micro_cn_plot <- dna_nc %>%
+  pivot_longer(cols = c(samp_med_bact, samp_med_fung),
+               names_to = "type", values_to = "med") %>%
+  ggplot(aes(x = samp_cn_med,
+             y = med,
+             fill = factor(type),
+             color = factor(type))) +
+  geom_point(aes(color = factor(type))) +
+  geom_smooth(method = "lm", formula = y ~ x,
+              aes(fill = type, color = factor(type)), alpha = 0.25) +
+  facet_wrap(~ factor(type),
+             scales = "free", labeller = facet_type_labels,
+             dir = "v") +
+  scale_fill_manual(values = c("#097CB2", "#03CC23")) +
+  scale_color_manual(values = c("#16B4FF", "#39B708")) +
+  labs(y = "DNA (Proportional Concentration)",
+       x = "C:N Ratio",
+       title = "DNA Quantities vs C:N Ratios in Rewet Soils") +
+  scale_y_continuous(labels = label_scientific(digits = 2)) +
+  theme(legend.position = "none",
+        panel.spacing = unit(1, "lines"))
+ggsave(micro_n_plot,
+       filename = "output/2022/correlations/micro_n_plot.png",
+       width = 10, height = 10, units = "in")
+
 
 fung_cn_plot <- dna_nc %>%
   ggplot(aes(x = samp_cn_med,
@@ -319,7 +337,7 @@ ggsave(fung_cn_plot,
        filename = "output/2022/correlations/fung_cn_plot.png",
        width = 10, height = 8, units = "in")
 
-### Correlation between fungi and bacteria ###
+#### Correlation between fungi and bacteria ####
 fung_cn_plot <- dna_nc %>%
   ggplot(aes(x = samp_cn_med,
              y = samp_med_fung)) +
@@ -357,13 +375,19 @@ ggscatter(dna_sum_wcc, x = "samp_med_bact", y = "samp_med_fung",
           cor.coef = TRUE, cor.method = "kendall")
 
 
-### DNA ratio to C:N ratio ###
-dna_ratio <- dna_sum %>%
-  mutate(samp_ratio = samp_med_fung / samp_med_bact)
-
-dna_cn_ratio <- dna_ratio %>%
-  left_join(nc_sum)
-
-ggscatter(dna_cn_ratio, x = "samp_ratio", y = "samp_cn_med",
+ggscatter(dna_nc, x = "samp_med_fung", y = "samp_cn_med",
           add = "reg.line", conf.int = TRUE,
           cor.coef = TRUE, cor.method = "kendall")
+
+dna_nc_cw <- dna_nc %>%
+  filter(pre_post_wet == "cw")
+ggscatter(dna_nc_pre, x = "samp_med_fung", y = "samp_med_bact",
+          add = "reg.line", conf.int = TRUE,
+          cor.coef = TRUE, cor.method = "kendall")
+ggscatter(dna_nc_post, x = "samp_med_fung", y = "samp_med_bact",
+          add = "reg.line", conf.int = TRUE,
+          cor.coef = TRUE, cor.method = "kendall")
+ggscatter(dna_nc_cw, x = "samp_med_fung", y = "samp_med_bact",
+          add = "reg.line", conf.int = TRUE,
+          cor.coef = TRUE, cor.method = "kendall")
+
