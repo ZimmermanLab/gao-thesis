@@ -54,7 +54,6 @@ fung_norm_all <- norm_conc(fung_concentrations, dried_wts_qubit) %>%
          cq_fung = cq,
          outlier_flag_fung = outlier_flag)
 
-### FUNGAL:BACTERIAL RATIOS ###
 # Find median per sample for bacterial and fungal separately
 samp_rep_fung <- fung_norm_all %>%
   group_by(sample_no) %>%
@@ -74,7 +73,7 @@ samp_all <- samp_rep_bact %>%
 # Save out for correlation tests
 write_csv(samp_all, "data/cleaned_data/qPCR/samp_medians.csv")
 
-# Find ratios per sample
+### FUNGAL:BACTERIAL RATIOS ###
 # Note that I did this at the sample level vs the tech rep level since fungal
 # and bacterial tech reps cannot be mapped to each other
 samp_ratio_all <- samp_all %>%
