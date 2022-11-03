@@ -50,6 +50,7 @@ set_theme <- function() {
     legend.key.size = unit(10, "pt"),
     legend.spacing.y = unit(0, "pt"),
     legend.key = element_blank(),
-    strip.text.x = element_text(size = 12)
+    strip.text.x = element_text(size = 12),
+    strip.text.y = element_text(size = 12)
 )
 }
