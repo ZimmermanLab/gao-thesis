@@ -70,10 +70,7 @@ samp_all <- samp_rep_bact %>%
   summarize(samp_med_bact = median(samp_rep_med_bact),
             samp_med_fung = median(samp_rep_med_fung))
 
-# Save out for correlation tests
-write_csv(samp_all, "data/cleaned_data/qPCR/samp_medians.csv")
-
-### FUNGAL:BACTERIAL RATIOS ###
+# Calculate fungal : bacterial ratios
 # Note that I did this at the sample level vs the tech rep level since fungal
 # and bacterial tech reps cannot be mapped to each other
 samp_ratio_all <- samp_all %>%
@@ -81,13 +78,16 @@ samp_ratio_all <- samp_all %>%
   # Removes water only samples that had bacteria but no fungi
   filter(!is.na(samp_ratio))
 
-# NO CC ONLY
+# Save out for correlation tests
+write_csv(samp_ratio_all, "data/cleaned_data/qPCR/samp_medians.csv")
+
+#### PRE/POST RATIO NO CC ONLY ####
 samp_ratio_nocc <- samp_ratio_all %>%
-  filter(cc_treatment == "no_cc") %>%
-  filter(pre_post_wet == "pre"|
-           pre_post_wet == "post")
+  filter(cc_treatment == "no_cc")
 # Calculate per treatment medians + IQs
-treat_ratio_nocc_sum <- samp_ratio_nocc %>%
+treat_ratio_nocc_sum <- samp_ratio_nocc  %>%
+  filter(pre_post_wet == "pre"|
+           pre_post_wet == "post") %>%
   group_by(cc_treatment, drying_treatment, pre_post_wet) %>%
   summarize(treat_median_ratio = median(samp_ratio),
             treat_iqr = IQR(samp_ratio)) %>%
@@ -96,10 +96,6 @@ treat_ratio_nocc_sum <- samp_ratio_nocc %>%
 # Calculate total statistics of rewetting in no cc
 ratio_stats_rewet_nocc <- samp_ratio_nocc %>%
   kruskal.test(data = ., samp_ratio ~ pre_post_wet)
-# Calculate stats of drying in pre only
-ratio_stats_drying_nocc <- samp_ratio_nocc %>%
-  filter(pre_post_wet == "pre") %>%
-  kruskal.test(data = ., samp_ratio ~ drying_treatment)
 
 # Calculate per week differences in pre-post
 ratio_nocc_one_wk_stats <- samp_ratio_nocc %>%
@@ -117,7 +113,7 @@ ratio_nocc_four_wk_stats <- samp_ratio_nocc %>%
 facet_drying_labels <- as_labeller(c("one_wk" = "One Week",
                                      "two_wk" = "Two Weeks",
                                      "four_wk" = "Four Weeks"))
-# No cc
+# No cc pre/post ratio plot
 ratio_nocc_plot <- samp_ratio_nocc %>%
   ggplot(aes(x = factor(pre_post_wet, levels = c("pre", "post")),
              y = samp_ratio,
@@ -143,14 +139,13 @@ ggsave(ratio_nocc_plot,
        filename = "output/2022/qpcr_plots/ratios_all_nocc.png",
        width = 10, height = 8, units = "in")
 
-
-# W CC ONLY
+#### PRE/POST RATIO W CC ONLY ####
 samp_ratio_wcc <- samp_ratio_all %>%
-  filter(cc_treatment == "w_cc") %>%
-  filter(pre_post_wet == "pre"|
-           pre_post_wet == "post")
+  filter(cc_treatment == "w_cc")
 # Calculate per treatment medians + IQs
-treat_ratio_wcc_sum <- samp_ratio_wcc %>%
+treat_ratio_wcc_sum <- samp_ratio_wcc  %>%
+  filter(pre_post_wet == "pre"|
+           pre_post_wet == "post") %>%
   group_by(cc_treatment, drying_treatment, pre_post_wet) %>%
   summarize(treat_median_ratio = median(samp_ratio),
             treat_iqr = IQR(samp_ratio)) %>%
@@ -159,10 +154,6 @@ treat_ratio_wcc_sum <- samp_ratio_wcc %>%
 # Calculate total statistics of rewetting in w cc
 ratio_stats_rewet_wcc <- samp_ratio_wcc %>%
   kruskal.test(data = ., samp_ratio ~ pre_post_wet)
-# Calculate stats of drying in pre only
-ratio_stats_drying_wcc <- samp_ratio_wcc %>%
-  filter(pre_post_wet == "pre") %>%
-  kruskal.test(data = ., samp_ratio ~ drying_treatment)
 
 # Calculate per week differences in pre-post
 ratio_wcc_one_wk_stats <- samp_ratio_wcc %>%
@@ -175,7 +166,7 @@ ratio_wcc_four_wk_stats <- samp_ratio_wcc %>%
   filter(drying_treatment == "four_wk") %>%
   kruskal.test(data = ., samp_ratio ~ pre_post_wet)
 
-# Plot w cc
+# Plot pre/post ratio w cc
 ratio_wcc_plot <- samp_ratio_wcc %>%
   ggplot(aes(x = factor(pre_post_wet, levels = c("pre", "post")),
              y = samp_ratio,
@@ -242,28 +233,133 @@ samp_ratio_nomod_plot <- samp_ratio_nomod %>%
 # W CC OR W/O CC
 
 
+#### DRYING NO CC ####
+
+# Calculate stats of drying in pre only
+ratio_drying_nocc <- samp_ratio_nocc %>%
+  filter(pre_post_wet == "pre")
+ratio_sum_drying_nocc <- ratio_drying_nocc %>%
+  group_by(drying_treatment) %>%
+  summarise(treat_ratio_med = median(samp_ratio),
+            treat_ratio_iqr = IQR(samp_ratio),
+            treat_bact_med = median(samp_med_bact),
+            treat_bact_iqr = IQR(samp_med_bact),
+            treat_fung_med = median(samp_med_fung),
+            treat_fung_iqr = IQR(samp_med_fung)) %>%
+  arrange(factor(drying_treatment, levels = c("one_wk", "two_wk", "four_wk")))
+
+ratio_stats_drying_nocc <- ratio_drying_nocc %>%
+  kruskal.test(data = ., samp_ratio ~ drying_treatment)
+bact_stats_drying_nocc <- ratio_drying_nocc %>%
+  kruskal.test(data = ., samp_med_bact ~ drying_treatment)
+fung_stats_drying_nocc <- ratio_drying_nocc %>%
+  kruskal.test(data = ., samp_med_fung ~ drying_treatment)
+
+# Plot no cc bacteria and fungi over time in drying
+facet_type_labels <- as_labeller(c("samp_med_bact" = "Bacteria",
+                                   "samp_med_fung" = "Fungi"))
+drying_plot_nocc <- ratio_drying_nocc %>%
+  pivot_longer(cols = c(samp_med_bact, samp_med_fung),
+               names_to = "type", values_to = "med") %>%
+  ggplot(aes(x = drying_treatment,
+             y = med,
+             fill = type,
+             color = type)) +
+  geom_boxplot() +
+  facet_wrap(~ factor(type, levels = c("samp_med_bact", "samp_med_fung")),
+             scales = "free", labeller = facet_type_labels) +
+  scale_x_discrete(limits = c("one_wk", "two_wk", "four_wk"),
+                   labels = c("One Week", "Two Weeks", "Four Weeks")) +
+  scale_fill_manual(name = NULL, limits = c("samp_med_bact", "samp_med_fung"),
+                    values = c("#16B4FF", "#34980D"),
+                    labels = c("Bacteria", "Fungi")) +
+  scale_color_manual(name = NULL, limits = c("samp_med_bact", "samp_med_fung"),
+                     values = c("#097CB2", "#195004"),
+                     labels = c("Bacteria", "Fungi")) +
+  theme(panel.spacing = unit(2, "lines"),
+        legend.position = "none") +
+  labs(x = "Weeks of Drying",
+       y = "DNA Quantity (Proportional Concentration)",
+       title = "Microbial DNA in Drying Soils Without Cover Crop")
+# Save plot
+ggsave(drying_plot_nocc,
+       filename = "output/2022/qpcr_plots/drying_plot_nocc_all.png",
+       width = 10, height = 8, units = "in")
+
+#### DRYING W CC ####
+# Calculate stats of drying in pre only
+ratio_drying_wcc <- samp_ratio_wcc %>%
+  filter(pre_post_wet == "pre")
+
+ratio_sum_drying_wcc <- ratio_drying_wcc %>%
+  group_by(drying_treatment) %>%
+  summarise(treat_ratio_med = median(samp_ratio),
+            treat_ratio_iqr = IQR(samp_ratio),
+            treat_bact_med = median(samp_med_bact),
+            treat_bact_iqr = IQR(samp_med_bact),
+            treat_fung_med = median(samp_med_fung),
+            treat_fung_iqr = IQR(samp_med_fung)) %>%
+  arrange(factor(drying_treatment, levels = c("one_wk", "two_wk", "four_wk")))
+
+ratio_stats_drying_wcc <- ratio_drying_wcc %>%
+  kruskal.test(data = ., samp_ratio ~ drying_treatment)
+bact_stats_drying_wcc <- ratio_drying_wcc %>%
+  kruskal.test(data = ., samp_med_bact ~ drying_treatment)
+fung_stats_drying_wcc <- ratio_drying_wcc %>%
+  kruskal.test(data = ., samp_med_fung ~ drying_treatment)
+
+# Plot w cc bacteria and fungi over time in drying
+drying_plot_wcc <- ratio_drying_wcc %>%
+  pivot_longer(cols = c(samp_med_bact, samp_med_fung),
+               names_to = "type", values_to = "med") %>%
+  ggplot(aes(x = drying_treatment,
+             y = med,
+             fill = type,
+             color = type)) +
+  geom_boxplot() +
+  facet_wrap(~ factor(type, levels = c("samp_med_bact", "samp_med_fung")),
+             scales = "free", labeller = facet_type_labels) +
+  scale_x_discrete(limits = c("one_wk", "two_wk", "four_wk"),
+                   labels = c("One Week", "Two Weeks", "Four Weeks")) +
+  scale_fill_manual(name = NULL, limits = c("samp_med_bact", "samp_med_fung"),
+                    values = c("#16B4FF", "#34980D"),
+                    labels = c("Bacteria", "Fungi")) +
+  scale_color_manual(name = NULL, limits = c("samp_med_bact", "samp_med_fung"),
+                     values = c("#097CB2", "#195004"),
+                     labels = c("Bacteria", "Fungi")) +
+  theme(panel.spacing = unit(2, "lines"),
+        legend.position = "none") +
+  labs(x = "Weeks of Drying",
+       y = "DNA Quantity (Proportional Concentration)",
+       title = "Microbial DNA in Drying Soils With Cover Crop")
+# Save plot
+ggsave(drying_plot_wcc,
+       filename = "output/2022/qpcr_plots/drying_plot_wcc_all.png",
+       width = 10, height = 8, units = "in")
+
+
 #### SEPARATE BACTERIAL + FUNGAL ANALYSES ####
 
 # Map samples to all treatment conditions
-bact_treatment_all <- bact_norm_all %>%
+bact_map_all <- bact_norm_all %>%
   left_join(all_treatments)
-fung_treatment_all <- fung_norm_all %>%
+fung_map_all <- fung_norm_all %>%
   left_join(all_treatments)
 
 # Without tech replicate extreme outliers (> 3x IQR)
-bact_treatment_no_ext <- bact_treatment_all %>%
+bact_map_no_ext <- bact_map_all %>%
   filter(!(outlier_flag == "extreme") |
            is.na(outlier_flag)) %>%
   select(-c(outlier_flag))
-fung_treatment_no_ext <- fung_treatment_all %>%
+fung_map_no_ext <- fung_map_all %>%
   filter(!(outlier_flag == "extreme") |
            is.na(outlier_flag)) %>%
   select(-c(outlier_flag))
 # Without tech replicate extreme and moderate outliers (> 1.5x IQR)
-fung_treatment_no_mod <- fung_treatment_all %>%
+fung_map_no_mod <- fung_map_all %>%
   filter(is.na(outlier_flag)) %>%
   select(-c(outlier_flag))
-bact_treatment_no_mod <- bact_treatment_all %>%
+bact_map_no_mod <- bact_map_all %>%
   filter(is.na(outlier_flag)) %>%
   select(-c(outlier_flag))
 
@@ -271,13 +367,13 @@ bact_treatment_no_mod <- bact_treatment_all %>%
 # DNA quantities
 source("code/functions/qpcr_functions/analyze_plot_dna.R")
 # in samples without cc
-bact_rewet_no_cc <- analyze_plot_dna(bact_treatment_all, "no_cc")
+bact_rewet_no_cc <- analyze_plot_dna(bact_map_all, "no_cc")
 # Run test at every time point to compare differences before and after
 source("code/functions/qpcr_functions/compare_rewet_each_wk.R")
-bact_wk_no_cc_all <- compare_rewet_time(bact_treatment_all, "no_cc")
+bact_wk_no_cc_all <- compare_rewet_time(bact_map_all, "no_cc")
 # Fungal
-fung_rewet_no_cc <- analyze_plot_dna(fung_treatment_all, "no_cc")
-fung_wk_no_cc_all <- compare_rewet_time(fung_treatment_all, "no_cc")
+fung_rewet_no_cc <- analyze_plot_dna(fung_map_all, "no_cc")
+fung_wk_no_cc_all <- compare_rewet_time(fung_map_all, "no_cc")
 
 
 # Make plot and run Kruskal-Wallis test to see effect of rewetting on
