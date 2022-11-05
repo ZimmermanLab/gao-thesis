@@ -41,11 +41,19 @@ shapiro.test(dna_co2$co2_med)
 ggqqplot(dna_co2$samp_med_bact)
 ggqqplot(dna_co2$co2_med)
 
+# Filter by no_cc and w_cc
+dna_co2_nocc <- dna_co2 %>%
+  filter(cc_treatment == "no_cc")
+dna_co2_wcc <- dna_co2 %>%
+  filter(cc_treatment == "w_cc")
+
 # Use Kendall rank-based test for non-parametric correlation
 # Tau is correlation coefficient
 # p-value < 0.05 means they are significantly correlated
-bact_dna_co2_stat <- cor.test(
-  dna_co2$samp_med_bact, dna_co2$co2_med, method = "kendall")
+bact_co2_nocc_stat <- cor.test(
+  dna_co2_nocc$samp_med_bact, dna_co2_nocc$co2_med, method = "kendall")
+bact_co2_wcc_stat <- cor.test(
+  dna_co2_wcc$samp_med_bact, dna_co2_wcc$co2_med, method = "kendall")
 
 ### Fungal DNA with CO2 ###
 # Test normality
@@ -53,13 +61,17 @@ shapiro.test(dna_co2$samp_med_fung)
 ggqqplot(dna_co2$samp_med_fung)
 
 # Use Kendall rank-based test for non-parametric correlation
-fung_dna_co2_stat <- cor.test(
-  dna_co2$samp_med_fung, dna_co2$co2_med, method = "kendall")
+fung_co2_nocc_stat <- cor.test(
+  dna_co2_nocc$samp_med_fung, dna_co2_nocc$co2_med, method = "kendall")
+fung_co2_wcc_stat <- cor.test(
+  dna_co2_wcc$samp_med_fung, dna_co2_wcc$co2_med, method = "kendall")
 
 # Plot correlation b/w DNA and CO2 respiration in
-# post wet samples only
+# post wet samples w cc only
+facet_type_labels <- as_labeller(c("samp_med_bact" = "Bacteria",
+                                   "samp_med_fung" = "Fungi"))
 # Side by side of bacterial and fungal DNA
-dna_co2_plot <- dna_co2 %>%
+dna_co2_wcc_plot <- dna_co2_wcc %>%
   pivot_longer(cols = c(samp_med_bact, samp_med_fung),
                names_to = "type", values_to = "med") %>%
   ggplot(aes(x = med,
@@ -76,13 +88,14 @@ dna_co2_plot <- dna_co2 %>%
   scale_fill_manual(values = c("#097CB2", "#03CC23")) +
   scale_color_manual(values = c("#16B4FF", "#39B708")) +
   labs(y = "CO2 (ppm)", x = "DNA (Proportional Concentration)",
-       title = "DNA Quantities in Rewet Soils vs CO2 Concentration") +
+       title = "DNA Quantities in Rewet Soils With Cover Crop
+       vs CO2 Concentration") +
   scale_y_continuous(labels = comma) +
   scale_x_continuous(labels = scientific) +
   theme(legend.position = "none",
         panel.spacing = unit(1, "lines"))
-ggsave(dna_co2_plot,
-       filename = "output/2022/correlations/micro_co2_plot.png",
+ggsave(dna_co2_wcc_plot,
+       filename = "output/2022/correlations/micro_co2_wcc_plot.png",
        width = 12, height = 8, units = "in")
 
 
@@ -91,16 +104,31 @@ ggsave(dna_co2_plot,
 nc_co2 <- nc_sum %>%
   left_join(co2_sum) %>%
   filter(!is.na(co2_med))
+#Separate by cc treatment
+nc_co2_nocc <- nc_co2 %>%
+  filter(cc_treatment == "no_cc")
+nc_co2_wcc <- nc_co2 %>%
+  filter(cc_treatment == "w_cc")
 
-# Correlation b/w CO2 and soil C
+# Correlation b/w CO2 and soil CN in no cc
+c_co2_nocc_stat <- cor.test(
+  nc_co2_nocc$samp_c_med, nc_co2_nocc$co2_med, method = "kendall")
+n_co2_nocc_stat <- cor.test(
+  nc_co2_nocc$samp_n_med, nc_co2_nocc$co2_med, method = "kendall")
+# W cc
+c_co2_wcc_stat <- cor.test(
+  nc_co2_wcc$samp_c_med, nc_co2_wcc$co2_med, method = "kendall")
+n_co2_wcc_stat <- cor.test(
+  nc_co2_wcc$samp_n_med, nc_co2_wcc$co2_med, method = "kendall")
+
+# Correlation b/w CO2 and soil CN all
 c_co2_stat <- cor.test(
   nc_co2$samp_c_med, nc_co2$co2_med, method = "kendall")
-# Correlation b/w CO2 and soil N
 n_co2_stat <- cor.test(
   nc_co2$samp_n_med, nc_co2$co2_med, method = "kendall")
 
 # Side by side plot of CO2 and %N and %C
-nc_co2_plot <- nc_co2 %>%
+nc_co2_wcc_plot <- nc_co2_wcc %>%
   pivot_longer(cols = c(samp_n_med, samp_c_med),
                names_to = "type", values_to = "med") %>%
   ggplot(aes(x = med,
@@ -118,17 +146,20 @@ nc_co2_plot <- nc_co2 %>%
   scale_fill_manual(values = c("#03CC23", "#097CB2")) +
   scale_color_manual(values = c( "#39B708", "#16B4FF")) +
   labs(x = "Element %", y = "CO2 (ppm)",
-       title = "CO2 Concentration in Rewet Soils vs Total Soil CN") +
+       title = "CO2 Concentration in Rewet Soils With Cover Crop
+       vs Total Soil CN") +
   scale_y_continuous(labels = comma) +
   theme(legend.position = "none",
         panel.spacing = unit(1, "lines"))
-ggsave(nc_co2_plot,
-       filename = "output/2022/correlations/nc_co2_plot.png",
+ggsave(nc_co2_wcc_plot,
+       filename = "output/2022/correlations/nc_co2_wcc_plot.png",
        width = 12, height = 8, units = "in")
 
 ### Correlation b/w CO2 and soil C:N ###
-cn_co2_stat <- cor.test(
-  nc_co2$samp_cn_med, nc_co2$co2_med, method = "kendall")
+cn_co2_nocc_stat <- cor.test(
+  nc_co2_nocc$samp_cn_med, nc_co2_nocc$co2_med, method = "kendall")
+cn_co2_wcc_stat <- cor.test(
+  nc_co2_wcc$samp_cn_med, nc_co2_wcc$co2_med, method = "kendall")
 
 cn_co2_plot <- nc_co2 %>%
   ggplot(aes(x = samp_cn_med,
@@ -152,51 +183,74 @@ ggsave(cn_co2_plot,
 
 #### NC AND DNA PRE/POST WET ####
 # Join NC and DNA data and select only pre/post wet
-dna_nc <- nc_sum %>%
-  left_join(dna_sum)
+# No cc
+dna_nc_nocc <- nc_sum %>%
+  left_join(dna_sum) %>%
+  filter(cc_treatment == "no_cc")
 
-dna_nc_prepost <- dna_nc %>%
+dna_nc_nocc_prepost <- dna_nc_nocc %>%
   filter(pre_post_wet == "pre" |
            pre_post_wet == "post")
-dna_nc_pre <- dna_nc %>%
+dna_nc_nocc_pre <- dna_nc_nocc %>%
   filter(pre_post_wet == "pre")
-dna_nc_post <- dna_nc %>%
+dna_nc_nocc_post <- dna_nc_nocc %>%
   filter(pre_post_wet == "post")
-dna_nc_dry <- dna_nc %>%
+dna_nc_nocc_dry <- dna_nc_nocc %>%
   filter(pre_post_wet == "pre" |
            pre_post_wet == "all_dry")
 
+# W cc
+dna_nc_wcc <- nc_sum %>%
+  left_join(dna_sum) %>%
+  filter(cc_treatment == "w_cc")
 
-ggscatter(dna_nc_dry, x = "samp_med_bact", y = "samp_c_med",
+dna_nc_wcc_prepost <- dna_nc_wcc %>%
+  filter(pre_post_wet == "pre" |
+           pre_post_wet == "post")
+dna_nc_wcc_pre <- dna_nc_wcc %>%
+  filter(pre_post_wet == "pre")
+dna_nc_wcc_post <- dna_nc_wcc %>%
+  filter(pre_post_wet == "post")
+dna_nc_wcc_dry <- dna_nc_wcc %>%
+  filter(pre_post_wet == "pre" |
+           pre_post_wet == "all_dry")
+
+ggscatter(dna_nc_nocc_pre, x = "samp_med_fung", y = "samp_n_med",
           add = "reg.line", conf.int = TRUE,
           cor.coef = TRUE, cor.method = "kendall")
 
 
 
 # Correlation between bacteria and N in pre vs post
-bact_n_stat <- cor.test(
-  dna_nc$samp_n_med, dna_nc$samp_med_bact, method = "kendall")
-bact_n_stat_pre <- cor.test(
-  dna_nc_pre$samp_n_med, dna_nc_pre$samp_med_bact, method = "kendall")
-bact_n_stat_post <- cor.test(
-  dna_nc_post$samp_n_med, dna_nc_post$samp_med_bact, method = "kendall")
-# in dry only
-bact_n_stat_dry <- cor.test(
-  dna_nc_dry$samp_n_med, dna_nc_dry$samp_med_bact, method = "kendall")
-# Correlation between fungi and N in pre vs post
-fung_n_stat <- cor.test(
-  dna_nc$samp_n_med, dna_nc$samp_med_fung, method = "kendall")
-fung_n_stat_pre <- cor.test(
-  dna_nc_pre$samp_n_med, dna_nc_pre$samp_med_fung, method = "kendall")
-fung_n_stat_post <- cor.test(
-  dna_nc_post$samp_n_med, dna_nc_post$samp_med_fung, method = "kendall")
-# in dry only
-fung_n_stat_dry <- cor.test(
-  dna_nc_dry$samp_n_med, dna_nc_dry$samp_med_fung, method = "kendall")
+# No cc
+bact_n_nocc_stat_pre <- cor.test(
+  dna_nc_nocc_pre$samp_n_med, dna_nc_nocc_pre$samp_med_bact, method = "kendall")
+bact_n_noccstat_post <- cor.test(
+  dna_nc_nocc_post$samp_n_med, dna_nc_nocc_post$samp_med_bact,
+  method = "kendall")
 
-# 4 x 4 Facet plot of bacteria and fungi vs %N in pre vs post
-facet_type_labels <- as_labeller(c("samp_med_bact" = "Bacteria",
-                                   "samp_med_fung" = "Fungi"))
+# W cc
+bact_n_wcc_stat_pre <- cor.test(
+  dna_nc_wcc_pre$samp_n_med, dna_nc_wcc_pre$samp_med_bact, method = "kendall")
+bact_n_wccstat_post <- cor.test(
+  dna_nc_wcc_post$samp_n_med, dna_nc_wcc_post$samp_med_bact,
+  method = "kendall")
+
+# Correlation between fungi and N in pre vs post
+# No cc
+fung_n_nocc_stat_pre <- cor.test(
+  dna_nc_nocc_pre$samp_n_med, dna_nc_nocc_pre$samp_med_fung, method = "kendall")
+fung_n_nocc_stat_post <- cor.test(
+  dna_nc_nocc_post$samp_n_med, dna_nc_nocc_post$samp_med_fung,
+  method = "kendall")
+# W cc
+fung_n_wcc_stat_pre <- cor.test(
+  dna_nc_wcc_pre$samp_n_med, dna_nc_wcc_pre$samp_med_fung, method = "kendall")
+fung_n_wcc_stat_post <- cor.test(
+  dna_nc_wcc_post$samp_n_med, dna_nc_wcc_post$samp_med_fung,
+  method = "kendall")
+
+# 4 x 4 Facet plot of bacteria and fungi vs %N in pre vs post with no cc
 facet_prepost_labels <- c("b_post" = "Post-Wet", "a_pre" = "Pre-Wet")
 micro_n_plot <- dna_nc_prepost %>%
   mutate(pre_post_wet =
@@ -391,3 +445,14 @@ ggscatter(dna_nc_cw, x = "samp_med_fung", y = "samp_med_bact",
           add = "reg.line", conf.int = TRUE,
           cor.coef = TRUE, cor.method = "kendall")
 
+dna_co2_nocc <- dna_co2 %>%
+  filter(cc_treatment == "no_cc")
+ggscatter(dna_co2_nocc, x = "samp_med_fung", y = "co2_med",
+          add = "reg.line", conf.int = TRUE,
+          cor.coef = TRUE, cor.method = "kendall")
+
+dna_co2_wcc <- dna_co2 %>%
+  filter(cc_treatment == "w_cc")
+ggscatter(dna_co2_wcc, x = "samp_med_fung", y = "co2_med",
+          add = "reg.line", conf.int = TRUE,
+          cor.coef = TRUE, cor.method = "kendall")
