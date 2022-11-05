@@ -83,11 +83,11 @@ write_csv(samp_ratio_all, "data/cleaned_data/qPCR/samp_medians.csv")
 
 #### PRE/POST RATIO NO CC ONLY ####
 samp_ratio_nocc <- samp_ratio_all %>%
-  filter(cc_treatment == "no_cc")
+  filter(cc_treatment == "no_cc") %>%
+  filter(pre_post_wet == "pre" |
+           pre_post_wet == "post")
 # Calculate per treatment medians + IQs
 treat_ratio_nocc_sum <- samp_ratio_nocc  %>%
-  filter(pre_post_wet == "pre"|
-           pre_post_wet == "post") %>%
   group_by(cc_treatment, drying_treatment, pre_post_wet) %>%
   summarize(treat_median_ratio = median(samp_ratio),
             treat_iqr = IQR(samp_ratio)) %>%
@@ -96,6 +96,10 @@ treat_ratio_nocc_sum <- samp_ratio_nocc  %>%
 # Calculate total statistics of rewetting in no cc
 ratio_stats_rewet_nocc <- samp_ratio_nocc %>%
   kruskal.test(data = ., samp_ratio ~ pre_post_wet)
+# Stats of drying time in no cc
+ratio_stats_rewet_nocc <- samp_ratio_nocc %>%
+  kruskal.test(data = ., samp_ratio ~ pre_post_wet)
+
 
 # Calculate per week differences in pre-post
 ratio_nocc_one_wk_stats <- samp_ratio_nocc %>%
@@ -141,11 +145,11 @@ ggsave(ratio_nocc_plot,
 
 #### PRE/POST RATIO W CC ONLY ####
 samp_ratio_wcc <- samp_ratio_all %>%
-  filter(cc_treatment == "w_cc")
-# Calculate per treatment medians + IQs
-treat_ratio_wcc_sum <- samp_ratio_wcc  %>%
+  filter(cc_treatment == "w_cc") %>%
   filter(pre_post_wet == "pre"|
-           pre_post_wet == "post") %>%
+           pre_post_wet == "post")
+# Calculate per treatment medians + IQs
+treat_ratio_wcc_sum <- samp_ratio_wcc %>%
   group_by(cc_treatment, drying_treatment, pre_post_wet) %>%
   summarize(treat_median_ratio = median(samp_ratio),
             treat_iqr = IQR(samp_ratio)) %>%
@@ -342,7 +346,9 @@ ggsave(drying_plot_wcc,
 
 # Map samples to all treatment conditions
 bact_map_all <- bact_norm_all %>%
-  left_join(all_treatments)
+  left_join(all_treatments) %>%
+  # Filter out water only samples for bacteria qPCR
+  filter(pre_post_wet != "no_soil")
 fung_map_all <- fung_norm_all %>%
   left_join(all_treatments)
 
