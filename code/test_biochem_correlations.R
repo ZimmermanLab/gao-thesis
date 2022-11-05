@@ -215,7 +215,7 @@ dna_nc_wcc_dry <- dna_nc_wcc %>%
   filter(pre_post_wet == "pre" |
            pre_post_wet == "all_dry")
 
-ggscatter(dna_nc_nocc_pre, x = "samp_med_fung", y = "samp_n_med",
+ggscatter(dna_nc_nocc, y = "samp_med_fung", x = "samp_n_med",
           add = "reg.line", conf.int = TRUE,
           cor.coef = TRUE, cor.method = "kendall")
 
@@ -228,7 +228,6 @@ bact_n_nocc_stat_pre <- cor.test(
 bact_n_noccstat_post <- cor.test(
   dna_nc_nocc_post$samp_n_med, dna_nc_nocc_post$samp_med_bact,
   method = "kendall")
-
 # W cc
 bact_n_wcc_stat_pre <- cor.test(
   dna_nc_wcc_pre$samp_n_med, dna_nc_wcc_pre$samp_med_bact, method = "kendall")
@@ -252,7 +251,7 @@ fung_n_wcc_stat_post <- cor.test(
 
 # 4 x 4 Facet plot of bacteria and fungi vs %N in pre vs post with no cc
 facet_prepost_labels <- c("b_post" = "Post-Wet", "a_pre" = "Pre-Wet")
-micro_n_plot <- dna_nc_prepost %>%
+micro_n_nocc_plot <- dna_nc_nocc_prepost %>%
   mutate(pre_post_wet =
            # Terrible hack to reorder facets
            case_when(str_detect(pre_post_wet, "pre") ~ "a_pre",
@@ -274,41 +273,45 @@ micro_n_plot <- dna_nc_prepost %>%
   scale_color_manual(values = c("#16B4FF", "#39B708")) +
   labs(y = "DNA (Proportional Concentration)",
        x = "% Nitrogen",
-       title = "DNA Quantities vs Total Soil Nitrogen in Rewet Soils") +
+       title = "DNA Quantities vs Total Soil Nitrogen in Rewet Soils
+       With Cover Crop") +
   scale_y_continuous(labels = label_scientific(digits = 2)) +
   theme(legend.position = "none",
         panel.spacing = unit(1, "lines"))
-ggsave(micro_n_plot,
-       filename = "output/2022/correlations/micro_n_plot.png",
+ggsave(micro_n_nocc_plot,
+       filename = "output/2022/correlations/micro_n_nocc_plot.png",
        width = 10, height = 10, units = "in")
 
 # Correlation between bacteria and C
-bact_c_stat <- cor.test(
-  dna_nc$samp_c_med, dna_nc$samp_med_bact, method = "kendall")
-# pre vs post
-bact_c_stat_pre <- cor.test(
-  dna_nc_pre$samp_c_med, dna_nc_pre$samp_med_bact, method = "kendall")
-bact_c_stat_post <- cor.test(
-  dna_nc_post$samp_c_med, dna_nc_post$samp_med_bact, method = "kendall")
-# in dry only
-bact_c_stat_dry <- cor.test(
-  dna_nc_dry$samp_c_med, dna_nc_dry$samp_med_bact, method = "kendall")
+# No cc
+bact_c_nocc_stat_pre <- cor.test(
+  dna_nc_nocc_pre$samp_c_med, dna_nc_nocc_pre$samp_med_bact, method = "kendall")
+bact_c_noccstat_post <- cor.test(
+  dna_nc_nocc_post$samp_c_med, dna_nc_nocc_post$samp_med_bact,
+  method = "kendall")
+# W cc
+bact_c_wcc_stat_pre <- cor.test(
+  dna_nc_wcc_pre$samp_c_med, dna_nc_wcc_pre$samp_med_bact, method = "kendall")
+bact_c_wccstat_post <- cor.test(
+  dna_nc_wcc_post$samp_c_med, dna_nc_wcc_post$samp_med_bact,
+  method = "kendall")
 
-# Correlation between fungi and N
-fung_c_stat <- cor.test(
-  dna_nc$samp_c_med, dna_nc$samp_med_fung, method = "kendall")
-# pre vs post
-fung_c_stat_pre <- cor.test(
-  dna_nc_pre$samp_c_med, dna_nc_pre$samp_med_fung, method = "kendall")
-fung_c_stat_post <- cor.test(
-  dna_nc_post$samp_c_med, dna_nc_post$samp_med_fung, method = "kendall")
-# in dry only
-fung_c_stat_dry <- cor.test(
-  dna_nc_dry$samp_c_med, dna_nc_dry$samp_med_fung, method = "kendall")
-
+# Correlation between fungi and N in pre vs post
+# No cc
+fung_c_nocc_stat_pre <- cor.test(
+  dna_nc_nocc_pre$samp_c_med, dna_nc_nocc_pre$samp_med_fung, method = "kendall")
+fung_c_nocc_stat_post <- cor.test(
+  dna_nc_nocc_post$samp_c_med, dna_nc_nocc_post$samp_med_fung,
+  method = "kendall")
+# W cc
+fung_c_wcc_stat_pre <- cor.test(
+  dna_nc_wcc_pre$samp_c_med, dna_nc_wcc_pre$samp_med_fung, method = "kendall")
+fung_c_wcc_stat_post <- cor.test(
+  dna_nc_wcc_post$samp_c_med, dna_nc_wcc_post$samp_med_fung,
+  method = "kendall")
 
 # 4x4 Facet plot of bacteria and fungi vs %C in pre vs post wet
-micro_c_plot <- dna_nc_prepost %>%
+micro_c_nocc_plot <- dna_nc_nocc_prepost %>%
   mutate(pre_post_wet =
            # Terrible hack to reorder facets
            case_when(str_detect(pre_post_wet, "pre") ~ "a_pre",
@@ -330,12 +333,13 @@ micro_c_plot <- dna_nc_prepost %>%
   scale_color_manual(values = c("#16B4FF", "#39B708")) +
   labs(y = "DNA (Proportional Concentration)",
        x = "% Carbon",
-       title = "DNA Quantities vs Total Soil Carbon in Rewet Soils") +
+       title = "DNA Quantities vs Total Soil Carbon in Rewet Soils
+       Without Cover Crop") +
   scale_y_continuous(labels = label_scientific(digits = 2)) +
   theme(legend.position = "none",
         panel.spacing = unit(1, "lines"))
-ggsave(micro_c_plot,
-       filename = "output/2022/correlations/micro_c_plot.png",
+ggsave(micro_c_nocc_plot,
+       filename = "output/2022/correlations/micro_c_nocc_plot.png",
        width = 10, height = 10, units = "in")
 
 # Correlation between bacteria and C:N #
