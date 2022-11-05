@@ -6,42 +6,50 @@
 # hellosarahgao@gmail.com
 
 compare_rewet_time <- function(treatment_data, cc_type) {
+
+  # Determine microbial type
+  if (str_detect(input_name, "bact")) {
+    micro_type = "conc_norm_bact"
+  } else if (str_detect(input_name, "fung"))  {
+    micro_type = "conc_norm_fung"
+  }
+
   if(cc_type != "all") {
     one_wk <- treatment_data %>%
       filter(cc_treatment == cc_type,
              drying_treatment == "one_wk",
              pre_post_wet != "cw")
     one_wk_stats <- one_wk %>%
-      kruskal.test(data = ., prop_conc_norm ~ pre_post_wet)
+      kruskal.test(data = ., get(micro_type) ~ pre_post_wet)
     two_wk <- treatment_data %>%
       filter(cc_treatment == cc_type,
              drying_treatment == "two_wk",
              pre_post_wet != "cw")
     two_wk_stats <- two_wk %>%
-      kruskal.test(data = ., prop_conc_norm ~ pre_post_wet)
+      kruskal.test(data = ., get(micro_type) ~ pre_post_wet)
     four_wk <- treatment_data %>%
       filter(cc_treatment == cc_type,
              drying_treatment == "four_wk",
              pre_post_wet != "cw")
     four_wk_stats <- four_wk %>%
-      kruskal.test(data = ., prop_conc_norm ~ pre_post_wet)
+      kruskal.test(data = ., get(micro_type) ~ pre_post_wet)
     }
   if(cc_type == "all") {
     one_wk <- treatment_data %>%
       filter(drying_treatment == "one_wk",
              pre_post_wet != "cw")
     one_wk_stats <- one_wk %>%
-      kruskal.test(data = ., prop_conc_norm ~ pre_post_wet)
+      kruskal.test(data = ., get(micro_type) ~ pre_post_wet)
     two_wk <- treatment_data %>%
       filter(drying_treatment == "two_wk",
              pre_post_wet != "cw")
     two_wk_stats <- two_wk %>%
-      kruskal.test(data = ., prop_conc_norm ~ pre_post_wet)
+      kruskal.test(data = ., get(micro_type) ~ pre_post_wet)
     four_wk <- treatment_data %>%
       filter(drying_treatment == "four_wk",
              pre_post_wet != "cw")
     four_wk_stats <- four_wk %>%
-      kruskal.test(data = ., prop_conc_norm ~ pre_post_wet)
+      kruskal.test(data = ., get(micro_type) ~ pre_post_wet)
   }
 
   all_time_stats <- data.frame("drying_treatment" = c("one_wk",
