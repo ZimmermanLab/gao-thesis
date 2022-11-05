@@ -12,6 +12,7 @@ library("dplyr")
 library("ggplot2")
 
 analyze_plot_dna <- function(treatment_mapped, cc_type) {
+
   if (cc_type == "w_cc") {
     rewet_subset <- treatment_mapped %>%
       # Select only pre-wet and post-wet data at 1, 2, and 4 weeks
@@ -33,12 +34,24 @@ analyze_plot_dna <- function(treatment_mapped, cc_type) {
         filter(pre_post_wet == "pre" |
                  pre_post_wet == "post")
       cc_title = "In All Samples"
-    }
+  }
+
+  # Take name of input
+  input_name <- deparse(substitute(treatment_mapped))
+
+  # Determine microbial type
+  if (str_detect(input_name, "bact")) {
+    micro_type = "conc_norm_bact"
+    micro_title = "Bacterial"
+  } else if (str_detect(input_name, "fung"))  {
+    micro_type = "conc_norm_fung"
+    micro_title = "Fungal"
+  }
 
   # Find medians per sample first across all tech reps
   samp_sum <- rewet_subset %>%
     group_by(sample_no, drying_treatment, pre_post_wet) %>%
-    summarize(samp_median = median(prop_conc_norm))
+    summarize(samp_median = median(get(micro_type)))
   # Find medians + IQRs across all treatment levels
   treat_sum <- samp_sum %>%
     group_by(drying_treatment, pre_post_wet) %>%
@@ -59,12 +72,6 @@ analyze_plot_dna <- function(treatment_mapped, cc_type) {
   # Set plot themes
   source("code/functions/set_plot_themes.R")
   set_theme()
-
-  # Take name of input
-  input_name <- deparse(substitute(treatment_mapped))
-  # Get "bacterial" or "fungal" from input name
-  micro_type = ifelse(
-    str_detect(input_name, "bact") == TRUE, "Bacterial", "Fungal")
 
   # Create a boxpot of DNA quantities pre/post rewetting at each time point
   # Set facet labels
@@ -92,7 +99,7 @@ analyze_plot_dna <- function(treatment_mapped, cc_type) {
           strip.text = element_text(size = 12)) +
     labs(x = element_blank(),
          y = "Proportional Concentration",
-         title = paste(micro_type, "DNA Changes From Rewetting\n", cc_title))
+         title = paste(micro_title, "DNA Changes From Rewetting\n", cc_title))
 
   # Save out the plot
   ggsave(file = paste0("output/2022/qpcr_plots/",
