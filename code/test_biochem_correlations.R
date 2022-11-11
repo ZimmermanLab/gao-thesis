@@ -274,7 +274,7 @@ micro_n_nocc_plot <- dna_nc_nocc_prepost %>%
   labs(y = "DNA (Proportional Concentration)",
        x = "% Nitrogen",
        title = "DNA Quantities vs Total Soil Nitrogen in Rewet Soils
-       With Cover Crop") +
+       Without Cover Crop") +
   scale_y_continuous(labels = label_scientific(digits = 2)) +
   theme(legend.position = "none",
         panel.spacing = unit(1, "lines"))
