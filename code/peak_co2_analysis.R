@@ -82,6 +82,14 @@ nocc_peaks_stats <- nocc_peaks_subset %>%
 wcc_peaks_stats <- wcc_peaks_subset %>%
   kruskal.test(data = ., median ~ drying_treatment)
 
+# Run stats on effect of cc treatment
+# In dried soils
+dry_cc_stats <- samp_median %>%
+  filter(drying_treatment == "initial_dry") %>%
+  kruskal.test(data = ., median ~ cc_treatment)
+# In post-wet soils
+rewet_cc_stats <- peaks_all_data %>%
+  kruskal.test(data = ., median ~ cc_treatment)
 
 # CO2 ONLY JARS
 # Pool samples per day
