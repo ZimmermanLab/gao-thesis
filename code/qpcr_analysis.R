@@ -419,3 +419,33 @@ bact_wk_w_cc_noext <- compare_rewet_time(bact_treatment_no_mod, "w_cc")
 
 fung_rewet_w_cc_nomod <- analyze_plot_dna(fung_treatment_no_mod, "w_cc")
 fung_wk_w_cc_nomod <- compare_rewet_time(fung_treatment_no_mod, "w_cc")
+
+
+# EFFECT OF CC TREATMENT
+# In dried soils
+# On bacterial DNA
+bact_dry_cc_stats <- samp_ratio_all %>%
+  filter(pre_post_wet == "pre") %>%
+  kruskal.test(data = ., samp_med_bact ~ cc_treatment)
+# On fungal DNA
+fung_dry_cc_stats <- samp_ratio_all %>%
+  filter(pre_post_wet == "pre") %>%
+  kruskal.test(data = ., samp_med_fung ~ cc_treatment)
+# On fungi:bacteria ratio
+ratio_dry_cc_stats <- samp_ratio_all %>%
+  filter(pre_post_wet == "pre") %>%
+  kruskal.test(data = ., samp_ratio ~ cc_treatment)
+
+# In post-wet soils
+# On bacterial DNA
+bact_rewet_cc_stats <- samp_ratio_all %>%
+  filter(pre_post_wet == "post") %>%
+  kruskal.test(data = ., samp_med_bact ~ cc_treatment)
+# On fungal DNA
+fung_dry_cc_stats <- samp_ratio_all %>%
+  filter(pre_post_wet == "post") %>%
+  kruskal.test(data = ., samp_med_fung ~ cc_treatment)
+# On fungi:bacteria ratio
+ratio_dry_cc_stats <- samp_ratio_all %>%
+  filter(pre_post_wet == "post") %>%
+  kruskal.test(data = ., samp_ratio ~ cc_treatment)
