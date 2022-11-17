@@ -12,6 +12,9 @@ library("dplyr")
 library("ggplot2")
 library("stringr")
 library("scales")
+library("ggstatsplot")
+library("grid")
+library("rstatix")
 
 # Source function to calculate AUCs
 source("code/functions/co2_functions/find_peaks.R")
@@ -191,17 +194,26 @@ co2_tests_medians %>%
 #### EFFECT OF DRYING ON RESPIRATION ####
 # initial_dry set only!
 initial_dry_all <- samp_medians %>%
-  filter(drying_treatment == "initial_dry")
+  filter(drying_treatment == "initial_dry") %>%
+  mutate(day_elapsed = case_when(date == "2022-02-15" ~ "1",
+                                 date == "2022-02-16" ~ "2",
+                                 date == "2022-02-17" ~ "3",
+                                 date == "2022-02-18" ~ "4",
+                                 date == "2022-02-19" ~ "5"))
+# Set facet names
+facet_cc_names <- as_labeller(c("no_cc" = "No Cover Crop",
+                                "w_cc" = "With Cover Crop"))
 
 # No cc
+init_dry_nocc <- initial_dry_all %>%
+  filter(cc_treatment == "no_cc")
+# Calculate medians + IQRs per day
 init_dry_nocc_stats <- initial_dry_all %>%
-  filter(cc_treatment == "no_cc") %>%
   arrange(date) %>%
   group_by(date) %>%
   summarize(median_co2 = median(median), iqr_co2 = IQR(median))
-# Test significance
-initial_dry_all %>%
-  filter(cc_treatment == "no_cc") %>%
+# Test overall significance of drying
+initial_dry_nocc %>%
   kruskal.test(data = ., median ~ date)
 
 # W cc
@@ -215,27 +227,70 @@ initial_dry_all %>%
   filter(cc_treatment == "w_cc") %>%
   kruskal.test(data = ., median ~ date)
 
-# Plot side by side
+# Plot cc_treatment side by side
 init_dry_all_plot <- initial_dry_all %>%
-  ggplot(aes(x = date,
+  ggplot(aes(x = day_elapsed,
+             y = median)) +
+  geom_boxplot(aes(fill = cc_treatment,
+    color = cc_treatment)) +
+  labs(x = "Day of Drying",
+       y = "CO2 (ppm)",
+       title = "CO2 in Drying Soils") +
+  facet_wrap(~ cc_treatment,
+             labeller = facet_cc_names) +
+  theme(legend.position = "none") +
+  scale_color_manual(limits = c("no_cc", "w_cc"),
+                     values = c("#097CB2", "#195004")) +
+  scale_fill_manual(limits = c("no_cc", "w_cc"),
+                    values = c("#16B4FF", "#34980D")) +
+  scale_y_continuous(labels = label_comma(),
+                     trans = "log10") +
+  theme(panel.spacing = unit(2, "lines")) +
+  # Add overall Kruskal-Wallis p-values
+  stat_compare_means(label.x = 3.5, label.y = 4,
+                     family = "Helvetica",
+                     size = 6)
+ggsave(init_dry_all_plot, filename =
+         "output/2022/co2/figures/co2_drying_allcc.png",
+       width = 14, height = 8, units = "in")
+
+# Plot no cc on its own with pairwise significance
+init_dry_nocc_plot <- init_dry_nocc %>%
+  ggplot(aes(x = day_elapsed,
              y = median,
              fill = cc_treatment,
              color = cc_treatment)) +
   geom_boxplot() +
   labs(x = "Day of Drying",
-       y = "CO2 Concentration (ppm)",
-       title = "CO2 Concentrations In Drying Soils") +
-  facet_wrap(~ cc_treatment, scales = "free",
+       y = "CO2 (ppm)",
+       title = "CO2 in Drying Soils") +
+  facet_wrap(~ cc_treatment,
              labeller = facet_cc_names) +
-  scale_x_discrete(labels = c("1", "2", "3", "4", "5")) +
-  theme(legend.position = "none",
-        strip.text = element_text(size = 12)) +
+  theme(legend.position = "none") +
   scale_color_manual(limits = c("no_cc", "w_cc"),
                      values = c("#097CB2", "#195004")) +
   scale_fill_manual(limits = c("no_cc", "w_cc"),
                     values = c("#16B4FF", "#34980D")) +
   scale_y_continuous(labels = label_comma()) +
-  theme(panel.spacing = unit(2, "lines"))
+  theme(panel.spacing = unit(2, "lines")) +
+  # Adds pairwise comparisons in dried days only
+  stat_compare_means(comparisons = list(
+    c("1", "3"), c("1", "2")), method = "wilcox.test",
+    label = "p.format",
+    aes(family = "Georgia")) +
+  annotation_custom(grob =
+                      grobTree(textGrob("Pairwise Wilcoxon \nRank Sum Tests",
+                                        x = .8, y = 0.9,
+                                        gp = gpar(fontsize = 16,
+                                                  fontfamily = "Helvetica",
+                                                  lineheight = 0.9))))
+  stat_compare_means(label.x = 3.6, label.y = 4800,
+                     family = "Helvetica",
+                     size = 6)
+ggsave(init_dry_nocc_plot,
+       filename = "output/2022/co2/figures/co2_drying_nocc.png",
+       width = 8, height = 8, units = "in")
+
 # Save plot
 ggsave(init_dry_all_plot,
        filename = "output/2022/co2/figures/co2_drying_wk.png",
