@@ -56,7 +56,7 @@ set_theme <- function(plot_type) {
                                   margin = margin(b = 10, t = 10)),
       strip.text.y = element_text(size = 16)
     )
-  } else if () {
+  } else if (plot_type == "doc") {
     theme_update(
       text = element_text(family = "Georgia"),
       plot.title = element_text(face = "bold",
