@@ -49,7 +49,9 @@ pairwise_compare <- function(dataset, x_value, y_value,
   # create comparison bar y heights using above values
   y_positions <- seq(from = y_max + interval,
                      by = interval,
-                     length.out = nrow(filtered_results_df))
+                     length.out = ifelse(nrow(filtered_results_df),
+                                         nrow(filtered_results_df),
+                                         1))
 
   # let the user know the max y for this plot by output to console
   print("Maximum y axis position in this plot:")
