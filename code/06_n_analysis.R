@@ -14,7 +14,7 @@ library("fs")
 
 # Set plot themes
 source("code/functions/set_plot_themes.R")
-set_theme()
+set_theme("pres")
 
 # Get file list
 file_list <- paste0("data/raw_data/SmartChem_N_extractions/2022_samples/",
@@ -123,7 +123,7 @@ wk_nh3_sub <- post_samp_sum %>%
                values_to = "nh3_per")
 facet_labels_nh3 <- c("leach_nh3_per_median" = "Leachate",
                       "ext_nh3_per_median" = "Total Extractable N")
-nh3_plots <- plot_n_data(wk_nh3_sub, "nh3_per", facet_labels_nh3)
+nh3_plots <- sum_plot_n(wk_nh3_sub, "nh3_per", facet_labels_nh3, "nh3")
 # Calculate stats per week to see effect of cover crop on
 # aqueous N
 nh3_stats <- wk_nh3_sub %>%
@@ -145,23 +145,100 @@ no2_no3_stats <- wk_no2no3_sub %>%
   wk_stats(., "no2_no3_per", "per_wk")
 
 
+
+
+
+#### PAIRWISE STUFF ####
+# Create Wilcoxon annotation
+wilcox_annot <- data.frame(drying_treatment = "four_wk",
+                           label = "Pairwise Wilcoxon \nRanked Sum Tests")
+
+# Create function to not show NS in ggsignif plots
+sigFunc <- function(x){
+  if (x < 0.001){"***"}
+  else if (x < 0.01){"**"}
+  else if (x < 0.05){"*"}
+  else if (x < 0.1){"."}
+  else {NA}}
+
 ### THESE NEED TO IDEALLY BE NORMALIZED TO ###
 ### DRY SOIL WEIGHT TO COMPARE ACROSS TIME ###
 # Leachate NH3 per gram plot across time + medians
-leach_nh3 <- sum_plot_n(post_samp_sum, "leach_nh3_per_median", "nh3")
+leach_nh3_plot <- sum_plot_n(post_samp_sum, "leach_nh3_per_median", "nh3")$plot +
+  scale_y_continuous(limits = c(0, 6.3)) +
+  # Adds Wilcoxon pairwise comparisons
+  geom_signif(comparisons = list(c("no_cc", "w_cc")), test = "wilcox.test",
+              map_signif_level = sigFunc,
+              family = "Helvetica", textsize = 6) +
+  # Add test annotation
+  geom_text(x = 1.5, y = 6, data = wilcox_annot, aes(label = label,
+                                                      family = "Helvetica",
+                                                      size = 16,
+                                                      lineheight = 0.9),
+            show.legend = F)
+ggsave(leach_nh3_plot, filename = "output/2022/n_plots/leach_nh3_per_median.png",
+       width = 14, height = 8, units = "in")
+
+# Calculate weekly stats
 leach_nh3_wk <- wk_stats(post_samp_sum, "leach_nh3_per_median", "all_wk")
 
 # Leachate NO2-NO3 per gram across time
-leach_no2no3 <- sum_plot_n(post_samp_sum, "leach_no2_no3_per_median",
-                                    "no2-no3")
+leach_no2no3_plot <- sum_plot_n(post_samp_sum, "leach_no2_no3_per_median",
+                                    "no2-no3")$plot +
+  scale_y_continuous(limits = c(0, 42)) +
+  # Adds Wilcoxon pairwise comparisons
+  geom_signif(comparisons = list(c("no_cc", "w_cc")), test = "wilcox.test",
+              map_signif_level = sigFunc,
+              family = "Helvetica", textsize = 6) +
+  # Add test annotation
+  geom_text(x = 1.5, y = 40, data = wilcox_annot, aes(label = label,
+                                                     family = "Helvetica",
+                                                     size = 16,
+                                                     lineheight = 0.9),
+            show.legend = F)
+ggsave(leach_no2no3_plot,
+       filename = "output/2022/n_plots/leach_no2no3_per_median.png",
+       width = 14, height = 8, units = "in")
+
+# Calculate weekly stats
 leach_no2no3_wk <- wk_stats(post_samp_sum, "leach_no2_no3_per_median",
                             "all_wk")
 
-# Extract NH3 per gram across time
-ext_nh3 <- sum_plot_n(post_samp_sum, "ext_nh3_per_median", "nh3")
+# Total extract NH3 per gram across time
+ext_nh3_plot <- sum_plot_n(post_samp_sum, "ext_nh3_per_median", "nh3")$plot +
+  scale_y_continuous(limits = c(0, 40)) +
+  # Adds Wilcoxon pairwise comparisons
+  geom_signif(comparisons = list(c("no_cc", "w_cc")), test = "wilcox.test",
+              map_signif_level = sigFunc,
+              family = "Helvetica", textsize = 6) +
+  # Add test annotation
+  geom_text(x = 1.5, y = 30, data = wilcox_annot, aes(label = label,
+                                                         family = "Helvetica",
+                                                         size = 16,
+                                                         lineheight = 0.9),
+            show.legend = F)
+ggsave(ext_nh3_plot, filename = "output/2022/n_plots/ext_nh3_per_median.png",
+       width = 14, height = 8, units = "in")
+
+# Calculate weekly stats
 ext_nh3_wk <- wk_stats(post_samp_sum, "ext_nh3_per_median", "all_wk")
 
 # Extract NO2-NO3 per gram across time
-ext_no2no3 <- sum_plot_n(post_samp_sum, "ext_no2_no3_per_median",
-                                  "no2-no3")
+ext_no2no3_plot <- sum_plot_n(post_samp_sum, "ext_no2_no3_per_median",
+                                  "no2-no3")$plot +
+  scale_y_continuous(limits = c(0, 70)) +
+  # Adds Wilcoxon pairwise comparisons
+  geom_signif(comparisons = list(c("no_cc", "w_cc")), test = "wilcox.test",
+              map_signif_level = sigFunc,
+              family = "Helvetica", textsize = 6) +
+  # Add test annotation
+  geom_text(x = 1.5, y = 65, data = wilcox_annot, aes(label = label,
+                                                      family = "Helvetica",
+                                                      size = 16,
+                                                      lineheight = 0.9),
+            show.legend = F)
+ggsave(ext_no2no3_plot, filename = "output/2022/n_plots/ext_no2no3_per_median.png",
+       width = 14, height = 8, units = "in")
+
+# Calculate weekly stats
 ext_no2no3_wk <- wk_stats(post_samp_sum, "ext_no2_no3_per_median", "all_wk")
