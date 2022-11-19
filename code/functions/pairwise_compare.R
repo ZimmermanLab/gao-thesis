@@ -1,3 +1,10 @@
+# This function takes in a dataset and runs Dunn's test on pairwise comparisons
+# The output is a plot with stats displayed.
+
+# Originally written by Naupaka Zimmerman on November 17th, 2022
+# Sarah Gao
+# hellosarahgao@gmail.com
+
 library("apexcharter")
 library("pairwiseComparisons")
 library("ggplot2")
@@ -64,7 +71,7 @@ pairwise_compare <- function(dataset, x_value, y_value,
     geom_boxplot() +
     ggpubr::stat_pvalue_manual(data = filtered_results_df,
                                label = "p.label",
-                               y.position = y_positions, size = 6) +
+                               y.position = y_positions, size = 8) +
     theme(legend.position = "none")
 
   # return the ggplot object
