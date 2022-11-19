@@ -69,22 +69,17 @@ analyze_plot_dna <- function(treatment_mapped, cc_type) {
     kruskal.test(samp_median ~ drying_treatment,
                               data = .,)
 
-  # Set plot themes
-  source("code/functions/set_plot_themes.R")
-  set_theme()
-
-  # Create a boxpot of DNA quantities pre/post rewetting at each time point
+  # Create a boxplot of DNA quantities pre/post rewetting at each time point
   # Set facet labels
   facet_drying_labels <- as_labeller(c("one_wk" = "One Week",
                                        "two_wk" = "Two Weeks",
                                        "four_wk" = "Four Weeks"))
   rewet_plot <- samp_sum %>%
     ggplot(aes(x = factor(pre_post_wet, levels = c("pre", "post")),
-               y = samp_median,
-               # Reorder to have pre first then post
-               fill = pre_post_wet,
-               color = pre_post_wet)) +
-    geom_boxplot() +
+               y = samp_median)) +
+    # Reorder to have pre first then post
+    geom_boxplot(aes(fill = pre_post_wet,
+      color = pre_post_wet)) +
     facet_wrap(~ factor(drying_treatment,
                         levels = c("one_wk", "two_wk", "four_wk")),
                labeller = facet_drying_labels)  +
