@@ -224,13 +224,25 @@ n_dry_treat_sum_all <- n_dry_samp_sum_all %>%
   arrange(factor(drying_treatment,
                  levels = c("initial", "one_wk", "two_wk", "four_wk")))
 
-# Plot
+# Create Wilcoxon annotation
+wilcox_annot <- data.frame(drying_treatment = "four_wk",
+                           label = "Pairwise Wilcoxon \nRanked Sum Tests")
+
+# Create function to not show NS in ggsignif plots
+sigFunc <- function(x){
+  if (x < 0.001){"***"}
+  else if (x < 0.01){"**"}
+  else if (x < 0.05){"*"}
+  else if (x < 0.1){"."}
+  else {NA}}
+
+# Plot %N over time across both cc groups
 n_dry_plot_all <- n_dry_samp_sum_all %>%
   ggplot(aes(x = factor(cc_treatment, levels = c("no_cc", "w_cc")),
-             y = samp_n_med,
-             fill = cc_treatment,
-             color = cc_treatment)) +
-  geom_boxplot() +
+             y = samp_n_med)) +
+  geom_boxplot(aes(
+    fill = cc_treatment,
+    color = cc_treatment)) +
   facet_grid(~ factor(drying_treatment,
                       levels = c("initial", "one_wk", "two_wk", "four_wk")),
              labeller = facet_drying_labels)  +
@@ -240,12 +252,24 @@ n_dry_plot_all <- n_dry_samp_sum_all %>%
   scale_color_manual(name = NULL, limits = c("no_cc", "w_cc"),
                      values = c("#097CB2", "#195004"),
                      labels = c("No Cover Crop", "With Cover Crop")) +
+  scale_y_continuous(limits = c(0.3, 0.47)) +
   theme(axis.text.x = element_blank(),
         axis.title.x = element_blank(),
         axis.ticks.x = element_blank(),
         legend.position = "bottom") +
   labs(y = "% Nitrogen",
-       title = "Nitrogen in Drying Soils")
+       title = "Nitrogen in Drying Soils") +
+  # Adds Wilcoxon pairwise comparisons
+  geom_signif(comparisons = list(c("no_cc", "w_cc")), test = "wilcox.test",
+              map_signif_level = sigFunc,
+              family = "Helvetica", textsize = 6) +
+  # Add test annotation
+  geom_text(x = 1.5, y = 0.465, data = wilcox_annot, aes(label = label,
+                                                      family = "Helvetica",
+                                                      size = 16,
+                                                      lineheight = 0.9),
+                                                      show.legend = F)
+
 ggsave(n_dry_plot_all, filename = "output/2022/ea_plots/nper_cc_drying.png",
        width = 14, height = 8, units = "in")
 
