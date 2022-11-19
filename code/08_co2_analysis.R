@@ -68,7 +68,7 @@ samp_mapped <- samp_outliers %>%
 
 # Set plot theme
 source("code/functions/set_plot_themes.R")
-set_theme()
+set_theme("pres")
 
 # List dates as days elapsed since rewetting
 days_elapsed <- list("day0" = c("2022-02-22",
@@ -272,21 +272,7 @@ init_dry_nocc_plot <- init_dry_nocc %>%
   scale_fill_manual(limits = c("no_cc", "w_cc"),
                     values = c("#16B4FF", "#34980D")) +
   scale_y_continuous(labels = label_comma()) +
-  theme(panel.spacing = unit(2, "lines")) +
-  # Adds pairwise comparisons in dried days only
-  stat_compare_means(comparisons = list(
-    c("1", "3"), c("1", "2")), method = "wilcox.test",
-    label = "p.format",
-    aes(family = "Georgia")) +
-  annotation_custom(grob =
-                      grobTree(textGrob("Pairwise Wilcoxon \nRank Sum Tests",
-                                        x = .8, y = 0.9,
-                                        gp = gpar(fontsize = 16,
-                                                  fontfamily = "Helvetica",
-                                                  lineheight = 0.9))))
-  stat_compare_means(label.x = 3.6, label.y = 4800,
-                     family = "Helvetica",
-                     size = 6)
+  theme(panel.spacing = unit(2, "lines"))
 ggsave(init_dry_nocc_plot,
        filename = "output/2022/co2/figures/co2_drying_nocc.png",
        width = 8, height = 8, units = "in")
