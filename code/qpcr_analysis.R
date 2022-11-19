@@ -14,7 +14,7 @@ library("fs")
 
 # Set plot themes
 source("code/functions/set_plot_themes.R")
-set_theme()
+set_theme("pres")
 
 # Source data cleaning function
 source("code/functions/qpcr_functions/clean_qpcr_data.R")
@@ -103,7 +103,6 @@ ratio_stats_rewet_nocc <- samp_ratio_nocc %>%
 # Stats of drying time in no cc
 ratio_stats_rewet_nocc <- samp_ratio_nocc %>%
   kruskal.test(data = ., samp_ratio ~ pre_post_wet)
-
 
 # Calculate per week differences in pre-post
 ratio_nocc_one_wk_stats <- samp_ratio_nocc %>%
