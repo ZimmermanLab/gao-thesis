@@ -98,11 +98,39 @@ post_ratio_sum <- samp_sum_ratio %>%
            pre_post_wet == "initial")
 
 # Ratio of L:E in NH3
-ratio_nh3 <- sum_plot_n(post_ratio_sum, "ratio_nh3", "nh3")
+ratio_nh3_plot <- sum_plot_n(post_ratio_sum, "ratio_nh3", "nh3")$plot +
+  scale_y_continuous(limits = c(0, 2.1)) +
+  # Adds Wilcoxon pairwise comparisons
+  geom_signif(comparisons = list(c("no_cc", "w_cc")), test = "wilcox.test",
+              map_signif_level = sigFunc,
+              family = "Helvetica", textsize = 6) +
+  # Add test annotation
+  geom_text(x = 1.5, y = 2, data = wilcox_annot, aes(label = label,
+                                                     family = "Helvetica",
+                                                     size = 16,
+                                                     lineheight = 0.9),
+            show.legend = F)
+ggsave(ratio_nh3_plot, filename = "output/2022/n_plots/ratio_nh3.png",
+       width = 14, height = 8, units = "in")
+
 ratio_nh3_wk <- wk_stats(post_ratio_sum, "ratio_nh3", "all_wk")
 
 # Ratio of L:E in NO2-NO3
-ratio_no2_no3 <- sum_plot_n(post_ratio_sum, "ratio_no2no3", "no2-no3")
+ratio_no2_no3_plot <- sum_plot_n(post_ratio_sum, "ratio_no2no3", "no2-no3")$plot +
+  scale_y_continuous(limits = c(0, 1.8)) +
+  # Adds Wilcoxon pairwise comparisons
+  geom_signif(comparisons = list(c("no_cc", "w_cc")), test = "wilcox.test",
+              map_signif_level = sigFunc,
+              family = "Helvetica", textsize = 6) +
+  # Add test annotation
+  geom_text(x = 1.5, y = 1.7, data = wilcox_annot, aes(label = label,
+                                                     family = "Helvetica",
+                                                     size = 16,
+                                                     lineheight = 0.9),
+            show.legend = F)
+ggsave(ratio_no2_no3_plot, filename = "output/2022/n_plots/ratio_no2no3.png",
+       width = 14, height = 8, units = "in")
+
 ratio_no2_no3_wk <- wk_stats(post_ratio_sum, "ratio_no2no3", "all_wk")
 
 ### PER G FRESH SOIL PER WEEK ###
@@ -143,9 +171,6 @@ no2_no3_plots <- plot_n_data(wk_no2no3_sub, "no2_no3_per", facet_labels_no2no3)
 # aqueous N
 no2_no3_stats <- wk_no2no3_sub %>%
   wk_stats(., "no2_no3_per", "per_wk")
-
-
-
 
 
 #### PAIRWISE STUFF ####
