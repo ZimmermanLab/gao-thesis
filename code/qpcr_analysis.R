@@ -453,6 +453,14 @@ ratio_dry_cc_stats <- samp_ratio_all %>%
   filter(pre_post_wet == "post") %>%
   kruskal.test(data = ., samp_ratio ~ cc_treatment)
 
+# Create significance mapping function
+sigFunc <- function(x){
+  if (x < 0.001){"***"}
+  else if (x < 0.01){"**"}
+  else if (x < 0.05){"*"}
+  else if (x < 0.1){"."}
+  else {NA}}
+
 # Plot ratio between cover crop treatments
 cc_ratio_plot <- samp_ratio_all %>%
   filter(pre_post_wet == "post") %>%
@@ -465,9 +473,20 @@ cc_ratio_plot <- samp_ratio_all %>%
                     values = c("#16B4FF", "#34980D")) +
   scale_color_manual(name = NULL, limits = c("no_cc", "w_cc"),
                      values = c("#097CB2", "#195004")) +
+  scale_y_continuous(limits = c(0, 0.029)) +
   theme(legend.position = "none",
         axis.title.x = element_blank()) +
   labs(y = "Fungi:Bacteria Ratio",
-       title = "Fungi:Bacteria Ratios in Post-Wet Soils")
+       title = "Fungi:Bacteria Ratios in Post-Wet Soils") +
+  geom_signif(comparisons = list(c("no_cc", "w_cc")), test = "wilcox.test",
+              map_signif_level = sigFunc,
+              y_position = 0.023, family = "Helvetica", textsize = 6) +
+  # Add test annotation
+  annotation_custom(grob =
+                      grobTree(textGrob("Pairwise Wilcoxon \nRanked Sum Tests",
+                                        x = .80, y = 0.90,
+                                        gp = gpar(fontsize = 16,
+                                                  fontfamily = "Helvetica",
+                                                  lineheight = 0.9))))
 ggsave(cc_ratio_plot, filename = "output/2022/qpcr_plots/ratios_all_cc.png",
-       width = 8, height = 6, units = "in")
+       width = 10, height = 8, units = "in")
