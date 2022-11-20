@@ -43,7 +43,7 @@ set_theme <- function(plot_type) {
       #            color = "#000000",
       #              margin = margin(r = 10, unit = "pt")),
       legend.text = element_text(family = "Helvetica",
-                                 size = 10,
+                                 size = 14,
                                  color = "#808080",
                                  margin = margin(10, 0, 10, 0)),
       legend.background = element_rect(color = "#E7E7E7"),
