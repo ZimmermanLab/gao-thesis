@@ -236,7 +236,7 @@ sigFunc <- function(x){
   else if (x < 0.1){"."}
   else {NA}}
 
-# Plot %N over time across both cc groups
+# Plot %N over time across both cc groups with Wilcoxon tests stats
 n_dry_plot_all <- n_dry_samp_sum_all %>%
   ggplot(aes(x = factor(cc_treatment, levels = c("no_cc", "w_cc")),
              y = samp_n_med)) +
