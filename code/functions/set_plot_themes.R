@@ -54,7 +54,8 @@ set_theme <- function(plot_type) {
       legend.key = element_blank(),
       strip.text.x = element_text(size = 16,
                                   margin = margin(b = 10, t = 10)),
-      strip.text.y = element_text(size = 16)
+      strip.text.y = element_text(size = 16,
+                                  margin = margin(r = 10, l = 10))
     )
   } else if (plot_type == "doc") {
     theme_update(
