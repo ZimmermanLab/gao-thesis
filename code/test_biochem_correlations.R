@@ -9,10 +9,11 @@ library("dplyr")
 library("ggplot2")
 library("ggpubr")
 library("scales")
+library("patchwork")
 
 # Set plot themes
 source("code/functions/set_plot_themes.R")
-set_theme()
+set_theme("pres")
 
 # Read in DNA summary data
 dna_sum <- read_csv("data/cleaned_data/qPCR/samp_medians.csv")
@@ -70,15 +71,19 @@ fung_co2_wcc_stat <- cor.test(
 # post wet samples w cc only
 facet_type_labels <- as_labeller(c("samp_med_bact" = "Bacteria",
                                    "samp_med_fung" = "Fungi"))
+# Create Kendall annotation
+kendall_annot_dna <- data.frame(type = "samp_med_fung",
+                           label = "Kendall Rank Correlation")
+
 # Side by side of bacterial and fungal DNA
 dna_co2_wcc_plot <- dna_co2_wcc %>%
   pivot_longer(cols = c(samp_med_bact, samp_med_fung),
                names_to = "type", values_to = "med") %>%
+  mutate(med = med * 1e4) %>%
   ggplot(aes(x = med,
-             y = co2_med,
-             fill = factor(type),
-             color = factor(type))) +
-  geom_point(aes(color = factor(type))) +
+             y = co2_med)) +
+  geom_point(aes(fill = factor(type),
+                 color = factor(type))) +
   geom_smooth(method = "lm", formula = y ~ x,
               aes(fill = type, color = factor(type)), alpha = 0.25) +
   facet_wrap(~ type,
@@ -88,15 +93,27 @@ dna_co2_wcc_plot <- dna_co2_wcc %>%
   scale_fill_manual(values = c("#097CB2", "#03CC23")) +
   scale_color_manual(values = c("#16B4FF", "#39B708")) +
   labs(y = "CO2 (ppm)", x = "DNA (Proportional Concentration)",
-       title = "DNA Quantities in Rewet Soils With Cover Crop
-       vs CO2 Concentration") +
+       title =
+         "CO2 Concentration vs DNA Quantities\nin Rewet Soils With Cover Crop") +
   scale_y_continuous(labels = comma) +
-  scale_x_continuous(labels = scientific) +
   theme(legend.position = "none",
-        panel.spacing = unit(1, "lines"))
+        panel.spacing = unit(1, "lines")) +
+  # Add correlation stats
+  stat_cor(method = "kendall", label.x.npc = "left", label.y.npc = "top",
+           p.accuracy = 0.001,
+           family = "Helvetica",
+           size = 5,
+           lineheight = 0.9) +
+  # Add test annotation
+  geom_text(x = 0.033, y = 25000, data = kendall_annot_dna,
+            aes(label = label,
+                family = "Helvetica",
+                size = 16,
+                lineheight = 0.9),
+            show.legend = F)
 ggsave(dna_co2_wcc_plot,
        filename = "output/2022/correlations/micro_co2_wcc_plot.png",
-       width = 12, height = 8, units = "in")
+       width = 14, height = 8, units = "in")
 
 
 #### CN AND CO2 ####
@@ -127,15 +144,18 @@ c_co2_stat <- cor.test(
 n_co2_stat <- cor.test(
   nc_co2$samp_n_med, nc_co2$co2_med, method = "kendall")
 
+# Create Kendall annotation
+kendall_annot_cn <- data.frame(type = "samp_n_med",
+                                label = "Kendall Rank Correlation")
 # Side by side plot of CO2 and %N and %C
 nc_co2_wcc_plot <- nc_co2_wcc %>%
   pivot_longer(cols = c(samp_n_med, samp_c_med),
                names_to = "type", values_to = "med") %>%
   ggplot(aes(x = med,
-             y = co2_med,
-             fill = factor(type),
-             color = factor(type))) +
-  geom_point(aes(color = factor(type))) +
+             y = co2_med)) +
+  geom_point(aes(
+    fill = factor(type),
+    color = factor(type))) +
   geom_smooth(method = "lm", formula = y ~ x,
               aes(fill = type, color = factor(type)), alpha = 0.25) +
   facet_wrap(~ type,
@@ -146,14 +166,29 @@ nc_co2_wcc_plot <- nc_co2_wcc %>%
   scale_fill_manual(values = c("#03CC23", "#097CB2")) +
   scale_color_manual(values = c( "#39B708", "#16B4FF")) +
   labs(x = "Element %", y = "CO2 (ppm)",
-       title = "CO2 Concentration in Rewet Soils With Cover Crop
-       vs Total Soil CN") +
-  scale_y_continuous(labels = comma) +
+       title =
+         "CO2 Concentration vs Total Soil CN\nin Rewet Soils With Cover Crop") +
+  scale_y_continuous(labels = comma,
+                     limits = c(0, 220000)) +
   theme(legend.position = "none",
-        panel.spacing = unit(1, "lines"))
+        panel.spacing = unit(1, "lines")) +
+  # Add correlation stats
+  stat_cor(method = "kendall", label.x.npc = "left", label.y.npc = "top",
+           p.accuracy = 0.001,
+           family = "Helvetica",
+           size = 5,
+           lineheight = 0.9) +
+  # Add test annotation
+  geom_text(x = 0.415, y = 8000, data = kendall_annot_cn,
+            aes(label = label,
+                family = "Helvetica",
+                size = 16,
+                lineheight = 0.9),
+            show.legend = F)
+
 ggsave(nc_co2_wcc_plot,
        filename = "output/2022/correlations/nc_co2_wcc_plot.png",
-       width = 12, height = 8, units = "in")
+       width = 14, height = 8, units = "in")
 
 ### Correlation b/w CO2 and soil C:N ###
 cn_co2_nocc_stat <- cor.test(
@@ -259,10 +294,9 @@ micro_n_nocc_plot <- dna_nc_nocc_prepost %>%
   pivot_longer(cols = c(samp_med_bact, samp_med_fung),
                names_to = "type", values_to = "med") %>%
   ggplot(aes(x = samp_n_med,
-             y = med,
-             fill = factor(type),
-             color = factor(type))) +
-  geom_point(aes(color = factor(type))) +
+             y = med)) +
+  geom_point(aes(fill = factor(type),
+                 color = factor(type))) +
   geom_smooth(method = "lm", formula = y ~ x,
               aes(fill = type, color = factor(type)), alpha = 0.25) +
   facet_grid(type ~ pre_post_wet,
@@ -271,13 +305,23 @@ micro_n_nocc_plot <- dna_nc_nocc_prepost %>%
                                   pre_post_wet = facet_prepost_labels))) +
   scale_fill_manual(values = c("#097CB2", "#03CC23")) +
   scale_color_manual(values = c("#16B4FF", "#39B708")) +
-  labs(y = "DNA (Proportional Concentration)",
+  labs(y = element_blank(),
        x = "% Nitrogen",
-       title = "DNA Quantities vs Total Soil Nitrogen in Rewet Soils
-       Without Cover Crop") +
+       title = "Nitrogen") +
   scale_y_continuous(labels = label_scientific(digits = 2)) +
   theme(legend.position = "none",
-        panel.spacing = unit(1, "lines"))
+        panel.spacing = unit(1, "lines",),
+        axis.text.y = element_blank(),
+        axis.ticks.y = element_blank(),
+        plot.title = element_text(size = 20),
+        plot.margin = margin(c(0, 10, 10, 0))) +
+  # Add correlation stats
+  stat_cor(method = "kendall", label.x.npc = "left", label.y.npc = "top",
+           p.accuracy = 0.001,
+           family = "Helvetica",
+           size = 5,
+           lineheight = 0.9)
+
 ggsave(micro_n_nocc_plot,
        filename = "output/2022/correlations/micro_n_nocc_plot.png",
        width = 10, height = 10, units = "in")
@@ -318,11 +362,11 @@ micro_c_nocc_plot <- dna_nc_nocc_prepost %>%
                      str_detect(pre_post_wet, "post") ~ "b_post")) %>%
   pivot_longer(cols = c(samp_med_bact, samp_med_fung),
                names_to = "type", values_to = "med") %>%
+  mutate(med = med * 1e4) %>%
   ggplot(aes(x = samp_c_med,
-             y = med,
-             fill = factor(type),
-             color = factor(type))) +
-  geom_point(aes(color = factor(type))) +
+             y = med)) +
+  geom_point(aes(fill = factor(type),
+                 color = factor(type))) +
   geom_smooth(method = "lm", formula = y ~ x,
               aes(fill = type, color = factor(type)), alpha = 0.25) +
   facet_grid(type ~ pre_post_wet,
@@ -333,14 +377,30 @@ micro_c_nocc_plot <- dna_nc_nocc_prepost %>%
   scale_color_manual(values = c("#16B4FF", "#39B708")) +
   labs(y = "DNA (Proportional Concentration)",
        x = "% Carbon",
-       title = "DNA Quantities vs Total Soil Carbon in Rewet Soils
-       Without Cover Crop") +
-  scale_y_continuous(labels = label_scientific(digits = 2)) +
+       title = "Carbon") +
   theme(legend.position = "none",
-        panel.spacing = unit(1, "lines"))
+        panel.spacing = unit(1, "lines"),
+        plot.title = element_text(size = 20),
+        plot.margin = margin(c(0, 10, 10, 10))) +
+  # Add correlation stats
+  stat_cor(method = "kendall", label.x.npc = "left", label.y.npc = "top",
+           p.accuracy = 0.001,
+           family = "Helvetica",
+           size = 5,
+           lineheight = 0.9)
 ggsave(micro_c_nocc_plot,
        filename = "output/2022/correlations/micro_c_nocc_plot.png",
        width = 10, height = 10, units = "in")
+
+# Combine 4 x 4 C and N plots
+combined_cn_plot <- (micro_c_nocc_plot + micro_n_nocc_plot) +
+  plot_annotation(title = paste0("DNA Quantities vs Total Soil CN",
+  " in Rewet Soils Without Cover Crop"),
+  theme = theme(plot.title = element_text(size = 32)))
+ggsave(combined_cn_plot,
+       filename = "output/2022/correlations/micro_cn_nocc_plot.png",
+       width = 22, height = 12, units =)
+
 
 # Correlation between bacteria and C:N #
 bact_cn_stat <- cor.test(
