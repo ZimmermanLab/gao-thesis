@@ -90,6 +90,19 @@ source("code/functions/n_functions/summarize_treat_n_data.R")
 # Calculate weekly statistics
 source("code/functions/n_functions/calculate_weekly_stats.R")
 
+#### PAIRWISE STUFF ####
+# Create Wilcoxon annotation
+wilcox_annot <- data.frame(drying_treatment = "four_wk",
+                           label = "Pairwise Wilcoxon \nRanked Sum Tests")
+
+# Create function to not show NS in ggsignif plots
+sigFunc <- function(x){
+  if (x < 0.001){"***"}
+  else if (x < 0.01){"**"}
+  else if (x < 0.05){"*"}
+  else if (x < 0.1){"."}
+  else {NA}}
+
 ### LEACHATE:EXTRACT RATIOS ###
 # Plot w cc vs no cc at each post-wetting point
 # Subset for post-wet and initial sets only
@@ -172,19 +185,6 @@ no2_no3_plots <- plot_n_data(wk_no2no3_sub, "no2_no3_per", facet_labels_no2no3)
 no2_no3_stats <- wk_no2no3_sub %>%
   wk_stats(., "no2_no3_per", "per_wk")
 
-
-#### PAIRWISE STUFF ####
-# Create Wilcoxon annotation
-wilcox_annot <- data.frame(drying_treatment = "four_wk",
-                           label = "Pairwise Wilcoxon \nRanked Sum Tests")
-
-# Create function to not show NS in ggsignif plots
-sigFunc <- function(x){
-  if (x < 0.001){"***"}
-  else if (x < 0.01){"**"}
-  else if (x < 0.05){"*"}
-  else if (x < 0.1){"."}
-  else {NA}}
 
 ### THESE NEED TO IDEALLY BE NORMALIZED TO ###
 ### DRY SOIL WEIGHT TO COMPARE ACROSS TIME ###
