@@ -10,6 +10,7 @@ library("forcats") # for factor manipulation
 library("tidyverse")
 library("grid")
 library("egg")
+library("ggsignif")
 
 # source functions and themes, see those files for comments etc
 source("code/functions/set_plot_themes.R")
@@ -19,8 +20,8 @@ set_theme("pres")
 
 # Read in data, subset to bacterial and pre/post-wet, no cc only
 dna_all <- read_csv("data/cleaned_data/qPCR/samp_medians.csv") %>%
-  mutate(samp_med_bact_human_read = samp_med_bact * 1e5) %>%
-  mutate(samp_med_fung_human_read = samp_med_fung * 1e7)
+  mutate(samp_med_bact_human_read = samp_med_bact * 1e6) %>%
+  mutate(samp_med_fung_human_read = samp_med_fung * 1e6)
 
 # Filter for only no cc, pre/post bacterial DNA data
 nocc_rewet <- dna_all %>%
@@ -72,7 +73,7 @@ nocc_bact_rewet_plot <- nocc_rewet %>%
   scale_color_manual(name = NULL, limits = c("pre", "post"),
                      values = c("#097CB2", "#195004"),
                      labels = c("Pre-Wet", "Post-Wet")) +
-  scale_y_continuous(limits = c(2.5, 7)) +
+  scale_y_continuous(limits = c(25, 70)) +
   theme(legend.position = "none",
         strip.text = element_text(size = 12)) +
   labs(x = element_blank(),
@@ -81,7 +82,7 @@ nocc_bact_rewet_plot <- nocc_rewet %>%
   # Adds Wilcoxon pairwise comparisons
   geom_signif(comparisons = list(c("pre", "post")), test = "wilcox.test",
               map_signif_level = sigFunc,
-              y_position = 6.4, family = "Helvetica", textsize = 6) +
+              y_position = 64, family = "Helvetica", textsize = 6) +
   # Add test annotation
   geom_text(x = 1.5, y = 6.6, data = wilcox_annot, aes(label = label,
                                                      family = "Helvetica",
@@ -107,7 +108,7 @@ wcc_bact_rewet_plot <- wcc_rewet %>%
   scale_color_manual(name = NULL, limits = c("pre", "post"),
                      values = c("#097CB2", "#195004"),
                      labels = c("Pre-Wet", "Post-Wet")) +
-  scale_y_continuous(limits = c(4, 22.5)) +
+  scale_y_continuous(limits = c(40, 225)) +
   theme(legend.position = "none",
         strip.text = element_text(size = 12)) +
   labs(y = "Proportional DNA Amount",
@@ -117,7 +118,7 @@ wcc_bact_rewet_plot <- wcc_rewet %>%
   geom_signif(comparisons = list(c("pre", "post")), test = "wilcox.test",
               map_signif_level = sigFunc, family = "Helvetica", textsize = 6) +
   # Add test annotation
-  geom_text(x = 1.5, y = 21, data = wilcox_annot, aes(label = label,
+  geom_text(x = 1.5, y = 210, data = wilcox_annot, aes(label = label,
                                                        family = "Helvetica",
                                                        size = 16,
                                                        lineheight = 0.9))
@@ -142,7 +143,7 @@ wcc_fung_rewet_plot <- wcc_rewet %>%
   scale_color_manual(name = NULL, limits = c("pre", "post"),
                      values = c("#097CB2", "#195004"),
                      labels = c("Pre-Wet", "Post-Wet")) +
-  scale_y_continuous(limits = c(0, 47)) +
+  scale_y_continuous(limits = c(0, 4.7)) +
   theme(legend.position = "none",
         strip.text = element_text(size = 12)) +
   labs(y = "Proportional DNA Amount",
@@ -153,7 +154,7 @@ wcc_fung_rewet_plot <- wcc_rewet %>%
               map_signif_level = sigFunc,
               family = "Helvetica", textsize = 6) +
   # Add test annotation
-  geom_text(x = 1.5, y = 43, data = wilcox_annot, aes(label = label,
+  geom_text(x = 1.5, y = 4.3, data = wilcox_annot, aes(label = label,
                                                       family = "Helvetica",
                                                       size = 16,
                                                       lineheight = 0.9))
