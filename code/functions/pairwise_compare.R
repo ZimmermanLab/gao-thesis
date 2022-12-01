@@ -15,7 +15,8 @@ library("rlang")
 # can take bare (unquoted) column names as arguments
 pairwise_compare <- function(dataset, x_value, y_value,
                              fill_value, col_value,
-                             p_val_cutoff = 0.1) {
+                             p_val_cutoff = 0.1,
+                             y_pos = NA) {
 
   # quote the bare column names
   x_value <- enquo(x_value)
@@ -54,11 +55,15 @@ pairwise_compare <- function(dataset, x_value, y_value,
   interval <- range/6 # use range to calculate spacing interval
 
   # create comparison bar y heights using above values
-  y_positions <- seq(from = y_max + interval,
-                     by = interval,
-                     length.out = ifelse(nrow(filtered_results_df),
-                                         nrow(filtered_results_df),
-                                         1))
+  if(is.na(y_pos)) {
+    y_positions <- seq(from = y_max + interval,
+                       by = interval,
+                       length.out = ifelse(nrow(filtered_results_df),
+                                           nrow(filtered_results_df),
+                                           1))
+  } else if(!is.na(y_pos)) {
+    y_positions <- y_pos
+  }
 
   # let the user know the max y for this plot by output to console
   print("Maximum y axis position in this plot:")
