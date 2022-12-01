@@ -14,7 +14,7 @@ library("ggsignif")
 
 # source functions and themes, see those files for comments etc
 source("code/functions/set_plot_themes.R")
-set_theme("pres")
+set_theme("doc")
 
 #### BACTERIA + FUNGI ####
 
@@ -60,7 +60,7 @@ sigFunc <- function(x){
 # Plot no cc bact using ggsignif and unpaired Wilcoxon Ranked Sum Tests
 nocc_bact_rewet_plot <- nocc_rewet %>%
   ggplot(aes(x = factor(pre_post_wet, levels = c("pre", "post")),
-             y = samp_med_bact_human_read)) +
+             y = samp_med_bact)) +
   geom_boxplot(aes(fill = pre_post_wet,
                    color = pre_post_wet)) +
   facet_wrap(~ factor(drying_treatment,
@@ -73,29 +73,35 @@ nocc_bact_rewet_plot <- nocc_rewet %>%
   scale_color_manual(name = NULL, limits = c("pre", "post"),
                      values = c("#097CB2", "#195004"),
                      labels = c("Pre-Wet", "Post-Wet")) +
-  scale_y_continuous(limits = c(25, 70)) +
+  scale_y_continuous(limits = c(2e-5, 7e-5)) +
   theme(legend.position = "none",
         strip.text = element_text(size = 12)) +
   labs(x = element_blank(),
        y = "Proportional DNA Amount",
-       title = "Bacterial DNA Changes Without Cover Crop") +
+       title = "Bacterial DNA Changes From Rewetting\nWithout Cover Crop") +
   # Adds Wilcoxon pairwise comparisons
   geom_signif(comparisons = list(c("pre", "post")), test = "wilcox.test",
               map_signif_level = sigFunc,
-              y_position = 64, family = "Helvetica", textsize = 6) +
+              y_position = 6e-5, family = "Helvetica", textsize = 6)
   # Add test annotation
-  geom_text(x = 1.5, y = 6.6, data = wilcox_annot, aes(label = label,
-                                                     family = "Helvetica",
-                                                     size = 16,
-                                                     lineheight = 0.9))
+  # geom_text(x = 1.5, y = 6.6, data = wilcox_annot, aes(label = label,
+  #                                                   family = "Helvetica",
+  #                                                   size = 16,
+  #                                                   lineheight = 0.9))
 ggsave(nocc_bact_rewet_plot,
        filename = "output/2022/qpcr_plots/bact_rewet_no_cc_.png",
        width = 10, height = 8, units = "in")
+# Show pairwise statistics using Wilcoxon Rank Sum Tests
+grouped_ggbetweenstats(data = nocc_rewet, grouping.var = drying_treatment,
+                       plot.type = "box", type = "nonparametric",
+                       p.adjust.method = "none",
+                       x = pre_post_wet, y = samp_med_bact)
+
 
 # Plot w cc bact using ggsignif and unpaired Wilcoxon Ranked Sum Tests
 wcc_bact_rewet_plot <- wcc_rewet %>%
   ggplot(aes(x = factor(pre_post_wet, levels = c("pre", "post")),
-             y = samp_med_bact_human_read)) +
+             y = samp_med_bact)) +
   geom_boxplot(aes(fill = pre_post_wet,
                    color = pre_post_wet)) +
   facet_wrap(~ factor(drying_treatment,
@@ -108,20 +114,17 @@ wcc_bact_rewet_plot <- wcc_rewet %>%
   scale_color_manual(name = NULL, limits = c("pre", "post"),
                      values = c("#097CB2", "#195004"),
                      labels = c("Pre-Wet", "Post-Wet")) +
-  scale_y_continuous(limits = c(40, 225)) +
+  scale_y_continuous(limits = c(3e-5, 2.2e-4),
+                     labels = scientific) +
   theme(legend.position = "none",
         strip.text = element_text(size = 12)) +
   labs(y = "Proportional DNA Amount",
        x = element_blank(),
-       title = "Bacterial DNA Changes With Cover Crop") +
+       title = "Bacterial DNA Changes From Rewetting\nWith Cover Crop") +
   # Adds Wilcoxon pairwise comparisons
   geom_signif(comparisons = list(c("pre", "post")), test = "wilcox.test",
-              map_signif_level = sigFunc, family = "Helvetica", textsize = 6) +
-  # Add test annotation
-  geom_text(x = 1.5, y = 210, data = wilcox_annot, aes(label = label,
-                                                       family = "Helvetica",
-                                                       size = 16,
-                                                       lineheight = 0.9))
+              map_signif_level = sigFunc, y_position = 2e-4,
+                family = "Helvetica", textsize = 6)
 ggsave(wcc_bact_rewet_plot,
        filename = "output/2022/qpcr_plots/bact_rewet_w_cc_.png",
        width = 10, height = 8, units = "in")
@@ -130,7 +133,7 @@ ggsave(wcc_bact_rewet_plot,
 # and unpaired Wilcoxon Ranked Sum Tests
 wcc_fung_rewet_plot <- wcc_rewet %>%
   ggplot(aes(x = factor(pre_post_wet, levels = c("pre", "post")),
-             y = samp_med_fung_human_read)) +
+             y = samp_med_fung)) +
   geom_boxplot(aes(fill = pre_post_wet,
                    color = pre_post_wet)) +
   facet_wrap(~ factor(drying_treatment,
@@ -143,21 +146,16 @@ wcc_fung_rewet_plot <- wcc_rewet %>%
   scale_color_manual(name = NULL, limits = c("pre", "post"),
                      values = c("#097CB2", "#195004"),
                      labels = c("Pre-Wet", "Post-Wet")) +
-  scale_y_continuous(limits = c(0, 4.7)) +
+  scale_y_continuous(limits = c(0, 4.7e-6)) +
   theme(legend.position = "none",
         strip.text = element_text(size = 12)) +
   labs(y = "Proportional DNA Amount",
        x = element_blank(),
-       title = "Fungal DNA Changes With Cover Crop") +
+       title = "Fungal DNA Changes From Rewetting\nWith Cover Crop") +
   # Adds Wilcoxon pairwise comparisons
   geom_signif(comparisons = list(c("pre", "post")), test = "wilcox.test",
               map_signif_level = sigFunc,
-              family = "Helvetica", textsize = 6) +
-  # Add test annotation
-  geom_text(x = 1.5, y = 4.3, data = wilcox_annot, aes(label = label,
-                                                      family = "Helvetica",
-                                                      size = 16,
-                                                      lineheight = 0.9))
+              family = "Helvetica", textsize = 6)
 ggsave(wcc_fung_rewet_plot,
        filename = "output/2022/qpcr_plots/fung_rewet_w_cc_.png",
        width = 10, height = 8, units = "in")
