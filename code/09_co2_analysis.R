@@ -51,7 +51,7 @@ samp_mapped <- samp_outliers %>%
 
 # Set plot theme
 source("code/functions/set_plot_themes.R")
-set_theme("pres")
+set_theme("doc")
 
 # List dates as days elapsed since rewetting
 days_elapsed <- list("day0" = c("2022-02-22",
@@ -126,24 +126,6 @@ ggsave(co2_tests_plot_nocc,
        filename = "output/2022/co2/figures/co2_time_nocc.png",
        width = 12, height = 8, units = "in")
 
-# Testing significance of secondary peaks
-co2_tests_medians %>%
-  filter(drying_treatment == "one_wk") %>%
-  filter(cc_treatment == "no_cc") %>%
-  filter(day_elapsed == "3" | day_elapsed == "4") %>%
-  kruskal.test(data = ., median ~ day_elapsed)
-co2_tests_medians %>%
-  filter(drying_treatment == "two_wk") %>%
-  filter(cc_treatment == "no_cc") %>%
-  filter(day_elapsed == "3" | day_elapsed == "4") %>%
-  kruskal.test(data = ., median ~ day_elapsed)
-co2_tests_medians %>%
-  filter(drying_treatment == "four_wk") %>%
-  filter(cc_treatment == "no_cc") %>%
-  filter(day_elapsed == "3" | day_elapsed == "4" |
-           day_elapsed == "2") %>%
-  kruskal.test(data = ., median ~ day_elapsed)
-
 # With cc subset
 co2_tests_wcc <- co2_tests_medians %>%
   filter(drying_treatment != "initial_dry") %>%
@@ -165,14 +147,6 @@ co2_tests_plot_wcc <- co2_tests_wcc %>%
 ggsave(co2_tests_plot_wcc,
        filename = "output/2022/co2/figures/co2_time_wcc.png",
        width = 12, height = 8, units = "in")
-
-# Testing significance of secondary peaks
-co2_tests_medians %>%
-  filter(drying_treatment == "four_wk") %>%
-  filter(cc_treatment == "w_cc") %>%
-  filter(day_elapsed == "3" | day_elapsed == "4"|
-           day_elapsed == "2") %>%
-  kruskal.test(data = ., median ~ day_elapsed)
 
 #### EFFECT OF DRYING ON RESPIRATION ####
 # initial_dry set only!
@@ -228,11 +202,11 @@ init_dry_all_plot <- initial_dry_all %>%
                     values = c("#16B4FF", "#34980D")) +
   scale_y_continuous(labels = label_comma(),
                      trans = "log10") +
-  theme(panel.spacing = unit(2, "lines")) +
+  theme(panel.spacing = unit(2, "lines"))
   # Add overall Kruskal-Wallis p-values
-  stat_compare_means(label.x = 3.5, label.y = 4,
-                     family = "Helvetica",
-                     size = 6)
+  # stat_compare_means(label.x = 3.5, label.y = 4,
+  #                   family = "Helvetica",
+  #                   size = 6)
 ggsave(init_dry_all_plot, filename =
          "output/2022/co2/figures/co2_drying_allcc.png",
        width = 14, height = 8, units = "in")
