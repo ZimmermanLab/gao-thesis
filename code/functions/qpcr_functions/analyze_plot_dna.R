@@ -96,14 +96,6 @@ analyze_plot_dna <- function(treatment_mapped, cc_type) {
          y = "Proportional Concentration",
          title = paste(micro_title, "DNA Changes From Rewetting\n", cc_title))
 
-  # Save out the plot
-  ggsave(file = paste0("output/2022/qpcr_plots/",
-                       # Account for microbial and outlier type in file name
-                       str_sub(input_name, end = 4), "_rewet_",
-                       cc_type, "_", str_sub(input_name, start = 16),".png"),
-         plot = rewet_plot,
-         width = 10, height = 8, units = "in")
-
   # Create a list to return both stats and plot
   return_list <- list("rewet_stats" = stats_rewet,
                       "drying_stats" = stats_drying,

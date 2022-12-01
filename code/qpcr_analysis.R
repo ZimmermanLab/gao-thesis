@@ -11,10 +11,11 @@ library("stringi")
 library("stringr")
 library("ggplot2")
 library("fs")
+library("ggsignif")
 
 # Set plot themes
 source("code/functions/set_plot_themes.R")
-set_theme("pres")
+set_theme("doc")
 
 # Source data cleaning function
 source("code/functions/qpcr_functions/clean_qpcr_data.R")
@@ -173,13 +174,19 @@ ratio_wcc_four_wk_stats <- samp_ratio_wcc %>%
   filter(drying_treatment == "four_wk") %>%
   kruskal.test(data = ., samp_ratio ~ pre_post_wet)
 
+# Create function to not show NS in ggsignif plots
+sigFunc <- function(x){
+  if (x < 0.001){"***"}
+  else if (x < 0.01){"**"}
+  else if (x < 0.05){"*"}
+  else {NA}}
+
 # Plot pre/post ratio w cc
 ratio_wcc_plot <- samp_ratio_wcc %>%
   ggplot(aes(x = factor(pre_post_wet, levels = c("pre", "post")),
-             y = samp_ratio,
-             fill = pre_post_wet,
-             color = pre_post_wet)) +
-  geom_boxplot() +
+             y = samp_ratio)) +
+  geom_boxplot(aes(fill = pre_post_wet,
+                   color = pre_post_wet)) +
   facet_wrap(~ factor(drying_treatment,
                       levels = c("one_wk", "two_wk", "four_wk")),
              labeller = facet_drying_labels)  +
@@ -194,10 +201,15 @@ ratio_wcc_plot <- samp_ratio_wcc %>%
   theme(legend.position = "none") +
   labs(x = element_blank(),
        y = "Ratios (log scale)",
-       title = "Fungal:Bacterial Ratios in Soils With Cover Crop")
+       title = "Fungal:Bacterial Ratios in Soils With Cover Crop") +
+  # Adds Wilcoxon pairwise comparisons
+  geom_signif(comparisons = list(c("pre", "post")), test = "wilcox.test",
+              map_signif_level = sigFunc,
+              y_position = log(0.2), family = "Helvetica", textsize = 6)
 ggsave(ratio_wcc_plot,
        filename = "output/2022/qpcr_plots/ratios_all_wcc.png",
        width = 10, height = 8, units = "in")
+
 
 # NO OUTLIERS
 # Find median per sample (no outliers)
@@ -346,6 +358,14 @@ ggsave(drying_plot_wcc,
 
 
 #### SEPARATE BACTERIAL + FUNGAL ANALYSES ####
+
+# Create function to not show NS in ggsignif plots
+sigFunc <- function(x){
+  if (x < 0.001){"***"}
+  else if (x < 0.01){"**"}
+  else if (x < 0.05){"*"}
+  else if (x < 0.1){"."}
+  else {NA}}
 
 # Map samples to all treatment conditions
 bact_map_all <- bact_norm_all %>%
