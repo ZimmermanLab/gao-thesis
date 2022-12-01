@@ -79,7 +79,7 @@ kendall_annot_dna <- data.frame(type = "samp_med_fung",
 dna_co2_wcc_plot <- dna_co2_wcc %>%
   pivot_longer(cols = c(samp_med_bact, samp_med_fung),
                names_to = "type", values_to = "med") %>%
-  mutate(med = med * 1e4) %>%
+  mutate(med = med * 1e6) %>%
   ggplot(aes(x = med,
              y = co2_med)) +
   geom_point(aes(fill = factor(type),
@@ -105,7 +105,7 @@ dna_co2_wcc_plot <- dna_co2_wcc %>%
            size = 5,
            lineheight = 0.9) +
   # Add test annotation
-  geom_text(x = 0.033, y = 25000, data = kendall_annot_dna,
+  geom_text(x = 3.3, y = 25000, data = kendall_annot_dna,
             aes(label = label,
                 family = "Helvetica",
                 size = 16,
@@ -293,6 +293,7 @@ micro_n_nocc_plot <- dna_nc_nocc_prepost %>%
                      str_detect(pre_post_wet, "post") ~ "b_post")) %>%
   pivot_longer(cols = c(samp_med_bact, samp_med_fung),
                names_to = "type", values_to = "med") %>%
+  mutate(med = med * 1e6) %>%
   ggplot(aes(x = samp_n_med,
              y = med)) +
   geom_point(aes(fill = factor(type),
@@ -362,7 +363,7 @@ micro_c_nocc_plot <- dna_nc_nocc_prepost %>%
                      str_detect(pre_post_wet, "post") ~ "b_post")) %>%
   pivot_longer(cols = c(samp_med_bact, samp_med_fung),
                names_to = "type", values_to = "med") %>%
-  mutate(med = med * 1e4) %>%
+  mutate(med = med * 1e6) %>%
   ggplot(aes(x = samp_c_med,
              y = med)) +
   geom_point(aes(fill = factor(type),
