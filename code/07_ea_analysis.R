@@ -106,13 +106,20 @@ facet_drying_labels <- as_labeller(c("one_wk" = "One Week",
                                      "two_wk" = "Two Weeks",
                                      "four_wk" = "Four Weeks",
                                      "initial" = "Initial"))
+# Create significance mapping function
+sigFunc <- function(x){
+  if (x < 0.001){"***"}
+  else if (x < 0.01){"**"}
+  else if (x < 0.05){"*"}
+  else if (x < 0.1){"."}
+  else {NA}}
+
 # Plot
 n_cw_plot_all <- n_cw_samp_sum_all %>%
   ggplot(aes(x = factor(cc_treatment, levels = c("no_cc", "w_cc")),
-             y = samp_median,
-             fill = cc_treatment,
-             color = cc_treatment)) +
-  geom_boxplot() +
+             y = samp_n_med)) +
+  geom_boxplot(aes(fill = cc_treatment,
+                   color = cc_treatment)) +
   facet_grid(~ factor(drying_treatment,
                       levels = c("initial", "one_wk", "two_wk", "four_wk")),
              labeller = facet_drying_labels)  +
@@ -122,10 +129,15 @@ n_cw_plot_all <- n_cw_samp_sum_all %>%
   scale_color_manual(name = NULL, limits = c("no_cc", "w_cc"),
                      values = c("#097CB2", "#195004"),
                      labels = c("No Cover Crop", "With Cover Crop")) +
+  scale_y_continuous(limits = c(0.325, .46)) +
   theme(axis.text.x = element_blank(),
         axis.title.x = element_blank(),
         axis.ticks.x = element_blank(),
         legend.position = "bottom") +
+  # Add Wilcoxon pairwise comparisons
+  geom_signif(comparisons = list(c("no_cc", "w_cc")), test = "wilcox.test",
+                map_signif_level = sigFunc,
+              family = "Helvetica", textsize = 6) +
   labs(y = "% Nitrogen",
        title = "Nitrogen in Consistently Moist Soils")
 ggsave(n_cw_plot_all, filename = "output/2022/ea_plots/nper_cc_cw.png",
@@ -141,15 +153,15 @@ n_cw_samp_sum_all %>%
 # Calculate stats for each week to see effect between w_cc and no_cc
 cw_wk_stats <- data.frame("drying_treatment" = character(),
                           "p_value"  = numeric(),
-                          "chi_sq" = numeric())
+                          "w" = numeric())
 weeks <- c("initial", "one_wk", "two_wk", "four_wk")
 for(a in weeks) {
   cw_stats <- n_cw_samp_sum_all %>%
     filter(drying_treatment == a) %>%
-    kruskal.test(data = ., samp_median ~ cc_treatment)
+    wilcox.test(data = ., samp_n_med ~ cc_treatment)
   new <- data.frame("drying_treatment" = a,
                     "p_value" = cw_stats$p.value,
-                    "chi_sq" = cw_stats$statistic)
+                    "w" = cw_stats$statistic)
   cw_wk_stats <- rbind(cw_wk_stats, new)
 }
 
@@ -195,19 +207,22 @@ ggsave(ratio_cw_plot, filename = "output/2022/ea_plots/ratio_cn_cw.png",
 # Calculate stats per week to see effect of cc treatment
 cw_cn_wk_stats <- data.frame("drying_treatment" = character(),
                           "p_value"  = numeric(),
-                          "chi_sq" = numeric())
+                          "w" = numeric())
 for(a in weeks) {
   cw_cn_stats <- samp_sum_all %>%
     filter(pre_post_wet == "cw" |
              pre_post_wet == "initial") %>%
     filter(drying_treatment == a) %>%
-    kruskal.test(data = ., samp_cn_med ~ cc_treatment)
+    wilcox.test(data = ., samp_cn_med ~ cc_treatment)
   new <- data.frame("drying_treatment" = a,
                     "p_value" = cw_cn_stats$p.value,
-                    "chi_sq" = cw_cn_stats$statistic)
+                    "w" = cw_cn_stats$statistic)
   cw_cn_wk_stats <- rbind(cw_cn_wk_stats, new)
 }
-
+# Calculate stats for each week to see effect between w_cc and no_cc
+cw_wk_stats <- data.frame("drying_treatment" = character(),
+                          "p_value"  = numeric(),
+                          "w" = numeric())
 
 ####  COMPARE %N BETWEEN CC IN DRYING ####
 # Examine the effects of cc on %N by comparing w_cc and no_cc when dried
@@ -262,14 +277,7 @@ n_dry_plot_all <- n_dry_samp_sum_all %>%
   # Adds Wilcoxon pairwise comparisons
   geom_signif(comparisons = list(c("no_cc", "w_cc")), test = "wilcox.test",
               map_signif_level = sigFunc,
-              family = "Helvetica", textsize = 6) +
-  # Add test annotation
-  geom_text(x = 1.5, y = 0.465, data = wilcox_annot, aes(label = label,
-                                                      family = "Helvetica",
-                                                      size = 16,
-                                                      lineheight = 0.9),
-                                                      show.legend = F)
-
+              family = "Helvetica", textsize = 6)
 ggsave(n_dry_plot_all, filename = "output/2022/ea_plots/nper_cc_drying.png",
        width = 14, height = 8, units = "in")
 
@@ -283,15 +291,15 @@ n_dry_samp_sum_all %>%
 # Calculate stats for each week between w_cc and no_cc
 dry_wk_stats <- data.frame("drying_treatment" = character(),
                           "p_value"  = numeric(),
-                          "chi_sq" = numeric())
+                          "w" = numeric())
 weeks <- c("initial", "one_wk", "two_wk", "four_wk")
 for(a in weeks) {
   dry_stats <- n_dry_samp_sum_all %>%
     filter(drying_treatment == a) %>%
-    kruskal.test(data = ., samp_median ~ cc_treatment)
+    wilcox.test(data = ., samp_n_med ~ cc_treatment)
   new <- data.frame("drying_treatment" = a,
                     "p_value" = dry_stats$p.value,
-                    "chi_sq" = dry_stats$statistic)
+                    "w" = dry_stats$statistic)
   dry_wk_stats <- rbind(dry_wk_stats, new)
 }
 
@@ -336,14 +344,14 @@ ggsave(ratio_dry_plot, filename = "output/2022/ea_plots/ratio_cn_drying.png",
 # Calculate stats per week on effect of cc treatment
 dry_cn_wk_stats <- data.frame("drying_treatment" = character(),
                            "p_value"  = numeric(),
-                           "chi_sq" = numeric())
+                           "w" = numeric())
 for(a in weeks) {
   dry_cn_stats <- samp_sum_all %>%
     filter(drying_treatment == a) %>%
-    kruskal.test(data = ., samp_cn_med ~ cc_treatment)
+    wilcox.test(data = ., samp_cn_med ~ cc_treatment)
   new <- data.frame("drying_treatment" = a,
                     "p_value" = dry_cn_stats$p.value,
-                    "chi_sq" = dry_cn_stats$statistic)
+                    "w" = dry_cn_stats$statistic)
   dry_cn_wk_stats <- rbind(dry_cn_wk_stats, new)
 }
 
