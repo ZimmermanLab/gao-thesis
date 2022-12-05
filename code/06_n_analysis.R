@@ -14,7 +14,7 @@ library("fs")
 
 # Set plot themes
 source("code/functions/set_plot_themes.R")
-set_theme("pres")
+set_theme("doc")
 
 # Get file list
 file_list <- paste0("data/raw_data/SmartChem_N_extractions/2022_samples/",
@@ -32,9 +32,9 @@ n_data_clean <- clean_n_data(file_list) %>%
 # and total extract based on having added 40mL of KCl
 total_leach_ext <- n_data_clean %>%
   mutate(leach_nh3_ug = 25 * nh3_leachate,
-         leach_no2_no3_ug = 25 * no2_no3_leachate) %>%
+         leach_no2no3_ug = 25 * no2_no3_leachate) %>%
   mutate(ext_nh3_ug = 40 * nh3_extract,
-         ext_no2_no3_ug = 40 * no2_no3_extract) %>%
+         ext_no2no3_ug = 40 * no2_no3_extract) %>%
   select(-c(nh3_leachate, no2_no3_leachate, nh3_extract, no2_no3_extract))
 
 # Bring in soil weights to determine total ug of leachate
@@ -60,9 +60,10 @@ total_leach_ext_wt <- total_leach_ext %>%
   left_join(all_treatments) %>%
   # Normalize total extracts and leachates to each sample's fresh soil weight
   mutate(leach_nh3_per = leach_nh3_ug / n_leachate_soil_mass_pre,
-         leach_no2_no3_per = leach_no2_no3_ug / n_leachate_soil_mass_pre,
+         leach_no2no3_per = leach_no2no3_ug / n_leachate_soil_mass_pre,
          ext_nh3_per = ext_nh3_ug / n_extraction_soil_mass,
-         ext_no2_no3_per = ext_no2_no3_ug / n_extraction_soil_mass)
+         ext_no2no3_per = ext_no2no3_ug / n_extraction_soil_mass) %>%
+  select(-c(leach_nh3_ug, leach_no2no3_ug, ext_nh3_ug, ext_no2no3_ug))
 
 # Calculate sample medians compiling tech reps across all N types
 samp_sum <- total_leach_ext_wt %>%
@@ -83,7 +84,7 @@ samp_sum <- samp_sum %>%
 # Create ratio of leachate : extract column
 samp_sum_ratio <- samp_sum %>%
   mutate(ratio_nh3 = leach_nh3_per_median / ext_nh3_per_median,
-         ratio_no2no3  = leach_no2_no3_per_median / ext_no2_no3_per_median)
+         ratio_no2no3  = leach_no2no3_per_median / ext_no2no3_per_median)
 
 # Plot and analyze by time
 source("code/functions/n_functions/summarize_treat_n_data.R")
@@ -116,17 +117,17 @@ ratio_nh3_plot <- sum_plot_n(post_ratio_sum, "ratio_nh3", "nh3")$plot +
   # Adds Wilcoxon pairwise comparisons
   geom_signif(comparisons = list(c("no_cc", "w_cc")), test = "wilcox.test",
               map_signif_level = sigFunc,
-              family = "Helvetica", textsize = 6) +
+              family = "Helvetica", textsize = 6)
   # Add test annotation
-  geom_text(x = 1.5, y = 2, data = wilcox_annot, aes(label = label,
-                                                     family = "Helvetica",
-                                                     size = 16,
-                                                     lineheight = 0.9),
-            show.legend = F)
+  # geom_text(x = 1.5, y = 2, data = wilcox_annot, aes(label = label,
+  #                                                   family = "Helvetica",
+  #                                                   size = 16,
+  #                                                   lineheight = 0.9),
+  #          show.legend = F)
 ggsave(ratio_nh3_plot, filename = "output/2022/n_plots/ratio_nh3.png",
        width = 14, height = 8, units = "in")
 
-ratio_nh3_wk <- wk_stats(post_ratio_sum, "ratio_nh3", "all_wk")
+nh3_wk <- wk_stats(post_ratio_sum, "nh3")
 
 # Ratio of L:E in NO2-NO3
 ratio_no2_no3_plot <- sum_plot_n(post_ratio_sum, "ratio_no2no3", "no2-no3")$plot +
@@ -144,7 +145,7 @@ ratio_no2_no3_plot <- sum_plot_n(post_ratio_sum, "ratio_no2no3", "no2-no3")$plot
 ggsave(ratio_no2_no3_plot, filename = "output/2022/n_plots/ratio_no2no3.png",
        width = 14, height = 8, units = "in")
 
-ratio_no2_no3_wk <- wk_stats(post_ratio_sum, "ratio_no2no3", "all_wk")
+ratio_no2_no3_wk <- wk_stats(post_ratio_sum, "ratio_no2no3")
 
 ### PER G FRESH SOIL PER WEEK ###
 # Plot extract and leachate by week next to each other
