@@ -21,7 +21,7 @@ sum_plot_n <- function(n_data, y_var, n_type) {
     y_title = paste0("\u03bcg ", toupper(n_type), " / g of Fresh Soil")
     var_name <- str_sub(var_name, end = -6)
   } else if (str_detect(var_name, "ext")) {
-    title = paste("Total", toupper(n_type), "in Post-Wet Soils")
+    title = paste("Extractable", toupper(n_type), "in Post-Wet Soils")
     y_title = paste0("\u03bcg ", toupper(n_type), " / g of Fresh Soil")
     var_name <- str_sub(var_name, end = -6)
   } else if (str_detect(var_name, "ratio")) {
