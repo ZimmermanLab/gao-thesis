@@ -86,6 +86,8 @@ samp_sum <- samp_sum %>%
 samp_sum_ratio <- samp_sum %>%
   mutate(ratio_nh3 = leach_nh3_per_median / ext_nh3_per_median,
          ratio_no2no3  = leach_no2no3_per_median / ext_no2no3_per_median)
+# Write out as csv
+write_csv(samp_sum_ratio, "data/cleaned_data/SmartChem_N/samp_sum_ratio.csv")
 
 # Plot and analyze by time
 source("code/functions/n_functions/summarize_treat_n_data.R")
