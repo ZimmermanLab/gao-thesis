@@ -76,7 +76,7 @@ pairwise_compare <- function(dataset, x_value, y_value,
     geom_boxplot() +
     ggpubr::stat_pvalue_manual(data = filtered_results_df,
                                label = "p.label",
-                               y.position = y_positions, size = 8) +
+                               y.position = y_positions, size = 6) +
     theme(legend.position = "none")
 
   # return the ggplot object
