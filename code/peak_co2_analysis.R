@@ -6,11 +6,11 @@
 
 library(ggplot2)
 library(scales)
-
+library(grid)
 
 source("code/functions/pairwise_compare.R")
 source("code/functions/set_plot_themes.R")
-set_theme("pres")
+set_theme("doc")
 
 samp_median <- read_csv("data/cleaned_data/LICOR/samp_medians.csv")
 
@@ -76,11 +76,11 @@ peak_all_plot <- all_peaks %>%
   scale_y_continuous(labels = label_comma(),
                      trans = "log10") +
   scale_x_discrete(labels = c("One Week", "Two Weeks", "Four Weeks")) +
-  theme(panel.spacing = unit(2, "lines")) +
+  theme(panel.spacing = unit(2, "lines"))
   # Add overall Kruskal-Wallis p-values
-  stat_compare_means(label.x = 2.25, label.y = 4,
-                     family = "Helvetica",
-                     size = 6)
+  # stat_compare_means(label.x = 2.25, label.y = 4,
+  #                   family = "Helvetica",
+  #                   size = 6)
 ggsave(peak_all_plot, filename =
          "output/2022/co2/figures/peak_rewet.png",
        width = 14, height = 8, units = "in")
@@ -127,14 +127,7 @@ wcc_plot <- wcc_peaks_subset %>%
        y = NULL,
        title = "With Cover Crop") +
   theme(plot.title = element_text(size = 20),
-        plot.margin = margin(c(0, 30, 0, 10))) +
-  # Add test annotation
-  annotation_custom(grob =
-                      grobTree(textGrob("Dunn's Test",
-                                        x = .80, y = 0.90,
-                                        gp = gpar(fontsize = 16,
-                                                  fontfamily = "Helvetica",
-                                                  lineheight = 0.9))))
+        plot.margin = margin(c(0, 30, 0, 10)))
 
 # Combine plots together
 patchwork_plot <- (nocc_plot + wcc_plot) +
