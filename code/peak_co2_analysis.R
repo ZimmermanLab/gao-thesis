@@ -50,6 +50,9 @@ wcc_peaks_subset <- samp_all %>%
 all_peaks <- wcc_peaks_subset %>%
   rbind(nocc_peaks_subset)
 
+# Save out peak data
+write_csv(all_peaks, "data/cleaned_data/LICOR/all_peaks.csv")
+
 # Set facet names
 facet_cc_names <- as_labeller(c("no_cc" = "No Cover Crop",
                                 "w_cc" = "With Cover Crop"))
@@ -148,7 +151,7 @@ peak_rewet_plot <- grid.arrange(arrangeGrob(pw_plot,
                                             bottom = x.grob),
                                 vp = viewport(width = 1, height = 0.95))
 ggsave(peak_rewet_plot, filename = "output/2022/co2/figures/peak_rewet.png",
-       width = 14, height = 8.5, units = "in")
+       width = 14, height = 8, units = "in")
 
 
 
