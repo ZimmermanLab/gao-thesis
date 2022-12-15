@@ -13,7 +13,7 @@ library("patchwork")
 
 # Set plot themes
 source("code/functions/set_plot_themes.R")
-set_theme("pres")
+set_theme("doc")
 
 # Read in DNA summary data
 dna_sum <- read_csv("data/cleaned_data/qPCR/samp_medians.csv")
@@ -76,11 +76,10 @@ kendall_annot_dna <- data.frame(type = "samp_med_fung",
                            label = "Kendall Rank Correlation")
 
 # Side by side of bacterial and fungal DNA
-dna_co2_wcc_plot <- dna_co2_wcc %>%
-  pivot_longer(cols = c(samp_med_bact, samp_med_fung),
-               names_to = "type", values_to = "med") %>%
-  mutate(med = med * 1e6) %>%
-  ggplot(aes(x = med,
+dna_co2_wcc_plot <- dna_co2_long %>%
+  filter(cc_treatment == "w_cc") %>%
+  mutate(dna_quant_e6 = dna_quant * 1e6) %>%
+  ggplot(aes(x = dna_quant_e6,
              y = co2_med)) +
   geom_point(aes(fill = factor(type),
                  color = factor(type))) +
@@ -114,7 +113,6 @@ dna_co2_wcc_plot <- dna_co2_wcc %>%
 ggsave(dna_co2_wcc_plot,
        filename = "output/2022/correlations/micro_co2_wcc_plot.png",
        width = 14, height = 8, units = "in")
-
 
 #### CN AND CO2 ####
 # Join CO2 and NC data
