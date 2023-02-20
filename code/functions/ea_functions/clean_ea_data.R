@@ -8,6 +8,7 @@ library("dplyr")
 library("readxl")
 library("tidyr")
 library("stringi")
+library("stringr")
 
 clean_ea_data <- function(input_file_list) {
   # Read in and clean up EA data
