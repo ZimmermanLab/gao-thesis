@@ -11,20 +11,38 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ## Context
 
-This Rmarkdown file is used to 
+This Rmarkdown file is used to bring in and clean each data type (i.e. total CN, qPCR DNA, aqueous N, and CO2 respiration). It keeps all non-error data, such as blanks and negative controls, during cleaning, without any standardization, calibration, or normalization.
 
 
+```{r packages}
+# Load relevant packages
 
-```{r cars}
-summary(cars)
+library("dplyr")
+library("readr")
+library("tidyr")
+library("fs")
+
 ```
 
-## Including Plots
+```{r ea-data}
+# This code chunk reads in the raw EA total CN data and cleans it
 
-You can also embed plots, for example:
+# Source cleaning function
+source("code/functions/ea_functions/clean_ea_data.R")
 
-```{r pressure, echo=FALSE}
-plot(pressure)
+# Compile list of file paths of percentage EA data
+files_percent <- dir_ls(path = "data/raw_data/EA_CN/2022/",
+                        recurse = 1,
+                        regex =
+                          "\\w+_Run\\d_(repeat_)*(\\d{2}_)*percent.(xls|XLS)")
+# Compile list of file paths of C:N ratio data
+files_ratio <- dir_ls(path = "data/raw_data/EA_CN/2022/",
+                      recurse = 1,
+                      regex = "\\w+_Run\\d_(repeat_)*(\\d{2}_)*ratio.(xls|XLS)")
+
+# Clean both types of data
+# Note that the function filters out any sample or SRM runs that had a value of 0. Blanks are retained.
+cn_percent_clean <- clean_ea_data(files_percent)
+cn_ratio_clean <- clean_ea_data(files_ratio)
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
