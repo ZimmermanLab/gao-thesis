@@ -24,11 +24,15 @@ library("fs")
 
 ```
 
+```{r functions}
+# Source necessary functions
+source("code/functions/ea_functions/clean_ea_data.R")
+source("code/functions/qpcr_functions/clean_qpcr_data.R")
+
+```
+
 ```{r ea-data}
 # This code chunk reads in the raw EA total CN data and cleans it
-
-# Source cleaning function
-source("code/functions/ea_functions/clean_ea_data.R")
 
 # Compile list of file paths of percentage EA data
 files_percent <- dir_ls(path = "data/raw_data/EA_CN/2022/",
@@ -46,3 +50,13 @@ cn_percent_clean <- clean_ea_data(files_percent)
 cn_ratio_clean <- clean_ea_data(files_ratio)
 ```
 
+```{r qpcr-dna}
+# This code chunk reads in the raw qPCR fungal and bacterial DNA data and
+# cleans it, retaining all Blank runs as well
+
+# Get clean fungal data
+clean_fungal <- clean_qpcr_data("data/raw_data/qPCR/", "fungal")
+
+# Get clean bacterial data
+clean_bacterial <- clean_qpcr_data("data/raw_data/qPCR/", "bacterial")
+```
