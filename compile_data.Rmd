@@ -33,6 +33,8 @@ source("code/functions/qpcr_functions/clean_qpcr_data.R")
 
 ## Total CN EA Data
 
+The following chunk reads and cleans Total CN data from the ThermoFisher EA runs, specifically percentage CN and ratio C:N in separate data files. Due to the finickiness of the EA machine, there were several runs that were labelled as SRM or sample numbers that had a value of 0. These are omitted, but all blanks (i.e. system blanks with no capsules, blanks that were just a tin capsule, and blanks that were just a silver capsule) are retained.s 
+
 ```{r ea-data}
 # This code chunk reads in the raw EA total CN data and cleans it
 
@@ -54,7 +56,7 @@ cn_ratio_clean <- clean_ea_data(files_ratio)
 
 ## qPCR DNA Data
 
-Here, raw qPCR fungal and bacterial DNA data is read and cleaned. All blank runs are retained as well, which may result in NAs for `rep_no` and even `cq` values. There are some wells where `sample_no` was NA due to [*CHECK LAB NOTEBOOK*]
+Here, raw qPCR fungal and bacterial DNA data is read and cleaned. All blank runs are retained as well, which may result in NAs for `rep_no` and even `cq` values. There are some non-blank sample wells where Cq values were NA due to unknown reasons. In fungal samples, these included the water-only samples (32, 42, 78, 97, 119) but there were also some samples that had a stray replicate that was NA when other replicates amplified.
 ```{r qpcr-dna}
 # Get clean fungal data
 clean_fungal <- clean_qpcr_data("data/raw_data/qPCR/", "fungal")
@@ -74,3 +76,7 @@ For the `bacteria-control` sample, a sample taken from bacteria cultured on agar
 dried_wts <- read_csv("data/raw_data/qPCR/2022_DNA.csv") %>%
   select(-"...5")
 ```
+
+## Aqueous N Data
+
+This code chunk reads in and cleans data from aqueous N measurements. These include both the 
