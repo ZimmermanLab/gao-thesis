@@ -22,28 +22,34 @@ n_data_clean <- read_delim(input_files, delim = ";", col_names = FALSE) %>%
          "od" = X6,
          "run_time" = X7,
          "type" = X8) %>%
-  # Add column to show sample type
-  mutate("sample_type" = case_when(
-    grepl("^[0-9]{3}E", sample_no_full) == TRUE ~ "extract",
-    grepl("^[0-9]{3}L", sample_no_full) == TRUE ~ "leachate")) %>%
   # Separate out replicate number
   mutate("sample_no" = case_when(
-    grepl("^[0-9]", sample_no_full) == TRUE ~
-      as.numeric(str_sub(sample_no_full, end = 3)))) %>%
+    grepl("^B", sample_no_full) ~ "blank",
+    grepl("NO3E6", sample_no_full) ~
+      "no3_std",
+    grepl("NO2E6", sample_no_full) ~
+      "no2_std",
+    grepl("NH3E", sample_no_full) ~
+      "nh3_std",
+    grepl("^[0-9]", sample_no_full) ~
+      str_sub(sample_no_full, end = 3))) %>%
   mutate("rep_no" = case_when(
     grepl("^[0-9]", sample_no_full) == TRUE ~
       as.numeric(str_sub(sample_no_full, start = -1)))) %>%
   select(-c(sample_no_full)) %>%
   relocate(sample_no, rep_no) %>%
+  # Add column to show sample type
+  mutate("sample_type" = case_when(
+    grepl("^[0-9]{3}E", sample_no_full) == TRUE ~ "extract",
+    grepl("^[0-9]{3}L", sample_no_full) == TRUE ~ "leachate")) %>%
   # Only Run #1 has "WNH3" instead of "WNHR" as it used a miscoded NH3 protocol
   mutate(type = str_replace(type, "WNH3", "nh3")) %>%
   mutate(type = str_replace(type, "WNHR", "nh3")) %>%
   mutate(type = str_replace(type, "WNO6", "no2-no3"))
 
-
 # Converts numbers to numeric
 n_data_clean <- n_data_clean %>%
-  mutate_at(c(1:4), as.numeric)
+  mutate_at(c(2:4), as.numeric)
 
 return(n_data_clean)
 }
