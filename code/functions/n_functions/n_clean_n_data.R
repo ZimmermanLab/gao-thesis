@@ -36,20 +36,20 @@ n_data_clean <- read_delim(input_files, delim = ";", col_names = FALSE) %>%
   mutate("rep_no" = case_when(
     grepl("^[0-9]", sample_no_full) == TRUE ~
       as.numeric(str_sub(sample_no_full, start = -1)))) %>%
-  select(-c(sample_no_full)) %>%
-  relocate(sample_no, rep_no) %>%
   # Add column to show sample type
   mutate("sample_type" = case_when(
-    grepl("^[0-9]{3}E", sample_no_full) == TRUE ~ "extract",
-    grepl("^[0-9]{3}L", sample_no_full) == TRUE ~ "leachate")) %>%
+    grepl("^[0-9]{3}E", sample_no_full) ~ "extract",
+    grepl("^[0-9]{3}L", sample_no_full) ~ "leachate",
+    grepl("E[0-9-]+$", sample_no_full) & !grepl("NO", sample_no_full)
+    ~ "extract",
+    grepl("L[0-9-]+$", sample_no_full) & !grepl("NO", sample_no_full)
+    ~ "leachate")) %>%
   # Only Run #1 has "WNH3" instead of "WNHR" as it used a miscoded NH3 protocol
   mutate(type = str_replace(type, "WNH3", "nh3")) %>%
   mutate(type = str_replace(type, "WNHR", "nh3")) %>%
-  mutate(type = str_replace(type, "WNO6", "no2-no3"))
-
-# Converts numbers to numeric
-n_data_clean <- n_data_clean %>%
-  mutate_at(c(2:4), as.numeric)
+  mutate(type = str_replace(type, "WNO6", "no2-no3")) %>%
+  select(-c(sample_no_full)) %>%
+  relocate(sample_no, rep_no)
 
 return(n_data_clean)
 }
