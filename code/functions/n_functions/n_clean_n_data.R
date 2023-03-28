@@ -24,7 +24,7 @@ n_data_clean <- read_delim(input_files, delim = ";", col_names = FALSE) %>%
          "type" = X8) %>%
   # Separate out replicate number
   mutate("sample_no" = case_when(
-    grepl("^B", sample_no_full) ~ "blank",
+    grepl("^B", sample_no_full) ~ "blank_inorg_n",
     grepl("NO3E6", sample_no_full) ~
       "no3_std",
     grepl("NO2E6", sample_no_full) ~
