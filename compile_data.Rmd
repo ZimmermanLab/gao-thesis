@@ -28,6 +28,7 @@ library("fs")
 # Source necessary functions
 source("code/functions/ea_functions/clean_ea_data.R")
 source("code/functions/qpcr_functions/clean_qpcr_data.R")
+source("code/functions/n_functions/n_clean_n_data.R")
 
 ```
 
@@ -73,10 +74,27 @@ Samples 32, 42, 78, 97, and 119 were water-only controls (i.e. only water in jar
 
 For the `bacteria-control` sample, a sample taken from bacteria cultured on agar from a soil sample was used for DNA extraction to serve as a positive control. The `extraction_soil_wt_mg` value is the weight of the bacteria sample (including any agar media) used for DNA extraction.
 ```{r qpcr-dried-wts}
+# Read in dried soil weights data
 dried_wts <- read_csv("data/raw_data/qPCR/2022_DNA.csv") %>%
   select(-"...5")
 ```
 
-## Aqueous N Data
+## Inorganic N Data
 
-This code chunk reads in and cleans data from aqueous N measurements. These include both the 
+This code chunk reads in and cleans data from inorganic N measurements. These include both the extractable N measurements as well as the leachate N measurements. Measured species were ammonia (NH3) and combined nitrite-nitrate (NO2-NO3).
+
+Reported measurements are already calibrated to NO2, NO3, and ammonia stock standards. These standards are retained in this dataset and are shown as `NO2E6`, `NO3E6`, and `NH3E` respectively. Blank values (i.e. technical blanks that underwent the same extraction / leachate process with the same solutions but without any added soil) are also shown.
+
+The column in the dataset labelled `OD` stands for the raw optical density measurement. Replicate number (`rep_no`) reflects the technical replicate number used during the SmartChem analysis (i.e. these replicates were created during SmartChem analysis and use the same sample). For blanks, these replicate numbers may be duplicated as blanks were taken during each round of sample collection. The labeling for blanks in `sample_no_full`, which is omitted in the final cleaned dataset, is coded to the batch of solution and is pretty haphazard. For example, `Blank1AL02` reflects the results of the second technical replicate of a leachate blank made with batch 1A of CaCl2. `BlankE102` is the second technical replicate of an extract blank made with batch 1 of KCl. There are multiples of each `BlankE1` replicate due to the fact that I made one big 5L batch of KCl that lasted for the entire experiment whereas I had to make multiple new batches of the CaCl2 solution.
+
+Some samples have measurements of `-9999` for unknown reasons, which have been retained in this dataset.
+```{r inorg-n}
+# Get file list
+file_list <- paste0("data/raw_data/SmartChem_N_extractions/2022_samples/",
+                    list.files(
+                      "data/raw_data/SmartChem_N_extractions/2022_samples/",
+                        pattern = "*.Csv"))
+
+# Read in and clean all csv files in the folder and create a compiled dataframe
+n_data_clean <- clean_n_data(file_list)
+```
