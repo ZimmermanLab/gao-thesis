@@ -21,14 +21,14 @@ clean_qpcr_data <- function(input_dir, micro_type) {
 
   } else if (micro_type == "bacterial") {
     # Compile list of file paths for bacterial data
-    # List of long files from machine 1
+    # List of wider files with more columns from machine 1
     files_long <- dir_ls(path = input_dir, recurse = 1,
                          regex =
                            "bacterial -  Quantification Cq Results.csv$")
     clean_data_long <- read_csv(files_long) %>%
       filter(Fluor == "SYBR") %>%
       select(Sample, Cq)
-    # List of short files from machine 2
+    # List of files with fewer columns from machine 2
     files_short <- dir_ls(path = input_dir, recurse = 1,
                           regex = "bacterial.csv$")
     clean_data_short <- read_csv(files_short) %>%
@@ -41,15 +41,15 @@ clean_qpcr_data <- function(input_dir, micro_type) {
     # Make sure Cq column is double type
     clean_data$Cq <- as.double(clean_data$Cq)
 
-    # Remove blanks, NAs, and separate out replicate numbers
+    # Separate out replicate numbers and clean up sample number
     clean_data_all <- clean_data %>%
-      filter(Cq != "NaN") %>%
-      filter(!(is.na(Cq))) %>%
-      filter(!(is.na(Sample))) %>%
-      filter(!(grepl("Blank", Sample))) %>%
-      rename("sample_no_full" = Sample, "cq" = Cq) %>%
-      mutate("sample_no" = as.numeric(str_sub(sample_no_full, end = 3))) %>%
-      mutate("rep_no" = as.numeric(str_sub(sample_no_full, start = -1)))
+      rename("sample_no" = Sample, "cq" = Cq) %>%
+      mutate(rep_no = case_when(
+        str_detect(sample_no, "-") ~ str_sub(sample_no, start = -1),
+        TRUE ~ NA_character_)) %>%
+      mutate(sample_no = case_when(
+        str_detect(sample_no, "-") ~ str_sub(sample_no, end = 3),
+        TRUE ~ sample_no))
 
     # Return cleaned data
     return(clean_data_all)
