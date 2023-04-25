@@ -98,3 +98,10 @@ file_list <- paste0("data/raw_data/SmartChem_N_extractions/2022_samples/",
 # Read in and clean all csv files in the folder and create a compiled dataframe
 n_data_clean <- clean_n_data(file_list)
 ```
+
+## CO2 Respiration Data
+
+This code chunk
+```{r co2}
+
+```
