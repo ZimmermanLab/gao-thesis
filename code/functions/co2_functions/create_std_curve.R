@@ -8,9 +8,9 @@
 # October 29, 2022
 # hellosarahgao@gmail.com
 
-# Read in AUCs from standards
+# Read in AUCs
 all_auc <- read_csv("output/2022/co2/auc_summary_all.txt")
-# Select samples (non-stds) only
+# Clean up sample names
 all_auc_clean <- all_auc %>%
   mutate(sample_no = case_when(
     str_detect(sample, "[0-9]{3}_[0-9]{2}") == TRUE ~
@@ -23,7 +23,7 @@ all_auc_clean <- all_auc %>%
   filter(!is.na(sample)) %>%
   select(-sample) %>%
   relocate(sample_no, total_auc)
-
+# Select CO2 standards only
 stds_only <- all_auc_clean %>%
   filter(str_detect(sample_no, "ppm") == TRUE) %>%
   mutate(sample_no = str_sub(sample_no, end = -4))
