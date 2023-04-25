@@ -29,6 +29,8 @@ library("fs")
 source("code/functions/ea_functions/clean_ea_data.R")
 source("code/functions/qpcr_functions/clean_qpcr_data.R")
 source("code/functions/n_functions/n_clean_n_data.R")
+source("code/functions/co2_functions/find_peaks.R")
+source("code/functions/co2_functions/create_std_curve.R")
 
 ```
 
@@ -101,7 +103,37 @@ n_data_clean <- clean_n_data(file_list)
 
 ## CO2 Respiration Data
 
-This code chunk
-```{r co2}
+This code chunk uses a bash function to run through the raw .txt CO2 data files from the LICOR and removes the weird unnecessary headers so that they can be subsequently read and analyzed for areas under the curve (AUCs).
+
+**Bash is not working in this Rmd for Sarah as of 4/25/23 but wrote what it would be if it were:**
+```{bash co2-trim-raw}
+bash code/clean_co2_files data/raw_data/LICOR_CO2
+```
+
+This code chunk uses the `find_peaks.R` function and finds the area under the curve (AUC) for each trimmed .txt data file. These AUCs are then saved out as a separate .txt file because it takes a long time to generate.
+```{r co2-find-auc}
+# Create list of file paths of CO2 data files
+files_list <- list.files(path = "data/cleaned_data/LICOR/", recursive = FALSE,
+                         pattern = "*.txt")
+files_list <- subset(files_list, str_detect(files_list, "extract") == FALSE)
+
+auc_summary_all <- data.frame()
+
+for(f in 1:length(files_list)) {
+  auc_summary <- find_peaks(files_list[f])
+  auc_summary_all <- rbind(auc_summary_all, auc_summary)
+}
+# Save this out because it takes a long time to generate
+write_csv(auc_summary_all, "output/2022/co2/auc_summary_all.txt")
+```
+
+Using the saved out AUC summary .txt file `auc_summary_all.txt`, this code chunk uses the function `create_std_curve.R` to create a standard curve using measurements pooled by day. At the beginning of the experiment, I did not have sufficiently high CO2 standard concentrations (I only had 100ppm, 1,000ppm, and 10,000ppm) to encompass some of the samples with higher CO2 measurements. Later on, I was able to obtain 100,000ppm and 99.99% CO2 standards.
+
+To see if there was any drifting by day in measurements, I initially plotted the standards by date and saw that there was indeed some drifting as time went on. Because of this, I decided to use each day's standards to generate separate curves to calibrate that day's samples with.
+
+In this `create_std_curve.R` function, you will see both results calibrated by pooled standards as well as results calibrated by each day's standards and should probably be cleaned up (and just cleaned up in general, lots of junk code in there...)
+
+**Oops I need to functionalize `create_std_curve.R`**
+```{r co2-std-curve}
 
 ```
