@@ -105,7 +105,7 @@ n_data_clean <- clean_n_data(file_list)
 
 This code chunk uses a bash function to run through the raw .txt CO2 data files from the LICOR and removes the weird unnecessary headers so that they can be subsequently read and analyzed for areas under the curve (AUCs).
 
-**Bash is not working in this Rmd for Sarah as of 4/25/23 but wrote what it would be if it were:**
+**Running this bash code chunk only works for Sarah as of 4/25/23 when Preferences > R Markdown > Show output line for all R Markdown documents is turned on**
 ```{bash co2-trim-raw}
 bash code/clean_co2_files data/raw_data/LICOR_CO2
 ```
