@@ -168,7 +168,7 @@ create_std_curve <- function(auc_summary_file) {
                       "samples_run" = (n_all != n2))
     samples_curve <- data.frame(matrix(ncol = 4, nrow = 0))
     colnames(samples_curve) <- c("date", "y_intercept", "slope", "r_squared")
-    # Maps each  date's standard curve if there samples run on that day
+    # Maps each date's standard curve if there samples run on that day
     for(i in 1:length(samples_run$date)){
       for(j in 1:length(curve$date)){
         if(samples_run$date[i] == curve$date[j] &
