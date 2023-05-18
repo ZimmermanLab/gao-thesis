@@ -21,6 +21,7 @@ library("dplyr")
 library("readr")
 library("tidyr")
 library("fs")
+library("stringr")
 
 ```
 
@@ -104,7 +105,9 @@ n_data_clean <- clean_n_data(file_list)
 ## CO2 Respiration Data
 
 This code chunk uses a bash function to run through the raw .txt CO2 data files from the LICOR and removes the weird unnecessary headers so that they can be subsequently read and analyzed for areas under the curve (AUCs).
-
+```{bash test}
+echo hello
+```
 **Running this bash code chunk only works for Sarah as of 4/25/23 when Preferences > R Markdown > Show output line for all R Markdown documents is turned on**
 ```{bash co2-trim-raw}
 bash code/clean_co2_files data/raw_data/LICOR_CO2
@@ -133,7 +136,7 @@ To see if there was any drifting by day in measurements, I initially plotted the
 
 In this `create_std_curve.R` function, you will see both results calibrated by pooled standards as well as results calibrated by each day's standards and should probably be cleaned up (and just cleaned up in general, lots of junk code in there...)
 
-**Oops I need to functionalize `create_std_curve.R`**
 ```{r co2-std-curve}
-
+create_std_curve("output/2022/co2/auc_summary_all.txt")
 ```
+
