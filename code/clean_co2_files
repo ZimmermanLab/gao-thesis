@@ -9,15 +9,17 @@
 if [ $# -eq 0 ]
 then
 	echo "Please include the path of the directory where the files you"\
-		"want to clean up are located."
+		"want to clean up are located as the first argument. For the second"\
+		"argument, include the path of the directory where outputs will be saved."
 	exit 1
 fi
 
-# Recursively loops through directory
+# Recursively loops through directory to remove header from each txt file
+# and saves it in the user defined directory
 shopt -s globstar
 for file in "$1"/**/*;
 	do
-	tail -n +2 "$file" > "data/cleaned_data/LICOR/$(basename "${file%.*}")_no_head.txt"
+	tail -n +2 "$file" > "$2/$(basename "${file%.*}")_no_head.txt"
 done
 
 
