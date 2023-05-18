@@ -60,7 +60,7 @@ create_std_curve <- function(auc_summary_file) {
         q <- q+1
         date_new <- date_1[j,]
         # Maps each standard replicate to log curve and sets highs and lows
-        # according to a 95% CI (check.alpha = 0.05)
+        # according to a 95% CI (check_alpha = 0.05)
         stds_log$low[q] <- predict(linmod, new_data = date_new,
                                    interval = 'confidence',
                                    level = 1-check_alpha)[2]
@@ -82,11 +82,11 @@ create_std_curve <- function(auc_summary_file) {
     check.stand = "TRUE"
     ci.meth = "avg"
       if(check.stand == TRUE){
-        ot1 <- output.1 %>%
+        ot1 <- stds_log %>%
           group_by(date, sample_no) %>%
           summarize(ci.low = mean(low), ci.high = mean(high))
         if(ci.meth == "avg"){
-          ot2 <- output.1 %>%
+          ot2 <- stds_log %>%
             group_by(date, sample_no) %>%
             summarize(mean.AUC = mean(log(total_auc)))
           ot3 <- full_join(ot1, ot2, by = c("date", "sample_no"))
@@ -132,7 +132,7 @@ create_std_curve <- function(auc_summary_file) {
           if(nrow(cierr) != 0){
             # Prints warning to show which standard samples fall outside of CI
             warning(call. = FALSE, c(
-              "\n\nCheck standards deviate from the ", 100*(1 - check.alpha),
+              "\n\nCheck standards deviate from the ", 100*(1 - check_alpha),
               "%", " confidence interval in the following Samples:\n"))
             for(i in 1:nrow(cierr)){
               if(ci.meth == "avg"){
@@ -184,7 +184,7 @@ create_std_curve <- function(auc_summary_file) {
                     .direction = "down")
     curve.3[, 2:4] <- sapply(curve.3[, 2:4], as.numeric)
     # Summarizes each standard on each day
-    stand <- output.1 %>%
+    stand <- stds_log %>%
       group_by(date, sample_no) %>%
       summarise(Mean = mean(total_auc), std.dev = sd(total_auc))%>%
       mutate(COV = std.dev/Mean)
@@ -206,7 +206,7 @@ create_std_curve <- function(auc_summary_file) {
 
 
     # Create summary
-    summary.stats <- output %>%
+    summary_stats <- output %>%
       filter(is.na(auc_calib) == FALSE) %>%
       group_by(sample_no, date) %>%
       summarise(mean_calib = mean(auc_calib),
@@ -216,5 +216,6 @@ create_std_curve <- function(auc_summary_file) {
 
     # SAVE THESE OUT
     write_csv(output, "output/2022/co2/auc_calib_date")
-    write_csv(summary.stats, "output/2022/co2/auc_sum_calib_date")
+    write_csv(summary_stats, "output/2022/co2/auc_sum_calib_date")
+    return(summary_stats)
 }
