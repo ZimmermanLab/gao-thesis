@@ -9,7 +9,7 @@ library("tidyr")
 library("dplyr")
 library("readr")
 
-clean_qpcr_data <- function(input_dir, micro_type) {
+clean_qpcr_data <- function(input_dir) {
   # Compile list of file paths for fungal data
   files_fung <- dir_ls(path = input_dir, recurse = 1,
     regex = "fungal -  Quantification Cq Results.csv")
