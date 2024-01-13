@@ -61,7 +61,7 @@ cn_ratio_clean <- clean_ea_data(files_ratio)
 
 ## qPCR DNA Data
 
-Here, raw qPCR fungal and bacterial DNA data is read and cleaned. All blank (i.e. water technical controls) runs are retained as well, which may result in NAs for `rep_no` and even `cq` values. There are some non-blank sample wells where Cq values were NA due to unknown reasons. In fungal samples, these included the water-only samples (32, 42, 78, 97, 119) but there were also some samples that had a stray replicate that was NA when other replicates amplified.
+Here, raw qPCR fungal and bacterial DNA data is read and cleaned. All blank (i.e. water technical controls) runs are retained as well, which may result in NAs for `tech_rep_number` and even `value` values (Cq). There are some non-blank sample wells where Cq values were NA due to unknown reasons. In fungal samples, these included the water-only samples (32, 42, 78, 97, 119) but there were also some samples that had a stray replicate that was NA when other replicates amplified.
 ```{r qpcr-dna}
 # Get clean qPCR data
 clean_qpcr <- clean_qpcr_data("data/raw_data/qPCR/")
