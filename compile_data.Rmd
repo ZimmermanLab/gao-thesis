@@ -63,11 +63,8 @@ cn_ratio_clean <- clean_ea_data(files_ratio)
 
 Here, raw qPCR fungal and bacterial DNA data is read and cleaned. All blank (i.e. water technical controls) runs are retained as well, which may result in NAs for `rep_no` and even `cq` values. There are some non-blank sample wells where Cq values were NA due to unknown reasons. In fungal samples, these included the water-only samples (32, 42, 78, 97, 119) but there were also some samples that had a stray replicate that was NA when other replicates amplified.
 ```{r qpcr-dna}
-# Get clean fungal data
-clean_fungal <- clean_qpcr_data("data/raw_data/qPCR/", "fungal")
-
-# Get clean bacterial data
-clean_bacterial <- clean_qpcr_data("data/raw_data/qPCR/", "bacterial")
+# Get clean qPCR data
+clean_qpcr <- clean_qpcr_data("data/raw_data/qPCR/")
 ```
 
 Here, dried soil weight measurements are read and cleaned. These weights were derived from frozen soil weights measured for DNA extraction. For each sample, approximately the same amount of frozen soil was later weighed out and then oven dried. These dried weights are reported here.

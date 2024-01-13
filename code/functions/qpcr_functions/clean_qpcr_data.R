@@ -10,46 +10,84 @@ library("dplyr")
 library("readr")
 
 clean_qpcr_data <- function(input_dir, micro_type) {
-  if (micro_type == "fungal") {
   # Compile list of file paths for fungal data
-  files <- dir_ls(path = input_dir, recurse = 1,
-                  regex = "fungal -  Quantification Cq Results.csv")
-  # Read in data from csv files
-  clean_data <- read_csv(files) %>%
-    filter(Fluor == "SYBR") %>%
-    select(Sample, Cq)
+  files_fung <- dir_ls(path = input_dir, recurse = 1,
+    regex = "fungal -  Quantification Cq Results.csv")
 
-  } else if (micro_type == "bacterial") {
+  # Read in data from csv files
+  clean_data_fung <- files_fung %>%
+    lapply(read_csv, col_names = TRUE) %>%
+    bind_rows(.id = "run_or_plate_id") %>%
+    filter(Fluor == "SYBR") %>%
+    mutate(measurement_type = "qpcr",
+           subtype = "fungal",
+           subsubtype = "dna") %>%
+    select(Sample, Cq, measurement_type, subtype, subsubtype, run_or_plate_id)
+
     # Compile list of file paths for bacterial data
     # List of wider files with more columns from machine 1
-    files_long <- dir_ls(path = input_dir, recurse = 1,
+    files_bact_long <- dir_ls(path = input_dir, recurse = 1,
                          regex =
                            "bacterial -  Quantification Cq Results.csv$")
-    clean_data_long <- read_csv(files_long) %>%
+    clean_data_bact_long <- files_bact_long %>%
+      lapply(read_csv, col_names = TRUE) %>%
+      bind_rows(.id = "run_or_plate_id") %>%
       filter(Fluor == "SYBR") %>%
-      select(Sample, Cq)
+      mutate(measurement_type = "qpcr",
+             subtype = "bacterial",
+             subsubtype = "dna") %>%
+      select(Sample, Cq, measurement_type, subtype, subsubtype, run_or_plate_id)
+
+
     # List of files with fewer columns from machine 2
-    files_short <- dir_ls(path = input_dir, recurse = 1,
+    files_bact_short <- dir_ls(path = input_dir, recurse = 1,
                           regex = "bacterial.csv$")
-    clean_data_short <- read_csv(files_short) %>%
+    clean_data_bact_short <- files_bact_short %>%
+      lapply(read_csv, col_names = TRUE) %>%
+      bind_rows(.id = "run_or_plate_id") %>%
       filter(Fluor == "SYBR") %>%
-      select(Sample, Cq)
-    # Combine for all bacterial data
-    clean_data <- rbind(clean_data_long, clean_data_short)
-  }
+      mutate(measurement_type = "qpcr",
+             subtype = "bacterial",
+             subsubtype = "dna") %>%
+      select(Sample, Cq, measurement_type, subtype, subsubtype, run_or_plate_id)
+
+    # Combine all types together
+    clean_data_all <- clean_data_fung %>%
+      rbind(clean_data_bact_long, clean_data_bact_short) %>%
+      # Add column for date analyzed
+      mutate(analyzed_date = str_extract(run_or_plate_id,
+                                         "(?<=qPCR/)\\d{8}")) %>%
+      mutate(run_or_plate_id = str_extract(run_or_plate_id, "Run\\d+"))
 
     # Make sure Cq column is double type
-    clean_data$Cq <- as.double(clean_data$Cq)
+    clean_data_all$Cq <- as.double(clean_data_all$Cq)
 
     # Separate out replicate numbers and clean up sample number
-    clean_data_all <- clean_data %>%
-      rename("sample_no" = Sample, "cq" = Cq) %>%
-      mutate(rep_no = case_when(
-        str_detect(sample_no, "-") ~ str_sub(sample_no, start = -1),
-        TRUE ~ NA_character_)) %>%
-      mutate(sample_no = case_when(
-        str_detect(sample_no, "-") ~ str_sub(sample_no, end = 3),
-        TRUE ~ sample_no))
+    clean_data_all <- clean_data_all%>%
+      rename(value = Cq,
+             sample_id = Sample) %>%
+      mutate(tech_rep_number = case_when(
+        str_detect(sample_id, "\\d-") ~ str_sub(sample_id, start = -1),
+        # NA for blanks
+        .default = NA_character_)) %>%
+      mutate(sample_id = case_when(
+        str_detect(sample_id, "\\d-") ~ str_sub(sample_id, end = 3),
+        # Leave as is for blanks
+        .default = sample_id)) %>%
+      # Add standard / sample / blank column
+      mutate(standard_sample_blank = case_when(
+        str_detect(sample_id, "\\d-") ~ "sample",
+        .default = "blank")) %>%
+      # Add columns needed for master dataframe
+      mutate(sample_type = "core",
+        units = "cq") %>%
+      # Rearrange columns
+      select(sample_id, sample_type, analyzed_date, run_or_plate_id,
+             measurement_type, subtype, subsubtype, standard_sample_blank,
+             tech_rep_number, value, units)
+
+    # Replace NaN string with NA values
+    is.na(clean_data_all) <- clean_data_all == "NaN"
 
     # Return cleaned data
     return(clean_data_all)
