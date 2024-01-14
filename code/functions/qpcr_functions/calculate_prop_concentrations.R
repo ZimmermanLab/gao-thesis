@@ -11,6 +11,6 @@ library("dplyr")
 
 calc_prop_conc <- function(stats_data){
   prop_conc <- stats_data %>%
-    mutate(prop_concentration = 2 ^ (- cq))
+    mutate(prop_concentration = 2 ^ (- value))
   return(prop_conc)
 }

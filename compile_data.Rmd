@@ -30,6 +30,9 @@ library("readxl")
 # Source necessary functions
 source("code/functions/ea_functions/clean_ea_data.R")
 source("code/functions/qpcr_functions/clean_qpcr_data.R")
+source("code/functions/qpcr_functions/normalize_along_soil_wt.R")
+source("code/functions/qpcr_functions/calculate_prop_concentrations.R")
+source("code/functions/qpcr_functions/normalize_prop_concentration.R")
 source("code/functions/n_functions/n_clean_n_data.R")
 source("code/functions/co2_functions/find_peaks.R")
 source("code/functions/co2_functions/create_std_curve.R")
@@ -67,7 +70,7 @@ Here, raw qPCR fungal and bacterial DNA data is read and cleaned. All blank (i.e
 clean_qpcr <- clean_qpcr_data("data/raw_data/qPCR/")
 ```
 
-Here, dried soil weight measurements are read and cleaned. These weights were derived from frozen soil weights measured for DNA extraction. For each sample, approximately the same amount of frozen soil was later weighed out and then oven dried. These dried weights are reported here.
+Here, dried soil weight measurements are read and cleaned. These weights were derived from frozen soil weights measured for DNA extraction. For each sample, the same amount of frozen soil as the original amount used for DNA extractions was later weighed out and then oven dried. In other words, the "extraction_soil_wt_mg" column and "fresh_soil_mg" column should be the same for each sample. These dried weights are reported here.
 
 The dried weights data also includes qubit concentration data taken after DNA extraction to determine the DNA concentrations of the resulting extractions.
 
@@ -80,8 +83,19 @@ dried_wts <- read_csv("data/raw_data/qPCR/2022_DNA.csv") %>%
   select(-"...5")
 ```
 
-Normalizes 
-```{r qpcr-normalize}
+Normalizes the qPCR data using dried soil weights and converts normalized Cq values into proportional concentrations to be used for downstream analyses.
+```{r qpcr-concentrations}
+# Normalize raw qPCR Cq data using dried soil weights
+qpcr_normalized_wts <- norm_soil_wt(clean_qpcr, dried_wts)
+
+# Calculate proportional concentrations
+qpcr_prop_conc_wts <- calc_prop_conc(qpcr_normalized_wts)
+
+# Normalize proportional concentrations using dried soil weight factors
+# and clean up for master dataframe merging, changing the value and units from
+# Cq to normalized proportional concentrations
+qpcr_prop_conc_norm <- norm_conc(qpcr_prop_conc_wts)
+
 ```
 
 ## Inorganic N Data

@@ -1,5 +1,6 @@
-# This function normalizes proportional concentration data from raw Cq values,
-# normalizes them using weights derived from dried soil samples
+# This function takes in qPCR datasets with already calculated proportional
+# concentration values from raw Cq values and normalizes them using factors
+# derived from dried soil weights
 
 # Sarah Gao
 # October 25, 2022
@@ -9,13 +10,11 @@ library("readr")
 library("tidyr")
 library("dplyr")
 
-norm_conc <- function(prop_conc_data, soil_wt){
-  mean_soil_wt <- mean(soil_wt$dry_soil_only)
-  norm_conc <- prop_conc_data %>%
-    left_join(soil_wt) %>%
-    select(-c(extraction_soil_wt_mg, qubit_concentration)) %>%
-    mutate(wt_norm = mean_soil_wt / dry_soil_only,
-           prop_conc_norm = prop_concentration * wt_norm) %>%
-    select(sample_no, cq, prop_conc_norm)
+norm_conc <- function(qpcr_prop_conc_wts){
+  norm_conc <- qpcr_prop_conc_wts %>%
+    mutate(value = prop_concentration * soil_wt_factor) %>%
+    mutate(units = "proportional_concentration_normalized") %>%
+    select(-c(soil_wt_factor, prop_concentration))
+
   return(norm_conc)
 }
