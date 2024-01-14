@@ -10,45 +10,49 @@ library("tidyr")
 library("stringi")
 library("stringr")
 
-clean_ea_data <- function(input_file_list) {
-  # Read in and clean up EA data
-  # Note that reading in the csv will auto name the columns
-  # and warn you about it, hence the suppressWarnings()
-  ea_results_raw <- input_file_list %>%
+clean_ea_data <- function(input_percent_files, input_ratio_files) {
+  # Read in and clean up EA percentage data
+  cn_percent_raw <- input_percent_files %>%
+    lapply(read_xls, col_names = FALSE) %>%
+    bind_rows(.id = "run_or_plate_id") %>%
+    mutate(run_or_plate_id = str_extract(run_or_plate_id, "Run\\d"))
+  # Read in and clean up EA ratio data
+  cn_ratio_raw <- input_ratio_files %>%
     lapply(read_xls, col_names = FALSE) %>%
     bind_rows(.id = "run_or_plate_id") %>%
     mutate(run_or_plate_id = str_extract(run_or_plate_id, "Run\\d"))
 
   # FOR PERCENTAGE DATA:
   # Select only sample number, type of sample, and n and c percentages
-  if (stri_detect_fixed(input_file_list[1], "percent") == TRUE) {
-    ea_results_clean <- ea_results_raw %>%
-      select("...2", "...4", "...6", "...12", "...13", run_or_plate_id) %>%
-      rename("sample_id" = "...2", "analyzed_date" = "...4", "type" = "...6",
-             "nitrogen_pcnt" = "...12", "carbon_pcnt" = "...13") %>%
-      # Filter out any samples and/or SRM runs that were 0
-      filter(!(str_detect(sample_id, "SG") & nitrogen_pcnt == 0)) %>%
-      filter(!(str_detect(sample_id, "SRM") & nitrogen_pcnt == 0)) %>%
-      # Pivot to long format
-      pivot_longer(cols = c(nitrogen_pcnt, carbon_pcnt),
-                   names_to = "subtype", values_to = "value")
-  }
+  cn_percent_clean <- cn_percent_raw %>%
+    select("...2", "...4", "...6", "...12", "...13", run_or_plate_id) %>%
+    rename("sample_id" = "...2", "analyzed_date" = "...4", "type" = "...6",
+           "nitrogen_pcnt" = "...12", "carbon_pcnt" = "...13") %>%
+    # Filter out any samples and/or SRM runs that were 0
+    filter(!(str_detect(sample_id, "SG") & nitrogen_pcnt == 0)) %>%
+    filter(!(str_detect(sample_id, "SRM") & nitrogen_pcnt == 0)) %>%
+    # Pivot to long format
+    pivot_longer(cols = c(nitrogen_pcnt, carbon_pcnt),
+                 names_to = "subtype", values_to = "value")
+
   # FOR RATIO DATA:
-  else if (stri_detect_fixed(input_file_list[1], "ratio") == TRUE) {
-      ea_results_clean <- ea_results_raw %>%
-        select("...2", "...4", "...6", "...13", run_or_plate_id) %>%
-        rename("sample_id" = "...2", "analyzed_date" = "...4", "type" = "...6",
-               "c_n_ratio" = "...13") %>%
-      # Filter out any samples and/or SRM runs that were 0
-      filter(!(str_detect(sample_id, "SG") & c_n_ratio == 0)) %>%
-      filter(!(str_detect(sample_id, "SRM") & c_n_ratio == 0)) %>%
-      # Pivot to long format
-      pivot_longer(cols = c_n_ratio,
-                   names_to = "subtype", values_to = "value")
-  }
+  cn_ratio_clean <- cn_ratio_raw %>%
+    select("...2", "...4", "...6", "...13", run_or_plate_id) %>%
+    rename("sample_id" = "...2", "analyzed_date" = "...4", "type" = "...6",
+           "c_n_ratio" = "...13") %>%
+    # Filter out any samples and/or SRM runs that were 0
+    filter(!(str_detect(sample_id, "SG") & c_n_ratio == 0)) %>%
+    filter(!(str_detect(sample_id, "SRM") & c_n_ratio == 0)) %>%
+    # Pivot to long format
+    pivot_longer(cols = c_n_ratio,
+                 names_to = "subtype", values_to = "value")
+
+  # Merge percentage and ratio data
+  cn_all_clean <- cn_percent_clean %>%
+    rbind(cn_ratio_clean)
 
   # Clean up sample names
-  ea_results_clean <- ea_results_clean %>%
+  cn_all_clean <- cn_all_clean %>%
     mutate(sample_id = case_when(
     str_detect(sample_id, "SG") ~
       str_sub(sample_id, start = -3),
@@ -79,6 +83,5 @@ clean_ea_data <- function(input_file_list) {
            measurement_type, subtype, subsubtype, standard_sample_blank,
            tech_rep_number, value, units)
 
-
-  return(ea_results_clean)
+  return(cn_all_clean)
 }

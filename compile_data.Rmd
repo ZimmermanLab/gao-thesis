@@ -33,6 +33,7 @@ source("code/functions/qpcr_functions/clean_qpcr_data.R")
 source("code/functions/n_functions/n_clean_n_data.R")
 source("code/functions/co2_functions/find_peaks.R")
 source("code/functions/co2_functions/create_std_curve.R")
+source("code/functions/co2_functions/clean_co2_data.R")
 
 ```
 
@@ -55,8 +56,7 @@ files_ratio <- dir_ls(path = "data/raw_data/EA_CN/2022/",
 
 # Clean both types of data
 # Note that the function filters out any sample or SRM runs that had a value of 0. Blanks are retained.
-cn_percent_clean <- clean_ea_data(files_percent)
-cn_ratio_clean <- clean_ea_data(files_ratio)
+cn_all_clean <- clean_ea_data(files_percent, files_ratio)
 ```
 
 ## qPCR DNA Data
@@ -78,6 +78,10 @@ For the `bacteria-control` sample, a sample taken from bacteria cultured on agar
 # Read in dried soil weights data
 dried_wts <- read_csv("data/raw_data/qPCR/2022_DNA.csv") %>%
   select(-"...5")
+```
+
+Normalizes 
+```{r qpcr-normalize}
 ```
 
 ## Inorganic N Data
@@ -138,11 +142,30 @@ auc_summary_path <- "output/2022/co2/auc_summary_all.txt"
 auc_all_calib <- create_std_curve(auc_summary_path)
 ```
 
-Map calibrated CO2 data to treatments
-```{r co2-map}
-# Note that this uses the old file, `auc_norm_date` for testing purposes, which should really be replaced by `auc_calib_date` but the create_std_curve() function is broken right now.
-auc_all_calib <- read_csv("output/2022/co2/auc_norm_date")
-
+This function cleans up the saved out file and prepares it for merging with the master dataframe.
+```{r co2-clean}
+# Note that this uses the old file, `auc_norm_date` for testing purposes, which should really be replaced by `auc_calib_date` but the create_std_curve() function is broken right now. In this older file, 'auc_norm_date', the column "auc_norm" should really be labelled to "auc_calib" because they have been calibrated to the gas standards, not normalized.
+input_file = "output/2022/co2/auc_norm_date"
+co2_data_clean <- clean_co2_data(input_file)
 ```
 
-Put everything together into one dataframe
+Load sample ID master list that shows which cover crop treatment, drying treatment, and sampling point each jar was assigned to. Note that for the "pre_post_wet" column, the codes are as follows:
+* cw = constantly kept watered until sampled
+* initial = sampled at the very beginning of the experiment as the baseline
+* pre = sampled before rewetting point
+* post = sampled after rewetting point
+* all_dry = never rewet, i.e. dried throughout the entire experiment.
+```{r load-sample-ids}
+id_assignments <- read_csv("output/2022/jar_assignments/master_list.csv") %>%
+  rename(sampling_week = drying_treatment) %>%
+  mutate(rewet = case_when(
+    str_detect(pre_post_wet, "pre|all_dry|initial|cw") ~ "no",
+    pre_post_wet == "post" ~ "yes")) %>%
+  mutate(control = case_when(
+    pre_post_wet == "cw" ~ "yes",
+    .default = "no"))
+```
+
+```{r compile-datasets}
+
+```
