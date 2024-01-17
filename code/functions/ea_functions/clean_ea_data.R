@@ -69,7 +69,7 @@ clean_ea_data <- function(input_percent_files, input_ratio_files) {
     # Add standard / sample / blank column
     mutate(standard_sample_blank = case_when(
       type == "STD" ~ "standard",
-      (type == "UNK" & str_detect(sample_id, "B")) ~ "blank",
+      str_detect(sample_id, "B") ~ "blank",
       (type == "UNK" & str_detect(sample_id, "SRM")) ~ "standard",
       .default = "sample")) %>%
     # Add empty columns needed for master dataframe
