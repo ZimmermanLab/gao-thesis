@@ -175,25 +175,16 @@ Load sample ID master list that shows which cover crop treatment, drying treatme
 * post = sampled after rewetting point
 * all_dry = never rewet, i.e. dried throughout the entire experiment.
 ```{r load-sample-ids}
-id_assignments <- read_csv("output/2022/jar_assignments/master_list.csv") %>%
-  rename(sampling_week = drying_treatment) %>%
-  # This is my attempt to recode it into something more sensical...TBD
-  mutate(rewet = case_when(
-    str_detect(pre_post_wet, "pre|all_dry|initial|cw") ~ "no",
-    pre_post_wet == "post" ~ "yes")) %>%
-  mutate(control = case_when(
-    pre_post_wet == "cw" ~ "yes",
-    .default = "no"))
+id_assignments <- read_csv("output/2022/jar_assignments/master_list.csv")
 
 # Match assignments with sampling dates
-sampling_dates <- read_csv("output/2022/jar_assignments/sampling_dates.csv") %>%
+sampling_dates <- read_csv("output/2022/jar_assignments/sampling_dates.csv")
   
 id_assignments <- id_assignments %>%
-  mutate(sampled_date = case_when(
-    
-  ))
+  left_join(sampling_dates, by = c("pre_post_wet", "cc_treatment", "drying_treatment"))
 ```
 
 ```{r compile-datasets}
-
+all_data <- cn_all_clean %>%
+  rbind(qpcr_prop_conc_norm, n_data_clean, co2_data_clean)
 ```
