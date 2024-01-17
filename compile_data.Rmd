@@ -13,6 +13,8 @@ knitr::opts_chunk$set(echo = TRUE)
 
 This Rmarkdown file is used to bring in and clean each data type (i.e. total CN, qPCR DNA, aqueous N, and CO2 respiration). It keeps all non-error data, such as blanks and negative controls, during cleaning, without any standardization, calibration, or normalization.
 
+All the cleaned data is then compiled into one master, long, dataset that can then be used for further downstream analyses.
+
 
 ```{r packages}
 # Load relevant packages
@@ -37,6 +39,7 @@ source("code/functions/n_functions/n_clean_n_data.R")
 source("code/functions/co2_functions/find_peaks.R")
 source("code/functions/co2_functions/create_std_curve.R")
 source("code/functions/co2_functions/clean_co2_data.R")
+source("code/functions/co2_functions/pull_sample_dates.R")
 
 ```
 
@@ -86,15 +89,13 @@ dried_wts <- read_csv("data/raw_data/qPCR/2022_DNA.csv") %>%
 Normalizes the qPCR data using dried soil weights and converts normalized Cq values into proportional concentrations to be used for downstream analyses.
 ```{r qpcr-concentrations}
 # Normalize raw qPCR Cq data using dried soil weights
-qpcr_normalized_wts <- norm_soil_wt(clean_qpcr, dried_wts)
-
-# Calculate proportional concentrations
-qpcr_prop_conc_wts <- calc_prop_conc(qpcr_normalized_wts)
-
-# Normalize proportional concentrations using dried soil weight factors
-# and clean up for master dataframe merging, changing the value and units from
-# Cq to normalized proportional concentrations
-qpcr_prop_conc_norm <- norm_conc(qpcr_prop_conc_wts)
+qpcr_prop_conc_norm <- norm_soil_wt(clean_qpcr, dried_wts) %>%
+  # Calculate proportional concentrations
+  calc_prop_conc() %>%
+  # Normalize proportional concentrations using dried soil weight factors
+  # and clean up for master dataframe merging, changing the value and units from
+  # Cq to normalized proportional concentrations
+  norm_conc()
 
 ```
 
@@ -158,7 +159,11 @@ auc_all_calib <- create_std_curve(auc_summary_path)
 
 This function cleans up the saved out file and prepares it for merging with the master dataframe.
 ```{r co2-clean}
-# Note that this uses the old file, `auc_norm_date` for testing purposes, which should really be replaced by `auc_calib_date` but the create_std_curve() function is broken right now. In this older file, 'auc_norm_date', the column "auc_norm" should really be labelled to "auc_calib" because they have been calibrated to the gas standards, not normalized.
+# Note that this uses the old file, `auc_norm_date` for testing purposes, which
+# should really be replaced by `auc_calib_date` but the create_std_curve()
+# function is broken right now. In this older file, 'auc_norm_date', the column
+# "auc_norm" should really be labelled to "auc_calib" because they have been
+# calibrated to the gas standards, not normalized.
 input_file = "output/2022/co2/auc_norm_date"
 co2_data_clean <- clean_co2_data(input_file)
 ```
@@ -172,12 +177,21 @@ Load sample ID master list that shows which cover crop treatment, drying treatme
 ```{r load-sample-ids}
 id_assignments <- read_csv("output/2022/jar_assignments/master_list.csv") %>%
   rename(sampling_week = drying_treatment) %>%
+  # This is my attempt to recode it into something more sensical...TBD
   mutate(rewet = case_when(
     str_detect(pre_post_wet, "pre|all_dry|initial|cw") ~ "no",
     pre_post_wet == "post" ~ "yes")) %>%
   mutate(control = case_when(
     pre_post_wet == "cw" ~ "yes",
     .default = "no"))
+
+# Match assignments with sampling dates
+sampling_dates <- read_csv("output/2022/jar_assignments/sampling_dates.csv") %>%
+  
+id_assignments <- id_assignments %>%
+  mutate(sampled_date = case_when(
+    
+  ))
 ```
 
 ```{r compile-datasets}
