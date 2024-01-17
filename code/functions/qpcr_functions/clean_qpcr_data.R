@@ -86,6 +86,8 @@ clean_qpcr_data <- function(input_dir) {
              measurement_type, subtype, subsubtype, standard_sample_blank,
              tech_rep_number, value, units)
 
+    # Make tech rep column integer type
+    clean_data_all$tech_rep_number <- as.integer(clean_data_all$tech_rep_number)
     # Replace NaN string with NA values
     is.na(clean_data_all) <- clean_data_all == "NaN"
 
