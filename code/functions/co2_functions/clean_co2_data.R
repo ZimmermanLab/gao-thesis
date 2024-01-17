@@ -16,7 +16,10 @@ clean_co2_data <- function(input_file) {
            value = auc_norm,
            sample_id = sample_no) %>%
     mutate(analyzed_date = strftime(as.Date(
-      analyzed_date, "%Y-%m-%d"),"%Y%m%d")) %>%
+      analyzed_date, "%Y-%m-%d"),"%Y%m%d"),
+      # Use same date for sampled_date as analyzed_date since for LICOR it's
+      # at the same time
+      sampled_date = analyzed_date) %>%
     mutate(units = "auc") %>%
     # Add columns for standards
     mutate(std_co2_amount = case_when(
@@ -34,7 +37,7 @@ clean_co2_data <- function(input_file) {
     # Add column for technical replicate number
     group_by(sample_id, analyzed_date) %>%
     mutate(tech_rep_number = seq_along(value)) %>%
-    select(sample_id, sample_type, analyzed_date, run_or_plate_id,
+    select(sample_id, sample_type, sampled_date, analyzed_date, run_or_plate_id,
            measurement_type, subtype, subsubtype, standard_sample_blank,
            tech_rep_number, std_co2_amount, std_co2_units, value, units)
 
