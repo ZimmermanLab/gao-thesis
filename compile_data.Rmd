@@ -175,16 +175,43 @@ Load sample ID master list that shows which cover crop treatment, drying treatme
 * post = sampled after rewetting point
 * all_dry = never rewet, i.e. dried throughout the entire experiment.
 ```{r load-sample-ids}
-id_assignments <- read_csv("output/2022/jar_assignments/master_list.csv")
-
-# Match assignments with sampling dates
+# Read in treatment group sampling dates
 sampling_dates <- read_csv("output/2022/jar_assignments/sampling_dates.csv")
-  
+
+id_assignments <- read_csv("output/2022/jar_assignments/master_list.csv") %>%
+  # Code CO2 only jars
+  mutate(sample_type = case_when(
+    pre_post_wet == "post_co2" ~ "co2_only",
+    .default = "core")) %>%
+  # Rename and convert sample IDs to character type
+  mutate(sample_id = as.character(sample_no)) %>%
+  # Add leading zeros to sample_id
+  mutate(sample_id = str_pad(sample_id, width = 3, side = "left", pad = "0")) %>%
+  select(-sample_no)
+
+# Duplicate the two_wk co2_only jars that were used for the initial CO2 sampling
+initial_co2 <- id_assignments %>%
+  filter(drying_treatment == "two_wk" &
+         sample_type == "co2_only") %>%
+  mutate(drying_treatment = "initial")
+
+# Add back into the id_assignments df
 id_assignments <- id_assignments %>%
-  left_join(sampling_dates, by = c("pre_post_wet", "cc_treatment", "drying_treatment"))
+  rbind(initial_co2) %>%
+  # Add sampling dates
+  left_join(sampling_dates, by = 
+              c("pre_post_wet", "cc_treatment", "drying_treatment",
+                "sample_type"))
 ```
 
 ```{r compile-datasets}
+# Join all datasets
 all_data <- cn_all_clean %>%
-  rbind(qpcr_prop_conc_norm, n_data_clean, co2_data_clean)
+  rbind(qpcr_prop_conc_norm, n_data_clean, co2_data_clean) %>%
+  mutate(sampled_date = as.double(sampled_date))
+
+# Add id_assignments df to add treatment condition columns + sampled date
+all_data <- all_data %>%
+  left_join(id_assignments, c("sample_id", "sample_type"))
+
 ```

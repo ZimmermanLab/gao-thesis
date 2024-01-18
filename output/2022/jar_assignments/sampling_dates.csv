@@ -1,24 +1,76 @@
-sampled_date,sample_type,drying_treatment,cc_treatment,co2_timepoint_h,pre_post_wet
-20220215,core,initial,w_cc,,initial
-20220215,core,initial,no_cc,,initial
-20220222,core,one_wk,w_cc,,pre
-20220222,core,one_wk,no_cc,,pre
-20220222,core,one_wk,w_cc,,cw
-20220222,core,one_wk,no_cc,,cw
-20220224,core,one_wk,w_cc,,post
-20220224,core,one_wk,no_cc,,post
-20220301,core,two_wk,w_cc,,pre
-20220301,core,two_wk,no_cc,,pre
-20220301,core,two_wk,w_cc,,cw
-20220301,core,two_wk,no_cc,,cw
-20220303,core,two_wk,w_cc,,post
-20220303,core,two_wk,no_cc,,post
-20220315,core,four_wk,w_cc,,pre
-20220315,core,four_wk,no_cc,,pre
-20220315,core,four_wk,w_cc,,cw
-20220315,core,four_wk,no_cc,,cw
-20220317,core,four_wk,w_cc,,post
-20220317,core,four_wk,no_cc,,post
-20220317,core,all_dry,w_cc,,all_dry
-20220317,core,all_dry,no_cc,,all_dry
-20220317,core,no_soil,no_soil,,no_soil
+sampled_date,sample_type,drying_treatment,cc_treatment,pre_post_wet,measurement_type,co2_timepoint_h,notes
+20220215,core,initial,w_cc,initial,,,
+20220215,core,initial,no_cc,initial,,,
+20220222,core,one_wk,w_cc,pre,,,
+20220222,core,one_wk,no_cc,pre,,,
+20220222,core,one_wk,w_cc,cw,,,
+20220222,core,one_wk,no_cc,cw,,,
+20220224,core,one_wk,w_cc,post,,,
+20220224,core,one_wk,no_cc,post,,,
+20220301,core,two_wk,w_cc,pre,,,
+20220301,core,two_wk,no_cc,pre,,,
+20220301,core,two_wk,w_cc,cw,,,
+20220301,core,two_wk,no_cc,cw,,,
+20220303,core,two_wk,w_cc,post,,,
+20220303,core,two_wk,no_cc,post,,,
+20220315,core,four_wk,w_cc,pre,,,
+20220315,core,four_wk,no_cc,pre,,,
+20220315,core,four_wk,w_cc,cw,,,
+20220315,core,four_wk,no_cc,cw,,,
+20220317,core,four_wk,w_cc,post,,,
+20220317,core,four_wk,no_cc,post,,,
+20220317,core,all_dry,w_cc,all_dry,,,
+20220317,core,all_dry,no_cc,all_dry,,,
+20220317,core,no_soil,no_soil,no_soil,,,
+20220215,co2_only,initial,no_cc,post_co2,licor,24,"used drying two_wk, post_co2 jars"
+20220215,co2_only,initial,w_cc,post_co2,licor,24,"used drying two_wk, post_co2 jars"
+20220216,co2_only,initial,no_cc,post_co2,licor,48,"used drying two_wk, post_co2 jars"
+20220216,co2_only,initial,w_cc,post_co2,licor,48,"used drying two_wk, post_co2 jars"
+20220217,co2_only,initial,no_cc,post_co2,licor,72,"used drying two_wk, post_co2 jars"
+20220217,co2_only,initial,w_cc,post_co2,licor,72,"used drying two_wk, post_co2 jars"
+20220218,co2_only,initial,no_cc,post_co2,licor,96,"used drying two_wk, post_co2 jars"
+20220218,co2_only,initial,w_cc,post_co2,licor,96,"used drying two_wk, post_co2 jars"
+20220218,co2_only,initial,no_cc,post_co2,licor,120,"used drying two_wk, post_co2 jars"
+20220218,co2_only,initial,w_cc,post_co2,licor,120,"used drying two_wk, post_co2 jars"
+20220222,co2_only,one_wk,no_cc,post_co2,licor,0,
+20220222,co2_only,one_wk,w_cc,post_co2,licor,0,
+20220223,co2_only,one_wk,no_cc,post_co2,licor,24,
+20220223,co2_only,one_wk,w_cc,post_co2,licor,24,
+20220223,core,one_wk,no_cc,post,licor,24,
+20220223,core,one_wk,w_cc,post,licor,24,
+20220224,co2_only,one_wk,no_cc,post_co2,licor,48,
+20220224,co2_only,one_wk,w_cc,post_co2,licor,48,
+20220224,core,one_wk,no_cc,post,licor,48,
+20220224,core,one_wk,w_cc,post,licor,48,
+20220225,co2_only,one_wk,no_cc,post_co2,licor,72,
+20220225,co2_only,one_wk,w_cc,post_co2,licor,72,
+20220226,co2_only,one_wk,no_cc,post_co2,licor,96,
+20220226,co2_only,one_wk,w_cc,post_co2,licor,96,
+20220308,co2_only,two_wk,no_cc,post_co2,licor,0,two_wk co2_only delayed by 1 week due to using it for initial set
+20220308,co2_only,two_wk,w_cc,post_co2,licor,0,two_wk co2_only delayed by 1 week due to using it for initial set
+20220309,co2_only,two_wk,no_cc,post_co2,licor,24,two_wk co2_only delayed by 1 week due to using it for initial set
+20220309,co2_only,two_wk,w_cc,post_co2,licor,24,two_wk co2_only delayed by 1 week due to using it for initial set
+20220302,core,two_wk,no_cc,post,licor,24,
+20220302,core,two_wk,w_cc,post,licor,24,
+20220310,co2_only,two_wk,no_cc,post_co2,licor,48,two_wk co2_only delayed by 1 week due to using it for initial set
+20220310,co2_only,two_wk,w_cc,post_co2,licor,48,two_wk co2_only delayed by 1 week due to using it for initial set
+20220303,core,two_wk,no_cc,post,licor,48,
+20220303,core,two_wk,w_cc,post,licor,48,
+20220311,co2_only,two_wk,no_cc,post_co2,licor,72,two_wk co2_only delayed by 1 week due to using it for initial set
+20220311,co2_only,two_wk,w_cc,post_co2,licor,72,two_wk co2_only delayed by 1 week due to using it for initial set
+20220312,co2_only,two_wk,no_cc,post_co2,licor,96,two_wk co2_only delayed by 1 week due to using it for initial set
+20220312,co2_only,two_wk,w_cc,post_co2,licor,96,two_wk co2_only delayed by 1 week due to using it for initial set
+20220315,co2_only,four_wk,no_cc,post_co2,licor,0,
+20220315,co2_only,four_wk,w_cc,post_co2,licor,0,
+20220316,co2_only,four_wk,no_cc,post_co2,licor,24,
+20220316,co2_only,four_wk,w_cc,post_co2,licor,24,
+20220316,core,four_wk,no_cc,post,licor,24,
+20220316,core,four_wk,w_cc,post,licor,24,
+20220317,co2_only,four_wk,no_cc,post_co2,licor,48,
+20220317,co2_only,four_wk,w_cc,post_co2,licor,48,
+20220317,core,four_wk,no_cc,post,licor,48,
+20220317,core,four_wk,w_cc,post,licor,48,
+20220318,co2_only,four_wk,no_cc,post_co2,licor,72,
+20220318,co2_only,four_wk,w_cc,post_co2,licor,72,
+20220319,co2_only,four_wk,no_cc,post_co2,licor,96,
+20220319,co2_only,four_wk,w_cc,post_co2,licor,96,
