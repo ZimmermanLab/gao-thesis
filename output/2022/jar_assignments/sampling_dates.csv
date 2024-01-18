@@ -30,8 +30,8 @@ sampled_date,sample_type,drying_treatment,cc_treatment,pre_post_wet,measurement_
 20220217,co2_only,initial,w_cc,post_co2,licor,72,"used drying two_wk, post_co2 jars"
 20220218,co2_only,initial,no_cc,post_co2,licor,96,"used drying two_wk, post_co2 jars"
 20220218,co2_only,initial,w_cc,post_co2,licor,96,"used drying two_wk, post_co2 jars"
-20220218,co2_only,initial,no_cc,post_co2,licor,120,"used drying two_wk, post_co2 jars"
-20220218,co2_only,initial,w_cc,post_co2,licor,120,"used drying two_wk, post_co2 jars"
+20220219,co2_only,initial,no_cc,post_co2,licor,120,"used drying two_wk, post_co2 jars"
+20220219,co2_only,initial,w_cc,post_co2,licor,120,"used drying two_wk, post_co2 jars"
 20220222,co2_only,one_wk,no_cc,post_co2,licor,0,
 20220222,co2_only,one_wk,w_cc,post_co2,licor,0,
 20220223,co2_only,one_wk,no_cc,post_co2,licor,24,
