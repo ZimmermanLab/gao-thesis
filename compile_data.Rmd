@@ -39,6 +39,7 @@ source("code/functions/n_functions/n_clean_n_data.R")
 source("code/functions/co2_functions/find_peaks.R")
 source("code/functions/co2_functions/create_std_curve.R")
 source("code/functions/co2_functions/clean_co2_data.R")
+source("code/functions/clean_treatment_conditions.R")
 
 ```
 
@@ -92,8 +93,8 @@ qpcr_prop_conc_norm <- norm_soil_wt(clean_qpcr, dried_wts) %>%
   # Calculate proportional concentrations
   calc_prop_conc() %>%
   # Normalize proportional concentrations using dried soil weight factors
-  # and clean up for master dataframe merging, changing the value and units from
-  # Cq to normalized proportional concentrations
+  # and clean up for master dataframe merging, changing the value and units
+  # from Cq to normalized proportional concentrations
   norm_conc()
 
 ```
@@ -124,12 +125,14 @@ This code chunk uses a bash function to run through the raw .txt CO2 data files 
 
 **Running this bash code chunk only works for Sarah as of 4/25/23 when Preferences > R Markdown > Show output line for all R Markdown documents is turned on**
 ```{bash co2-trim-raw}
+# Putting this output into a test folder so it doesn't overwrite the already
+# cleaned files just in case. Remove '/test' when feeling confident.
 bash code/clean_co2_files data/raw_data/LICOR_CO2 data/cleaned_data/LICOR/test
 ```
 
 This code chunk uses the `find_peaks.R` function and finds the area under the curve (AUC) for each trimmed .txt data file. These AUCs are then saved out as a separate .txt file because it takes a long time to generate.
 ```{r co2-find-auc}
-# Create list of file paths of CO2 data files
+# Create list of file paths of CO2 data files using the originally cleaned files
 files_list <- list.files(path = "data/cleaned_data/LICOR/", recursive = FALSE,
                          pattern = "*.txt")
 files_list <- subset(files_list, str_detect(files_list, "extract") == FALSE)
@@ -167,6 +170,8 @@ input_file = "output/2022/co2/auc_norm_date"
 co2_data_clean <- clean_co2_data(input_file)
 ```
 
+## Bringing It All Together
+
 Load sample ID master list that shows which cover crop treatment, drying treatment, and sampling point each jar was assigned to. Note that for the "pre_post_wet" column, the codes are as follows:
 * cw = constantly kept watered until sampled
 * initial = sampled at the very beginning of the experiment as the baseline
@@ -174,40 +179,13 @@ Load sample ID master list that shows which cover crop treatment, drying treatme
 * post = sampled after rewetting point
 * all_dry = never rewet, i.e. dried throughout the entire experiment.
 ```{r load-sample-ids}
-# Read in treatment group sampling dates
-sampling_dates <- read_csv("output/2022/jar_assignments/sampling_dates.csv")
+id_assignments <- clean_ids(
+  jar_assignments_file =
+    "output/2022/initial_experiment_setup/jar_assignments/master_list.csv",
+  sampling_dates_file =
+    "output/2022/initial_experiment_setup/jar_assignments/sampling_dates.csv",
+  need_recoding = "yes")
 
-id_assignments <- read_csv("output/2022/jar_assignments/master_list.csv") %>%
-  # Code CO2 only jars
-  mutate(sample_type = case_when(
-    pre_post_wet == "post_co2" ~ "co2_only",
-    .default = "core")) %>%
-  # Rename and convert sample IDs to character type
-  mutate(sample_id = as.character(sample_no)) %>%
-  # Add leading zeros to sample_id
-  mutate(sample_id = str_pad(sample_id, width = 3, side = "left", pad = "0")) %>%
-  select(-sample_no)
-
-# Duplicate the two_wk co2_only jars that were used for the initial CO2 sampling
-initial_co2 <- id_assignments %>%
-  filter(drying_treatment == "two_wk" &
-         sample_type == "co2_only") %>%
-  mutate(drying_treatment = "initial")
-
-# Add back into the id_assignments df
-id_assignments <- id_assignments %>%
-  rbind(initial_co2) %>%
-  # Add sampling dates
-  left_join(sampling_dates, by = 
-              c("pre_post_wet", "cc_treatment", "drying_treatment",
-                "sample_type"),
-            relationship = "many-to-many")
-
-# Create a "licor" column for merging
-id_assignments <- id_assignments %>%
-  mutate(licor = case_when(
-    measurement_type == "licor" ~ "yes",
-    .default = "no"))
 ```
 
 ```{r compile-datasets}
