@@ -39,7 +39,6 @@ source("code/functions/n_functions/n_clean_n_data.R")
 source("code/functions/co2_functions/find_peaks.R")
 source("code/functions/co2_functions/create_std_curve.R")
 source("code/functions/co2_functions/clean_co2_data.R")
-source("code/functions/co2_functions/pull_sample_dates.R")
 
 ```
 
@@ -201,17 +200,46 @@ id_assignments <- id_assignments %>%
   # Add sampling dates
   left_join(sampling_dates, by = 
               c("pre_post_wet", "cc_treatment", "drying_treatment",
-                "sample_type"))
+                "sample_type"),
+            relationship = "many-to-many")
+
+# Create a "licor" column for merging
+id_assignments <- id_assignments %>%
+  mutate(licor = case_when(
+    measurement_type == "licor" ~ "yes",
+    .default = "no"))
 ```
 
 ```{r compile-datasets}
-# Join all datasets
-all_data <- cn_all_clean %>%
-  rbind(qpcr_prop_conc_norm, n_data_clean, co2_data_clean) %>%
-  mutate(sampled_date = as.double(sampled_date))
+# Merge non-CO2 data first (works)
+no_co2_assign <- cn_all_clean %>%
+  rbind(qpcr_prop_conc_norm, n_data_clean) %>%
+  # Add a licor column for merging
+  mutate(licor = case_when(
+    measurement_type == "licor" ~ "yes",
+    .default = "no")) %>%
+  left_join(id_assignments, c("sample_id", "sample_type", "licor")) %>%
+  select(-measurement_type.y) %>%
+  rename("measurement_type" = measurement_type.x) %>%
+  # Add CO2 columns for merging
+  mutate(std_co2_amount = NA, std_co2_units = NA)
 
-# Add id_assignments df to add treatment condition columns + sampled date
-all_data <- all_data %>%
-  left_join(id_assignments, c("sample_id", "sample_type"))
+# Merge CO2 only data (works)
+co2_only_assign <- co2_data_clean %>%
+  # Convert sampled_date to double
+  mutate(sampled_date = as.double(sampled_date)) %>%
+  # Add a licor column for merging
+  mutate(licor = case_when(
+    measurement_type == "licor" ~ "yes",
+    .default = "no")) %>%
+  left_join(filter(id_assignments, licor == "yes"), c("sample_id",
+                                                      "sampled_date", "licor",
+                                                      "measurement_type")) %>%
+  select(-sample_type.x) %>%
+  rename("sample_type" = sample_type.y)
 
+# The final merging! Add CO2 only and non-CO2 datasets together
+all_data_assign <- co2_only_assign %>%
+  rbind(no_co2_assign) %>%
+  select(-licor)
 ```
