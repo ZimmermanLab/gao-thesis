@@ -40,7 +40,7 @@ source("code/functions/co2_functions/find_peaks.R")
 source("code/functions/co2_functions/create_std_curve.R")
 source("code/functions/co2_functions/clean_co2_data.R")
 source("code/functions/clean_treatment_conditions.R")
-
+source("code/functions/merge_datasets.R")
 ```
 
 ## Total CN EA Data
@@ -96,7 +96,6 @@ qpcr_prop_conc_norm <- norm_soil_wt(clean_qpcr, dried_wts) %>%
   # and clean up for master dataframe merging, changing the value and units
   # from Cq to normalized proportional concentrations
   norm_conc()
-
 ```
 
 ## Inorganic N Data
@@ -185,41 +184,14 @@ id_assignments <- clean_ids(
   sampling_dates_file =
     "output/2022/initial_experiment_setup/jar_assignments/sampling_dates.csv",
   need_recoding = "yes")
-
 ```
 
 ```{r compile-datasets}
-# Merge non-CO2 data first (works)
-no_co2_assign <- cn_all_clean %>%
-  rbind(qpcr_prop_conc_norm, n_data_clean) %>%
-  # Add a licor column for merging
-  mutate(licor = case_when(
-    measurement_type == "licor" ~ "yes",
-    .default = "no")) %>%
-  left_join(id_assignments, c("sample_id", "sample_type", "licor")) %>%
-  select(-measurement_type.y) %>%
-  rename("measurement_type" = measurement_type.x) %>%
-  # Add CO2 columns for merging
-  mutate(std_co2_amount = NA, std_co2_units = NA)
-
-# Merge CO2 only data (works)
-co2_only_assign <- co2_data_clean %>%
-  # Convert sampled_date to double
-  mutate(sampled_date = as.double(sampled_date)) %>%
-  # Add a licor column for merging
-  mutate(licor = case_when(
-    measurement_type == "licor" ~ "yes",
-    .default = "no")) %>%
-  left_join(filter(id_assignments, licor == "yes"), c("sample_id",
-                                                      "sampled_date", "licor",
-                                                      "measurement_type")) %>%
-  select(-sample_type.x) %>%
-  rename("sample_type" = sample_type.y)
-
-# The final merging! Add CO2 only and non-CO2 datasets together
-all_data_assign <- co2_only_assign %>%
-  rbind(no_co2_assign) %>%
-  select(-licor)
-
-# Save to csv
+all_data <- merge_datasets(ea_data = cn_all_clean,
+                           smartchem_data = n_data_clean,
+                           qpcr_data = qpcr_prop_conc_norm,
+                           inorg_n_data = n_data_clean,
+                           co2_data = co2_data_clean,
+                           id_assignments = id_assignments,
+                           output_file = "output/2022/master_dataset_02.csv")
 ```
