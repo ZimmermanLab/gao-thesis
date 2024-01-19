@@ -242,4 +242,6 @@ co2_only_assign <- co2_data_clean %>%
 all_data_assign <- co2_only_assign %>%
   rbind(no_co2_assign) %>%
   select(-licor)
+
+# Save to csv
 ```
