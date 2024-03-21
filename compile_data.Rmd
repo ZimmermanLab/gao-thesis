@@ -161,10 +161,11 @@ auc_all_calib <- create_std_curve(auc_summary_path)
 This function cleans up the saved out file and prepares it for merging with the master dataframe.
 ```{r co2-clean}
 # Note that this uses the old file, `auc_norm_date` for testing purposes, which
-# should really be replaced by `auc_calib_date` but the create_std_curve()
-# function is broken right now. In this older file, 'auc_norm_date', the column
-# "auc_norm" should really be labelled to "auc_calib" because they have been
-# calibrated to the gas standards, not normalized.
+# should really be replaced by `auc_all_calib` generated above by the 
+# create_std_curve() function, but this function is broken right now.
+# In this older file, 'auc_norm_date', the column "auc_norm" should really
+# be labelled to "auc_calib" because they have been calibrated to the gas
+# standards, not normalized.
 input_file = "output/2022/co2/auc_norm_date"
 co2_data_clean <- clean_co2_data(input_file)
 ```
