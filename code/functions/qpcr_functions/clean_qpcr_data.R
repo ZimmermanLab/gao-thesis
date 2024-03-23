@@ -76,8 +76,8 @@ clean_qpcr_data <- function(input_dir) {
         .default = sample_id)) %>%
       # Add standard / sample / blank column
       mutate(standard_sample_blank = case_when(
-        str_detect(sample_id, "\\d-") ~ "sample",
-        .default = "blank")) %>%
+        str_detect(sample_id, "^\\d") ~ "sample",
+        str_detect(sample_id, "Blank") ~ "blank")) %>%
       # Add columns needed for master dataframe
       mutate(sample_type = "core",
         units = "cq") %>%
