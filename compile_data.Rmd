@@ -25,6 +25,7 @@ library("tidyr")
 library("fs")
 library("stringr")
 library("readxl")
+library("lavaan")
 
 ```
 
@@ -195,4 +196,35 @@ all_data <- merge_datasets(ea_data = cn_all_clean,
                            co2_data = co2_data_clean,
                            id_assignments = id_assignments,
                            output_file = "output/2022/master_dataset_02.csv")
+```
+
+## Running an SEM
+Need a structural regression (multiple latent endogenous, i.e. dependent variables, to latent variables)
+```{r create-model}
+# Cleaning up the master dataframe to remove any duplicated / non uniquely
+# identified rows, standards, and blanks for this SEM exploration
+all_data_samples <- all_data %>%
+  #  Removing these 2 qPCR, bacterial dupes from sample_id 126 because
+  # there are 2 with different values for some reason
+  filter(!(sample_id == "126" & run_or_plate_id == "Run7" &
+             measurement_type == "qpcr" & subtype == "bacterial" &
+             subsubtype == "dna" & tech_rep_number == "2")) %>%
+  # Remove bad Smartchem runs
+  filter(value > -9998) %>%
+  # Removing standards and blanks
+  filter(standard_sample_blank == "sample")
+
+# Pivot wider to have separate columns
+measurement_soil_n_wide <- all_data_samples %>%
+  group_by(subsubtype, subtype, measurement_type, tech_rep_number,
+           analyzed_date) %>%
+  pivot_wider(names_from = c("measurement_type", "subtype", "subsubtype"),
+              values_from = "value")
+
+
+# Create measurement model for observed factors Total Soil N, Aqueous Soil NH3,
+# Aqueous Soil NO2-NO3, and Organic Residue that make up Soil Nitrogen Pools /
+# Partition. This is on the x side (exogenous i.e. independent variables).
+measurement_soil_n <- 'soil_n =~ 
+
 ```
