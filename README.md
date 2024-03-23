@@ -13,6 +13,7 @@ This project will take data collected from an experiment run on soils from Star 
 ***
 
 ## Change Log:
+* 2024-03-23: Created samples-only dataset and removed duplicates to experiment with `lavaan` package and test SEM stuff.
 * 2024-01-19: Cleaned up directory and reorganized experimental setup scripts. Parameterized final dataset merging. Created function to clean jar ID assignments and match them to sampling dates and treatment conditions.
 * 2024-01-18: Merged all data into master dataframe.
 * 2024-01-17: Added CO2 sampling timepoints and fixed blanks labeling.
