@@ -219,12 +219,36 @@ measurement_soil_n_wide <- all_data_samples %>%
   group_by(subsubtype, subtype, measurement_type, tech_rep_number,
            analyzed_date) %>%
   pivot_wider(names_from = c("measurement_type", "subtype", "subsubtype"),
-              values_from = "value")
-
+              values_from = "value") %>%
+  # Rename columns to remove hyphens for lavaan parsing
+  rename("smartchem_extract_no2no3" = "smartchem_extract_no2-no3",
+        "smartchem_leachate_no2no3" = "smartchem_leachate_no2-no3")
+# Note that this collapses the soluble N leachate and extract measurements by
+# tech reps, which...isn't correct.
 
 # Create measurement model for observed factors Total Soil N, Aqueous Soil NH3,
 # Aqueous Soil NO2-NO3, and Organic Residue that make up Soil Nitrogen Pools /
 # Partition. This is on the x side (exogenous i.e. independent variables).
-measurement_soil_n <- 'soil_n =~ 
+
+# This is conceptually what I want to do, but doesn't work
+# Maybe because of all the NA values within each variable column?
+# Do we need to collapse tech_reps per measurement?
+measurement_soil_n <- 'soil_n =~ ea_nitrogen_pcnt_NA + smartchem_extract_nh3 + smartchem_extract_no2no3 +
+cc_treatment'
+fit_soil_n <- sem(measurement_soil_n,
+                  data = measurement_soil_n_wide)
+summary(fit_soil_n, standardized = TRUE)
+
+# This work because EA %C and %N data always occur together in the same rows?
+measurement_soil_n_test <- 'soil_n =~ ea_carbon_pcnt_NA + ea_nitrogen_pcnt_NA'
+fit_soil_n_test <- sem(measurement_soil_n_test,
+                  data = measurement_soil_n_wide)
+summary(fit_soil_n_test, standardized = TRUE)
+
+measurement_soil_n_test <- 'soil_n =~ smartchem_extract_nh3 + 
+smartchem_extract_no2no3'
+fit_soil_n_test <- sem(measurement_soil_n_test,
+                  data = fixed_name)
+summary(fit_soil_n_test, standardized = TRUE)
 
 ```
