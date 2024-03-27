@@ -248,7 +248,13 @@ summary(fit_soil_n_test, standardized = TRUE)
 measurement_soil_n_test <- 'soil_n =~ smartchem_extract_nh3 + 
 smartchem_extract_no2no3'
 fit_soil_n_test <- sem(measurement_soil_n_test,
-                  data = fixed_name)
+                  data = measurement_soil_n_wide)
 summary(fit_soil_n_test, standardized = TRUE)
 
 ```
+
+Flag outliers for tech rep outliers using median / IQR
+Filter out outliers then use group_by() summarize() to calculate SD + means of tech reps before pivoting wider
+Combined analysis for everything minus CO2
+Second analysis only looks at maybe soil moisture's effect on CO2 + growth
+Note that NAs will propogate during collapse without removal
