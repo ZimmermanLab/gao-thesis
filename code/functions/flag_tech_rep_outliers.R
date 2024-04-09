@@ -11,6 +11,8 @@ library("tidyr")
 library("dplyr")
 
 flag_outliers <- function(samples_only) {
+  # Zeroes out any negative values
+  samples_only$value[samples_only$value < 0] <- 0
   outlier_flags <- samples_only %>%
     group_by(sample_id, measurement_type, subtype, subsubtype,
              run_or_plate_id, analyzed_date) %>%
