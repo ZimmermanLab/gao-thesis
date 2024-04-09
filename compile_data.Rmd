@@ -197,61 +197,55 @@ id_assignments <- clean_ids(
   need_recoding = "yes")
 ```
 
-```{r compile-datasets-no-co2}
-all_data <- merge_datasets(ea_data = cn_all_clean,
+```{r compile-data-non-co2}
+non_co2_data <- merge_datasets(ea_data = cn_all_clean,
                            smartchem_data = n_data_clean,
                            qpcr_data = qpcr_prop_conc_norm,
                            inorg_n_data = n_data_clean,
-                           id_assignments = id_assignments,
-                           output_file = "output/2022/master_dataset_03.csv")
+                           id_assignments = id_assignments)
 ```
 
-```{r flag-outliers}
-# Isolate dataset to samples only
-samples_only <- isolate_samples(all_data)
-
-# Add outlier flags for any outlying tech reps
-# What should I do about samples that were re-run on a different date? E.g. for
-# sample_id 001, EA was run on both 2022-10-18 and again on 2022-10-26.
-flagged_outliers <- flag_outliers(samples_only)
+```{r compile-data-co2}
+co2_data <-
 ```
+Note that the `flag_outliers()` function zeroes out any negative values, i.e. from SmartChem weird runs.
+What should I do about samples that were re-run on a different date? E.g. for
+sample_id 001, EA was run on both 2022-10-18 and again on 2022-10-26.
+```{r flag-outliers-non-co2}
+# Isolate non-CO2 dataset to samples only
+non_co2_samples_only <- isolate_samples(non_co2_data)
 
-```{r collapse-tech-reps}
-# Find mean across technical replicates, retaining all data
+# Add outlier flags for any outlying tech reps for non-CO2 data only
+non_co2_flagged_outliers <- flag_outliers(non_co2_samples_only)
+```
+```{r flag}
+
+Note that `sample_id` 126 has 2 qPCR, bacterial dupes with different values for some reason. These have both been included in this collapsing.
+
+```{r collapse-tech-reps-non-co2}
+# Find mean across technical replicates for non-CO2 data only
 # This currently collapses repeated runs of the same sample + test across
 # different dates analyzed
 # Note that defining the outlier_flag parameter with "extreme" or "moderate"
 # will filter out these outliers
-collapsed_samples <- collapse_tech_reps(flagged_outliers)
-```
+non_co2_collapsed_samples <- collapse_tech_reps(non_co2_flagged_outliers)
 
-## Running an SEM
-Need a structural regression (multiple latent endogenous, i.e. dependent variables, to latent variables)
-```{r create-model}
-# Cleaning up the master dataframe to remove any duplicated / non uniquely
-# identified rows, standards, and blanks for this SEM exploration
-all_data_samples <- all_data %>%
-  #  Removing these 2 qPCR, bacterial dupes from sample_id 126 because
-  # there are 2 with different values for some reason
-  filter(!(sample_id == "126" & run_or_plate_id == "Run7" &
-             measurement_type == "qpcr" & subtype == "bacterial" &
-             subsubtype == "dna" & tech_rep_number == "2")) %>%
-  # Remove bad Smartchem runs
-  filter(value > -9998) %>%
-  # Removing standards and blanks
-  filter(standard_sample_blank == "sample")
-
-# Pivot wider to have separate columns
-measurement_soil_n_wide <- all_data_samples %>%
-  group_by(subsubtype, subtype, measurement_type, tech_rep_number,
-           analyzed_date) %>%
+# Pivot wider to have separate columns to prep for SEM
+non_co2_wide <- non_co2_collapsed_samples %>%
+  group_by(subsubtype, subtype, measurement_type,
+           sampled_date) %>%
   pivot_wider(names_from = c("measurement_type", "subtype", "subsubtype"),
-              values_from = "value") %>%
+              values_from = "mean_value") %>%
   # Rename columns to remove hyphens for lavaan parsing
   rename("smartchem_extract_no2no3" = "smartchem_extract_no2-no3",
         "smartchem_leachate_no2no3" = "smartchem_leachate_no2-no3")
-# Note that this collapses the soluble N leachate and extract measurements by
-# tech reps, which...isn't correct.
+```
+
+## Running an SEM
+Need a structural regression (multiple latent endogenous, i.e. dependent variables, to latent variables).
+
+The dataset put into the model must have all uniquely identified rows.
+```{r create-model}
 
 # Create measurement model for observed factors Total Soil N, Aqueous Soil NH3,
 # Aqueous Soil NO2-NO3, and Organic Residue that make up Soil Nitrogen Pools /
@@ -263,7 +257,7 @@ measurement_soil_n_wide <- all_data_samples %>%
 measurement_soil_n <- 'soil_n =~ ea_nitrogen_pcnt_NA + smartchem_extract_nh3 + smartchem_extract_no2no3 +
 cc_treatment'
 fit_soil_n <- sem(measurement_soil_n,
-                  data = measurement_soil_n_wide)
+                  data = non_co2_wide)
 summary(fit_soil_n, standardized = TRUE)
 
 # This work because EA %C and %N data always occur together in the same rows?
