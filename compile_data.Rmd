@@ -188,14 +188,21 @@ id_assignments <- clean_ids(
   need_recoding = "yes")
 ```
 
-```{r compile-datasets}
+```{r compile-datasets-no-co2}
 all_data <- merge_datasets(ea_data = cn_all_clean,
                            smartchem_data = n_data_clean,
                            qpcr_data = qpcr_prop_conc_norm,
                            inorg_n_data = n_data_clean,
-                           co2_data = co2_data_clean,
                            id_assignments = id_assignments,
                            output_file = "output/2022/master_dataset_02.csv")
+```
+
+```{r flag-outliers}
+
+```
+
+```{r collapse-tech-reps}
+
 ```
 
 ## Running an SEM

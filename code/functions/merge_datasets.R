@@ -21,7 +21,7 @@ merge_datasets <- function(ea_data, smartchem_data, qpcr_data, inorg_n_data,
     mutate(std_co2_amount = NA, std_co2_units = NA)
 
   # Merge CO2 only data
-  co2_only <- co2_data %>%
+  if(!missing(co2_data)){co2_only <- co2_data %>%
     # Convert sampled_date to double for merging
     mutate(sampled_date = as.double(sampled_date)) %>%
     # Add a licor column for merging
@@ -39,6 +39,11 @@ merge_datasets <- function(ea_data, smartchem_data, qpcr_data, inorg_n_data,
   all_data <- co2_only %>%
     rbind(no_co2) %>%
     select(-licor)
+  }
+
+  if(missing(co2_data)) {
+    all_data <- no_co2
+  }
 
   # Save to csv
   write_csv(all_data, file = output_file)
