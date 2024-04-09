@@ -43,6 +43,7 @@ source("code/functions/co2_functions/clean_co2_data.R")
 source("code/functions/clean_treatment_conditions.R")
 source("code/functions/merge_datasets.R")
 source("code/functions/isolate_samples.R")
+source("code/functions/flag_tech_rep_outliers.R")
 ```
 
 ## Total CN EA Data
@@ -202,10 +203,14 @@ all_data <- merge_datasets(ea_data = cn_all_clean,
 # Isolate dataset to samples only
 samples_only <- isolate_samples(all_data)
 
-# 
+# Add outlier flags for any outlying tech reps
+# What should I do about samples that were re-run on a different date? E.g. for
+# sample_id 001, EA was run on both 2022-10-18 and again on 2022-10-26.
+flagged_outliers <- flag_outliers(samples_only)
 ```
 
 ```{r collapse-tech-reps}
+# Find mean across technical replicates
 
 ```
 
