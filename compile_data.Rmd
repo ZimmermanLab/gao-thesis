@@ -114,7 +114,9 @@ Reported measurements are already calibrated to NO2, NO3, and ammonia stock stan
 
 The column in the raw file labelled `X6` stands for the raw optical density measurement and has been omitted in the cleaned output in favor of the reported concentration value. Replicate number (`tech_rep_number`) reflects the technical replicate number used during the SmartChem analysis (i.e. these replicates were created during SmartChem analysis and use the same sample). For blanks, these replicate numbers may be duplicated as blanks were taken during each round of sample collection. The labeling for blanks in `sample_id` is coded to the batch of solution and is pretty haphazard. For example, `Blank1AL02` reflects the results of the second technical replicate of a leachate blank made with batch 1A of CaCl2. `BlankE102` is the second technical replicate of an extract blank made with batch 1 of KCl. There are multiples of each `BlankE1` replicate due to the fact that I made one big 5L batch of KCl that lasted for the entire experiment whereas I had to make multiple new batches of the CaCl2 solution.
 
-Some samples have measurements of `-9999` for unknown reasons, which have been retained in this dataset.
+Some samples have measurements of `-9999` for unknown reasons, which have been retained in this dataset. Additionally, the method used for the SmartChem had a max range of 20 mg/L and some samples exceeded this value. A list of these samples is found in `data/raw_data/SmartChem_N_extractions/2022_samples/2022-09-14_n_reruns.csv`. While initially I had planned to re-run these samples as 1/10 dilutions, the machine had major issues that were not fixed before I was able to do so.
+
+Note that `sample_id` 012 is missing both NO2-NO3 and NH3 leachate data.
 ```{r inorg-n}
 # Get file list
 file_list <- paste0("data/raw_data/SmartChem_N_extractions/2022_samples/",
@@ -215,8 +217,14 @@ flagged_outliers <- flag_outliers(samples_only)
 ```
 
 ```{r collapse-tech-reps}
-# Find mean across technical replicates
+# Find mean across technical replicates, retaining all data
+# This currently collapses repeated runs of the same sample + test across
+# different dates analyzed
+# Note that defining the outlier_flag parameter with "extreme" or "moderate"
+# will filter out these outliers
 collapsed_samples <- collapse_tech_reps(flagged_outliers)
+
+# Why is sample_id 012 (7 rows) missing all leachate data?
 ```
 
 ## Running an SEM
