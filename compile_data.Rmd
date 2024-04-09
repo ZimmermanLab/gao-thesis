@@ -32,18 +32,23 @@ library("lavaan")
 ```{r functions}
 # Source necessary functions
 source("code/functions/ea_functions/clean_ea_data.R")
+
 source("code/functions/qpcr_functions/clean_qpcr_data.R")
 source("code/functions/qpcr_functions/normalize_along_soil_wt.R")
 source("code/functions/qpcr_functions/calculate_prop_concentrations.R")
 source("code/functions/qpcr_functions/normalize_prop_concentration.R")
+
 source("code/functions/n_functions/n_clean_n_data.R")
+
 source("code/functions/co2_functions/find_peaks.R")
 source("code/functions/co2_functions/create_std_curve.R")
 source("code/functions/co2_functions/clean_co2_data.R")
+
 source("code/functions/clean_treatment_conditions.R")
 source("code/functions/merge_datasets.R")
 source("code/functions/isolate_samples.R")
 source("code/functions/flag_tech_rep_outliers.R")
+source("code/functions/collapse_tech_reps.R")
 ```
 
 ## Total CN EA Data
@@ -211,7 +216,7 @@ flagged_outliers <- flag_outliers(samples_only)
 
 ```{r collapse-tech-reps}
 # Find mean across technical replicates
-
+collapsed_samples <- collapse_tech_reps(flagged_outliers)
 ```
 
 ## Running an SEM
