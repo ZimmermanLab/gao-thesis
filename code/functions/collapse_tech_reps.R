@@ -24,8 +24,9 @@ collapse_tech_reps <- function(dataset, outlier_flag = "none"){
 
   # Find mean value for each sample for each test across all tech reps
   collapsed_samples <- dataset %>%
+    # Note that this collapses across different dates analyzed
     group_by(sample_id, measurement_type, subtype, subsubtype,
-             run_or_plate_id, analyzed_date) %>%
+             pre_post_wet, cc_treatment, drying_treatment, sampled_date) %>%
     summarise(mean_value = mean(value, na.rm = TRUE))
 
   return(collapsed_samples)
