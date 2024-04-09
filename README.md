@@ -13,7 +13,7 @@ This project will take data collected from an experiment run on soils from Star 
 ***
 
 ## Change Log:
-* 2024-04-08: Separated CO2 and non-CO2 data into two different datasets. Created functions to isolate data to samples only (i.e. remoed standards and blanks) and flag technical replicate outliers based on IQR.
+* 2024-04-08: Separated CO2 and non-CO2 data into two different datasets. Created functions to isolate data to samples only (i.e. removed standards and blanks), flag technical replicate outliers based on IQR, and collapse technical replicates per sample per test.
 * 2024-03-23: Created samples-only dataset and removed duplicates to experiment with `lavaan` package and test SEM stuff. Fixed previous error where qPCR data was incorrectly coded as blanks instead of samples.
 * 2024-01-19: Cleaned up directory and reorganized experimental setup scripts. Parameterized final dataset merging. Created function to clean jar ID assignments and match them to sampling dates and treatment conditions.
 * 2024-01-18: Merged all data into master dataframe.
