@@ -42,6 +42,7 @@ source("code/functions/co2_functions/create_std_curve.R")
 source("code/functions/co2_functions/clean_co2_data.R")
 source("code/functions/clean_treatment_conditions.R")
 source("code/functions/merge_datasets.R")
+source("code/functions/isolate_samples.R")
 ```
 
 ## Total CN EA Data
@@ -194,11 +195,14 @@ all_data <- merge_datasets(ea_data = cn_all_clean,
                            qpcr_data = qpcr_prop_conc_norm,
                            inorg_n_data = n_data_clean,
                            id_assignments = id_assignments,
-                           output_file = "output/2022/master_dataset_02.csv")
+                           output_file = "output/2022/master_dataset_03.csv")
 ```
 
 ```{r flag-outliers}
+# Isolate dataset to samples only
+samples_only <- isolate_samples(all_data)
 
+# 
 ```
 
 ```{r collapse-tech-reps}
