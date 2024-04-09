@@ -46,7 +46,9 @@ merge_datasets <- function(ea_data, smartchem_data, qpcr_data, inorg_n_data,
   }
 
   # Save to csv
-  write_csv(all_data, file = output_file)
+  if(!missing(output_file)){
+    write_csv(all_data, file = output_file)
+  }
 
   return(all_data)
 }

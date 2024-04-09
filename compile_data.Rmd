@@ -223,8 +223,6 @@ flagged_outliers <- flag_outliers(samples_only)
 # Note that defining the outlier_flag parameter with "extreme" or "moderate"
 # will filter out these outliers
 collapsed_samples <- collapse_tech_reps(flagged_outliers)
-
-# Why is sample_id 012 (7 rows) missing all leachate data?
 ```
 
 ## Running an SEM
