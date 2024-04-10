@@ -117,7 +117,7 @@ The column in the raw file labelled `X6` stands for the raw optical density meas
 Some samples have measurements of `-9999` for unknown reasons, which have been retained in this dataset. Additionally, the method used for the SmartChem had a max range of 20 mg/L and some samples exceeded this value. A list of these samples is found in `data/raw_data/SmartChem_N_extractions/2022_samples/2022-09-14_n_reruns.csv`. While initially I had planned to re-run these samples as 1/10 dilutions, the machine had major issues that were not fixed before I was able to do so.
 
 Note that `sample_id` 012 is missing both NO2-NO3 and NH3 leachate data.
-```{r inorg-n}
+```{r clean-inorg-n}
 # Get file list
 file_list <- paste0("data/raw_data/SmartChem_N_extractions/2022_samples/",
                     list.files(
@@ -126,6 +126,49 @@ file_list <- paste0("data/raw_data/SmartChem_N_extractions/2022_samples/",
 
 # Read in and clean all csv files in the folder and create a compiled dataframe
 n_data_clean <- clean_n_data(file_list)
+```
+```{r compile-datasheets}
+# Read in all datasheets and compile
+file_list <- paste0("data/raw_data/data_sheets/",
+                    list.files(
+                      "data/raw_data/data_sheets/",
+                        pattern = "*.csv"))
+
+n_weights <- read_csv(file_list, col_names = TRUE) %>%
+  rename("sample_id" = "sample_no",
+         "soil_absorbed_water_wt" = "water_absorbed_soil",
+         "leachate_water_wt" = "water_leachate") %>%
+  arrange(sample_id)
+
+```
+
+```{r inorg-n-dry-soil}
+# Bring in dried soil weights from KCl tubes
+kcl_weights <- read_csv("data/raw_data/2022_KCl_weights.csv") %>%
+  rename("sample_id" = "sample_no")
+kcl_weights$sample_id <- str_pad(kcl_weights$sample_id, width = 3, 
+                                 side = "left", pad = "0")
+
+no_soil <- id_assignments %>% filter(pre_post_wet == "no_soil")
+
+# Get mean tube weight based on no_soil samples
+tube_only <- kcl_weights %>%
+  filter(sample_id %in% no_soil$sample_id)
+mean_tube_weight <- mean(tube_only$dried_soil_tube_cap_wt)
+
+
+
+# Calculate % moisture per sample
+kcl_samples_only <- kcl_weights %>%
+  filter(sample_id != "Blank") %>%
+  filter(!(sample_id %in% no_soil$sample_id)) %>%
+  mutate(dried_soil_only = dried_soil_tube_cap_wt - mean_tube_weight) %>%
+  select(c(sample_id, dried_soil_only))
+
+# Use % moisture to back calculate dried soil weight of leachates and
+# extract samples
+
+# Normalize inorg N data to mg/L/g dried soil
 ```
 
 ## CO2 Respiration Data
@@ -279,3 +322,14 @@ Filter out outliers then use group_by() summarize() to calculate SD + means of t
 Combined analysis for everything minus CO2
 Second analysis only looks at maybe soil moisture's effect on CO2 + growth
 Note that NAs will propogate during collapse without removal
+
+
+4/12/24:
+Q's for Dr. Z:
+- What to do with duplicated tests for same sample? I.e. ran the same test for the same sample multiple times. Collapse / average?
+- Only have dried KCl weights for some samples. Should I use the DNA dried for the missing? Across the board?
+- What we do know:
+    - Total dry soil weight (pre distribution) - 12.510kg (taken on 2/9/22)
+    - Wet up to 35% WHC (pre distribution) - 3.085kg total water for 35% WHC
+    - Initial wet weights per sample (~@35% WHC)
+    - Could calculate initial dry weight per sample based on % meted to each jar?
