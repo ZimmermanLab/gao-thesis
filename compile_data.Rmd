@@ -261,9 +261,14 @@ non_co2_samples_only <- isolate_samples(non_co2_data)
 # Add outlier flags for any outlying tech reps for non-CO2 data only
 non_co2_flagged_outliers <- flag_outliers(non_co2_samples_only)
 ```
-```{r flag}
 
-Note that `sample_id` 126 has 2 qPCR, bacterial dupes with different values for some reason. These have both been included in this collapsing.
+```{r flag-outliers-co2}
+
+```
+
+
+Note that `sample_id` 126 has 2 qPCR, bacterial dupes with different values for some reason.
+These have both been included in this collapsing.
 
 ```{r collapse-tech-reps-non-co2}
 # Find mean across technical replicates for non-CO2 data only
