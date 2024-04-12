@@ -287,6 +287,8 @@ These have both been included in this collapsing.
 # will filter out these outliers
 non_co2_collapsed_samples <- collapse_tech_reps(non_co2_flagged_outliers)
 
+# FILTER OUT NO SOIL!
+
 # Pivot wider to have separate columns to prep for SEM
 non_co2_wide <- non_co2_collapsed_samples %>%
   group_by(subsubtype, subtype, measurement_type,
@@ -311,8 +313,13 @@ The dataset put into the model must have all uniquely identified rows.
 # This is conceptually what I want to do, but doesn't work
 # Maybe because of all the NA values within each variable column?
 # Do we need to collapse tech_reps per measurement?
-measurement_soil_n <- 'soil_n =~ ea_nitrogen_pcnt_NA + smartchem_extract_nh3 + smartchem_extract_no2no3 +
-cc_treatment'
+measurement_soil_n <- 'soil_n =~ ea_nitrogen_pcnt_NA + smartchem_extract_nh3 + smartchem_extract_no2no3 + cc_treatment
+#intercepts
+ea_nitrogen_pcnt_NA ~ 1
+smartchem_extract_nh3 ~ 1
+smartchem_extract_no2no3 ~ 1
+cc_treatment ~ 1
+'
 fit_soil_n <- sem(measurement_soil_n,
                   data = non_co2_wide)
 summary(fit_soil_n, standardized = TRUE)
@@ -337,7 +344,6 @@ Combined analysis for everything minus CO2
 Second analysis only looks at maybe soil moisture's effect on CO2 + growth
 Note that NAs will propogate during collapse without removal
 
-
 4/12/24:
 Q's for Dr. Z:
 - What to do with duplicated tests for same sample? I.e. ran the same test for the same sample multiple times. Collapse / average?
@@ -355,3 +361,11 @@ Q's for Dr. Z:
         - CaCl2 leachates:
             - Wet weights of leachate aliquot (unknown % WHC)
             - Weight of added CaCl2 absorbed by leachate sample (presumably 100% WHC?)
+            
+TO DOs:
+    - Have documentation somewhere to show the # of technical replicates per collapse
+    - Grab + retain the n technical replicates somewhere (supplementary table)
+    - Throw out wonky EA samples between clean and dirty standards
+    - Document SmartChem samples that exceeded highest standards, should not be quantitatively accurate but qualitatively ok
+    - Test lavaan stuff with factoring categorical variables
+    - Better documentation of what output means
