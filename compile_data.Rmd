@@ -97,7 +97,7 @@ dna_dried_wts <- read_csv("data/raw_data/qPCR/2022_DNA.csv") %>%
 Normalizes the qPCR data using dried soil weights and converts normalized Cq values into proportional concentrations to be used for downstream analyses.
 ```{r qpcr-concentrations}
 # Normalize raw qPCR Cq data using dried soil weights
-qpcr_prop_conc_norm <- norm_soil_wt(clean_qpcr, dried_wts) %>%
+qpcr_prop_conc_norm <- norm_soil_wt(clean_qpcr, dna_dried_wts) %>%
   # Calculate proportional concentrations
   calc_prop_conc() %>%
   # Normalize proportional concentrations using dried soil weight factors
