@@ -264,7 +264,7 @@ co2_data <-
 ```
 Note that the `flag_outliers()` function zeroes out any negative values, i.e. from SmartChem weird runs.
 What should I do about samples that were re-run on a different date? E.g. for
-sample_id 001, EA was run on both 2022-10-18 and again on 2022-10-26.
+sample_id 001, EA was run on both 2022-10-18 and again on 2022-10-26. This was because the original run was giving weird, all over the place results, probably because of the dang EA machine, so I wanted to rerun for better accuracy and precision.
 ```{r flag-outliers-non-co2}
 # Isolate non-CO2 dataset to samples only
 non_co2_samples_only <- isolate_samples(non_co2_data)
