@@ -146,6 +146,7 @@ kcl_weights_wet$sample_id <- str_pad(kcl_weights_wet$sample_id, width = 3,
 
 ```
 
+Note that for this portion of data, ideally I wanted to be able to compare leachate and extraction data across days. However, the amount of dried soil used per sample was not consistent across the different days and different treatments. I neglected to take the weight of the dried soil of each sample during the experiment and tried to do so from KCl tubes after the experiment by drying the tubes out in an oven and taking the dried soil weights. Some samples are missing this data, namely samples earlier on in the experiment. The plan was to take these dried soil weights to be able to normalize the leachate and extraction concentration data across the experiment. However, this work is unfinished as of 4/11/25.
 ```{r inorg-n-dry-soil}
 # Bring in dried soil weights from KCl tubes
 kcl_weights_dried <- read_csv(
