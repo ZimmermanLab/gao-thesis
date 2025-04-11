@@ -258,6 +258,7 @@ non_co2_data <- merge_datasets(ea_data = cn_all_clean,
                            id_assignments = id_assignments)
 ```
 
+Still need to compile all the data for CO2 measurements as of 4/11/25.
 ```{r compile-data-co2}
 co2_data <-
 ```
