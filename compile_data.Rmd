@@ -13,6 +13,8 @@ knitr::opts_chunk$set(echo = TRUE)
 
 This Rmarkdown file is used to bring in and clean each data type (i.e. total CN, qPCR DNA, aqueous N, and CO2 respiration). It keeps all non-error data, such as blanks and negative controls, during cleaning, without any standardization, calibration, or normalization.
 
+All the cleaned data is then compiled into one master, long, dataset that can then be used for further downstream analyses.
+
 
 ```{r packages}
 # Load relevant packages
@@ -21,20 +23,37 @@ library("dplyr")
 library("readr")
 library("tidyr")
 library("fs")
+library("stringr")
+library("readxl")
+library("lavaan")
 
 ```
 
 ```{r functions}
 # Source necessary functions
 source("code/functions/ea_functions/clean_ea_data.R")
+
 source("code/functions/qpcr_functions/clean_qpcr_data.R")
+source("code/functions/qpcr_functions/normalize_along_soil_wt.R")
+source("code/functions/qpcr_functions/calculate_prop_concentrations.R")
+source("code/functions/qpcr_functions/normalize_prop_concentration.R")
+
 source("code/functions/n_functions/n_clean_n_data.R")
 
+source("code/functions/co2_functions/find_peaks.R")
+source("code/functions/co2_functions/create_std_curve.R")
+source("code/functions/co2_functions/clean_co2_data.R")
+
+source("code/functions/clean_treatment_conditions.R")
+source("code/functions/merge_datasets.R")
+source("code/functions/isolate_samples.R")
+source("code/functions/flag_tech_rep_outliers.R")
+source("code/functions/collapse_tech_reps.R")
 ```
 
 ## Total CN EA Data
 
-The following chunk reads and cleans Total CN data from the ThermoFisher EA runs, specifically percentage CN and ratio C:N in separate data files. Due to the finickiness of the EA machine, there were several runs that were labelled as SRM or sample numbers that had a value of 0. These are omitted, but all blanks (i.e. system blanks with no capsules, blanks that were just a tin capsule, and blanks that were just a silver capsule) are retained.s 
+The following chunk reads and cleans Total CN data from the ThermoFisher EA runs, specifically percentage CN and ratio C:N in separate data files. Due to the finickiness of the EA machine, there were several runs that were labelled as SRM or sample numbers that had a value of 0. These are omitted, but all blanks (i.e. system blanks with no capsules, blanks that were just a tin capsule, and blanks that were just a silver capsule) are retained. 
 
 ```{r ea-data}
 # This code chunk reads in the raw EA total CN data and cleans it
@@ -51,22 +70,18 @@ files_ratio <- dir_ls(path = "data/raw_data/EA_CN/2022/",
 
 # Clean both types of data
 # Note that the function filters out any sample or SRM runs that had a value of 0. Blanks are retained.
-cn_percent_clean <- clean_ea_data(files_percent)
-cn_ratio_clean <- clean_ea_data(files_ratio)
+cn_all_clean <- clean_ea_data(files_percent, files_ratio)
 ```
 
 ## qPCR DNA Data
 
-Here, raw qPCR fungal and bacterial DNA data is read and cleaned. All blank runs are retained as well, which may result in NAs for `rep_no` and even `cq` values. There are some non-blank sample wells where Cq values were NA due to unknown reasons. In fungal samples, these included the water-only samples (32, 42, 78, 97, 119) but there were also some samples that had a stray replicate that was NA when other replicates amplified.
+Here, raw qPCR fungal and bacterial DNA data is read and cleaned. All blank (i.e. water technical controls) runs are retained as well, which may result in NAs for `tech_rep_number` and even `value` values (Cq). There are some non-blank sample wells where Cq values were NA due to unknown reasons. In fungal samples, these included the water-only samples (32, 42, 78, 97, 119) but there were also some samples that had a stray replicate that was NA when other replicates amplified.
 ```{r qpcr-dna}
-# Get clean fungal data
-clean_fungal <- clean_qpcr_data("data/raw_data/qPCR/", "fungal")
-
-# Get clean bacterial data
-clean_bacterial <- clean_qpcr_data("data/raw_data/qPCR/", "bacterial")
+# Get clean qPCR data
+clean_qpcr <- clean_qpcr_data("data/raw_data/qPCR/")
 ```
 
-Here, dried soil weight measurements are read and cleaned. These weights were derived from frozen soil weights measured for DNA extraction. For each sample, approximately the same amount of frozen soil was later weighed out and then oven dried. These dried weights are reported here.
+Here, dried soil weight measurements are read and cleaned. These weights were derived from frozen soil weights measured for DNA extraction. For each sample, the same amount of frozen soil as the original amount used for DNA extractions was later weighed out and then oven dried. In other words, the "extraction_soil_wt_mg" column and "fresh_soil_mg" column should be the same for each sample. These dried weights are reported here.
 
 The dried weights data also includes qubit concentration data taken after DNA extraction to determine the DNA concentrations of the resulting extractions.
 
@@ -75,8 +90,20 @@ Samples 32, 42, 78, 97, and 119 were water-only controls (i.e. only water in jar
 For the `bacteria-control` sample, a sample taken from bacteria cultured on agar from a soil sample was used for DNA extraction to serve as a positive control. The `extraction_soil_wt_mg` value is the weight of the bacteria sample (including any agar media) used for DNA extraction.
 ```{r qpcr-dried-wts}
 # Read in dried soil weights data
-dried_wts <- read_csv("data/raw_data/qPCR/2022_DNA.csv") %>%
+dna_dried_wts <- read_csv("data/raw_data/qPCR/2022_DNA.csv") %>%
   select(-"...5")
+```
+
+Normalizes the qPCR data using dried soil weights and converts normalized Cq values into proportional concentrations to be used for downstream analyses.
+```{r qpcr-concentrations}
+# Normalize raw qPCR Cq data using dried soil weights
+qpcr_prop_conc_norm <- norm_soil_wt(clean_qpcr, dna_dried_wts) %>%
+  # Calculate proportional concentrations
+  calc_prop_conc() %>%
+  # Normalize proportional concentrations using dried soil weight factors
+  # and clean up for master dataframe merging, changing the value and units
+  # from Cq to normalized proportional concentrations
+  norm_conc()
 ```
 
 ## Inorganic N Data
@@ -85,10 +112,12 @@ This code chunk reads in and cleans data from inorganic N measurements. These in
 
 Reported measurements are already calibrated to NO2, NO3, and ammonia stock standards. These standards are retained in this dataset and are shown as `NO2E6`, `NO3E6`, and `NH3E` respectively. Blank values (i.e. technical blanks that underwent the same extraction / leachate process with the same solutions but without any added soil) are also shown.
 
-The column in the dataset labelled `OD` stands for the raw optical density measurement. Replicate number (`rep_no`) reflects the technical replicate number used during the SmartChem analysis (i.e. these replicates were created during SmartChem analysis and use the same sample). For blanks, these replicate numbers may be duplicated as blanks were taken during each round of sample collection. The labeling for blanks in `sample_no_full`, which is omitted in the final cleaned dataset, is coded to the batch of solution and is pretty haphazard. For example, `Blank1AL02` reflects the results of the second technical replicate of a leachate blank made with batch 1A of CaCl2. `BlankE102` is the second technical replicate of an extract blank made with batch 1 of KCl. There are multiples of each `BlankE1` replicate due to the fact that I made one big 5L batch of KCl that lasted for the entire experiment whereas I had to make multiple new batches of the CaCl2 solution.
+The column in the raw file labelled `X6` stands for the raw optical density measurement and has been omitted in the cleaned output in favor of the reported concentration value. Replicate number (`tech_rep_number`) reflects the technical replicate number used during the SmartChem analysis (i.e. these replicates were created during SmartChem analysis and use the same sample). For blanks, these replicate numbers may be duplicated as blanks were taken during each round of sample collection. The labeling for blanks in `sample_id` is coded to the batch of solution and is pretty haphazard. For example, `Blank1AL02` reflects the results of the second technical replicate of a leachate blank made with batch 1A of CaCl2. `BlankE102` is the second technical replicate of an extract blank made with batch 1 of KCl. There are multiples of each `BlankE1` replicate due to the fact that I made one big 5L batch of KCl that lasted for the entire experiment whereas I had to make multiple new batches of the CaCl2 solution.
 
-Some samples have measurements of `-9999` for unknown reasons, which have been retained in this dataset.
-```{r inorg-n}
+Some samples have measurements of `-9999` for unknown reasons, which have been retained in this dataset. Additionally, the method used for the SmartChem had a max range of 20 mg/L and some samples exceeded this value. A list of these samples is found in `data/raw_data/SmartChem_N_extractions/2022_samples/2022-09-14_n_reruns.csv`. While initially I had planned to re-run these samples as 1/10 dilutions, the machine had major issues that were not fixed before I was able to do so.
+
+Note that `sample_id` 012 is missing both NO2-NO3 and NH3 leachate data.
+```{r clean-inorg-n}
 # Get file list
 file_list <- paste0("data/raw_data/SmartChem_N_extractions/2022_samples/",
                     list.files(
@@ -98,3 +127,247 @@ file_list <- paste0("data/raw_data/SmartChem_N_extractions/2022_samples/",
 # Read in and clean all csv files in the folder and create a compiled dataframe
 n_data_clean <- clean_n_data(file_list)
 ```
+
+```{r compile-datasheets}
+# Read in all KCl dried datasheets and compile
+file_list_kcl_wet <- paste0("data/raw_data/data_sheets/",
+                    list.files(
+                      "data/raw_data/data_sheets/",
+                        pattern = "*.csv"))
+
+kcl_weights_wet <- read_csv(file_list_kcl_wet, col_names = TRUE) %>%
+  rename("sample_id" = "sample_no",
+         "soil_absorbed_water_wt" = "water_absorbed_soil",
+         "leachate_water_wt" = "water_leachate") %>%
+  arrange(sample_id)
+
+kcl_weights_wet$sample_id <- str_pad(kcl_weights_wet$sample_id, width = 3, 
+                                 side = "left", pad = "0")
+
+```
+
+Note that for this portion of data, ideally I wanted to be able to compare leachate and extraction data across days. However, the amount of dried soil used per sample was not consistent across the different days and different treatments. I neglected to take the weight of the dried soil of each sample during the experiment and tried to do so from KCl tubes after the experiment by drying the tubes out in an oven and taking the dried soil weights. Some samples are missing this data, namely samples earlier on in the experiment. The plan was to take these dried soil weights to be able to normalize the leachate and extraction concentration data across the experiment. However, this work is unfinished as of 4/11/25.
+```{r inorg-n-dry-soil}
+# Bring in dried soil weights from KCl tubes
+kcl_weights_dried <- read_csv(
+  "data/raw_data/data_sheets/dried_wts/2022_KCl_weights.csv") %>%
+  rename("sample_id" = "sample_no")
+kcl_weights_dried$sample_id <- str_pad(kcl_weights_dried$sample_id, width = 3, 
+                                 side = "left", pad = "0")
+
+no_soil <- id_assignments %>% filter(pre_post_wet == "no_soil")
+
+# Get mean tube weight based on no_soil samples
+tube_only <- kcl_weights_dried %>%
+  filter(sample_id %in% no_soil$sample_id)
+mean_tube_weight <- mean(tube_only$dried_soil_tube_cap_wt)
+
+# Calculate % moisture per sample
+# Dried soil weight
+kcl_samples_only <- kcl_weights_dried %>%
+  filter(sample_id != "Blank") %>%
+  filter(!(sample_id %in% no_soil$sample_id)) %>%
+  mutate(kcl_dried_soil_only = dried_soil_tube_cap_wt - mean_tube_weight) %>%
+  left_join(kcl_weights_wet) %>%
+  select(c(sample_id, kcl_dried_soil_only, n_extraction_soil_mass)) %>%
+  # Calculate water content as gravimetric water content, different from
+  # previous measurements of % WHC
+  mutate(water_content = (n_extraction_soil_mass - 
+                            kcl_dried_soil_only)/kcl_dried_soil_only)
+
+# Use % moisture to back calculate dried soil weight of leachates and
+# extract samples
+
+# Normalize inorg N data to mg/L/g dried soil
+```
+
+## CO2 Respiration Data
+
+This code chunk uses a bash function to run through the raw .txt CO2 data files from the LICOR and removes the weird unnecessary headers so that they can be subsequently read and analyzed for areas under the curve (AUCs).
+
+**Running this bash code chunk only works for Sarah as of 4/25/23 when Preferences > R Markdown > Show output line for all R Markdown documents is turned on**
+```{bash co2-trim-raw}
+# Putting this output into a test folder so it doesn't overwrite the already
+# cleaned files just in case. Remove '/test' when feeling confident.
+bash code/clean_co2_files data/raw_data/LICOR_CO2 data/cleaned_data/LICOR/test
+```
+
+This code chunk uses the `find_peaks.R` function and finds the area under the curve (AUC) for each trimmed .txt data file. These AUCs are then saved out as a separate .txt file because it takes a long time to generate.
+```{r co2-find-auc}
+# Create list of file paths of CO2 data files using the originally cleaned files
+files_list <- list.files(path = "data/cleaned_data/LICOR/", recursive = FALSE,
+                         pattern = "*.txt")
+files_list <- subset(files_list, str_detect(files_list, "extract") == FALSE)
+
+auc_summary_all <- data.frame()
+
+for(f in 1:length(files_list)) {
+  auc_summary <- find_peaks(files_list[f])
+  auc_summary_all <- rbind(auc_summary_all, auc_summary)
+}
+# Save this out because it takes a long time to generate
+write_csv(auc_summary_all, "output/2022/co2/auc_summary_all.txt")
+```
+
+Using the saved out AUC summary .txt file `auc_summary_all.txt`, this code chunk uses the function `create_std_curve.R` to create a standard curve using measurements pooled by day. At the beginning of the experiment, I did not have sufficiently high CO2 standard concentrations (I only had 100ppm, 1,000ppm, and 10,000ppm) to encompass some of the samples with higher CO2 measurements. Later on, I was able to obtain 100,000ppm and 99.99% CO2 standards.
+
+To see if there was any drifting by day in measurements, I initially plotted the standards by date and saw that there was indeed some drifting as time went on. Because of this, I decided to use each day's standards to generate separate curves to calibrate that day's samples with.
+
+In this `create_std_curve.R` function, you will see both results calibrated by pooled standards as well as results calibrated by each day's standards and should probably be cleaned up (and just cleaned up in general, lots of junk code in there...)
+
+```{r co2-std-curve}
+# This function needs serious fixing
+auc_summary_path <- "output/2022/co2/auc_summary_all.txt"
+auc_all_calib <- create_std_curve(auc_summary_path)
+```
+
+This function cleans up the saved out file and prepares it for merging with the master dataframe.
+```{r co2-clean}
+# Note that this uses the old file, `auc_norm_date` for testing purposes, which
+# should really be replaced by `auc_all_calib` generated above by the 
+# create_std_curve() function, but this function is broken right now.
+# In this older file, 'auc_norm_date', the column "auc_norm" should really
+# be labelled to "auc_calib" because they have been calibrated to the gas
+# standards, not normalized.
+input_file = "output/2022/co2/auc_norm_date"
+co2_data_clean <- clean_co2_data(input_file)
+```
+
+## Bringing It All Together
+
+Load sample ID master list that shows which cover crop treatment, drying treatment, and sampling point each jar was assigned to. Note that for the "pre_post_wet" column, the codes are as follows:
+* cw = constantly kept watered until sampled
+* initial = sampled at the very beginning of the experiment as the baseline
+* pre = sampled before rewetting point
+* post = sampled after rewetting point
+* all_dry = never rewet, i.e. dried throughout the entire experiment.
+```{r load-sample-ids}
+id_assignments <- clean_ids(
+  jar_assignments_file =
+    "output/2022/initial_experiment_setup/jar_assignments/master_list.csv",
+  sampling_dates_file =
+    "output/2022/initial_experiment_setup/jar_assignments/sampling_dates.csv",
+  need_recoding = "yes")
+```
+
+```{r compile-data-non-co2}
+non_co2_data <- merge_datasets(ea_data = cn_all_clean,
+                           smartchem_data = n_data_clean,
+                           qpcr_data = qpcr_prop_conc_norm,
+                           inorg_n_data = n_data_clean,
+                           id_assignments = id_assignments)
+```
+
+Still need to compile all the data for CO2 measurements as of 4/11/25.
+```{r compile-data-co2}
+co2_data <-
+```
+Note that the `flag_outliers()` function zeroes out any negative values, i.e. from SmartChem weird runs.
+What should I do about samples that were re-run on a different date? E.g. for
+sample_id 001, EA was run on both 2022-10-18 and again on 2022-10-26. This was because the original run was giving weird, all over the place results, probably because of the dang EA machine, so I wanted to rerun for better accuracy and precision.
+```{r flag-outliers-non-co2}
+# Isolate non-CO2 dataset to samples only
+non_co2_samples_only <- isolate_samples(non_co2_data)
+
+# Add outlier flags for any outlying tech reps for non-CO2 data only
+non_co2_flagged_outliers <- flag_outliers(non_co2_samples_only)
+```
+
+```{r flag-outliers-co2}
+
+```
+
+
+Note that `sample_id` 126 has 2 qPCR, bacterial dupes with different values for some reason.
+These have both been included in this collapsing.
+
+```{r collapse-tech-reps-non-co2}
+# Find mean across technical replicates for non-CO2 data only
+# This currently collapses repeated runs of the same sample + test across
+# different dates analyzed
+# Note that defining the outlier_flag parameter with "extreme" or "moderate"
+# will filter out these outliers
+non_co2_collapsed_samples <- collapse_tech_reps(non_co2_flagged_outliers)
+
+# FILTER OUT NO SOIL!
+
+# Pivot wider to have separate columns to prep for SEM
+non_co2_wide <- non_co2_collapsed_samples %>%
+  group_by(subsubtype, subtype, measurement_type,
+           sampled_date) %>%
+  pivot_wider(names_from = c("measurement_type", "subtype", "subsubtype"),
+              values_from = "mean_value") %>%
+  # Rename columns to remove hyphens for lavaan parsing
+  rename("smartchem_extract_no2no3" = "smartchem_extract_no2-no3",
+        "smartchem_leachate_no2no3" = "smartchem_leachate_no2-no3")
+```
+
+## Running an SEM
+Need a structural regression (multiple latent endogenous, i.e. dependent variables, to latent variables).
+
+The dataset put into the model must have all uniquely identified rows.
+```{r create-model}
+
+# Create measurement model for observed factors Total Soil N, Aqueous Soil NH3,
+# Aqueous Soil NO2-NO3, and Organic Residue that make up Soil Nitrogen Pools /
+# Partition. This is on the x side (exogenous i.e. independent variables).
+
+# This is conceptually what I want to do, but doesn't work
+# Maybe because of all the NA values within each variable column?
+# Do we need to collapse tech_reps per measurement?
+measurement_soil_n <- 'soil_n =~ ea_nitrogen_pcnt_NA + smartchem_extract_nh3 + smartchem_extract_no2no3 + cc_treatment
+#intercepts
+ea_nitrogen_pcnt_NA ~ 1
+smartchem_extract_nh3 ~ 1
+smartchem_extract_no2no3 ~ 1
+cc_treatment ~ 1
+'
+fit_soil_n <- sem(measurement_soil_n,
+                  data = non_co2_wide)
+summary(fit_soil_n, standardized = TRUE)
+
+# This work because EA %C and %N data always occur together in the same rows?
+measurement_soil_n_test <- 'soil_n =~ ea_carbon_pcnt_NA + ea_nitrogen_pcnt_NA'
+fit_soil_n_test <- sem(measurement_soil_n_test,
+                  data = measurement_soil_n_wide)
+summary(fit_soil_n_test, standardized = TRUE)
+
+measurement_soil_n_test <- 'soil_n =~ smartchem_extract_nh3 + 
+smartchem_extract_no2no3'
+fit_soil_n_test <- sem(measurement_soil_n_test,
+                  data = measurement_soil_n_wide)
+summary(fit_soil_n_test, standardized = TRUE)
+
+```
+
+Flag outliers for tech rep outliers using median / IQR
+Filter out outliers then use group_by() summarize() to calculate SD + means of tech reps before pivoting wider
+Combined analysis for everything minus CO2
+Second analysis only looks at maybe soil moisture's effect on CO2 + growth
+Note that NAs will propogate during collapse without removal
+
+4/12/24:
+Q's for Dr. Z:
+- What to do with duplicated tests for same sample? I.e. ran the same test for the same sample multiple times. Collapse / average?
+- Only have dried KCl weights for some samples. Should I use the DNA dried for the missing? Across the board?
+- What we do know:
+    - Total soil:
+        - Total dry soil weight (pre distribution) - 12.510kg (taken on 2/9/22)
+        - Wet up to 35% WHC (pre distribution) - 3.085kg total water for 35% WHC
+    - Per jar sample:
+        - Initial wet weights per jar sample (~@35% WHC)
+           - Could calculate initial dry weight per sample based on % meted to each jar?
+        - KCl extracts:
+            - Wet weights of KCl extract aliquot (unknown % WHC)
+            - Dry weights of SOME KCl extract aliquot
+        - CaCl2 leachates:
+            - Wet weights of leachate aliquot (unknown % WHC)
+            - Weight of added CaCl2 absorbed by leachate sample (presumably 100% WHC?)
+            
+TO DOs:
+    - Have documentation somewhere to show the # of technical replicates per collapse
+    - Grab + retain the n technical replicates somewhere (supplementary table)
+    - Throw out wonky EA samples between clean and dirty standards
+    - Document SmartChem samples that exceeded highest standards, should not be quantitatively accurate but qualitatively ok
+    - Test lavaan stuff with factoring categorical variables
+    - Better documentation of what output means

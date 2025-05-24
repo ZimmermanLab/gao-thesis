@@ -4,6 +4,7 @@
 # This is modified from Jacob Anderson's peak.gas package:
 # https://github.com/andersonjake1988/peak.gas
 
+library("lubridate")
 
 find_peaks <- function(file_path, cut.off = 2) {
 
