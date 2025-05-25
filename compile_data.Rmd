@@ -336,13 +336,13 @@ summary(fit_soil_n, standardized = TRUE)
 # This work because EA %C and %N data always occur together in the same rows?
 measurement_soil_n_test <- 'soil_n =~ ea_carbon_pcnt_NA + ea_nitrogen_pcnt_NA'
 fit_soil_n_test <- sem(measurement_soil_n_test,
-                  data = measurement_soil_n_wide)
+                  data = non_co2_wide)
 summary(fit_soil_n_test, standardized = TRUE)
 
 measurement_soil_n_test <- 'soil_n =~ smartchem_extract_nh3 + 
 smartchem_extract_no2no3'
 fit_soil_n_test <- sem(measurement_soil_n_test,
-                  data = measurement_soil_n_wide)
+                  data = non_co2_wide)
 summary(fit_soil_n_test, standardized = TRUE)
 
 ```
@@ -356,6 +356,8 @@ Note that NAs will propogate during collapse without removal
 4/12/24:
 Q's for Dr. Z:
 - What to do with duplicated tests for same sample? I.e. ran the same test for the same sample multiple times. Collapse / average?
+    - 5/24/25: Flag outliers for individual duplicates / replicates first, then collapse and average the ones that aren't outliers or too crazy.
+        - For EA this will also be helped by adding the run order column as outlined below
 - Only have dried KCl weights for some samples. Should I use the DNA dried for the missing? Across the board?
 - What we do know:
     - Total soil:
@@ -370,14 +372,23 @@ Q's for Dr. Z:
         - CaCl2 leachates:
             - Wet weights of leachate aliquot (unknown % WHC)
             - Weight of added CaCl2 absorbed by leachate sample (presumably 100% WHC?)
+      - 5/24/25: Using the ratio approach outlined below, this would solve this problem (hopefully)
             
 TO DOs:
     - Have documentation somewhere to show the # of technical replicates per collapse
     - Grab + retain the n technical replicates somewhere (supplementary table)
     - Throw out wonky EA samples between clean and dirty standards
     - Document SmartChem samples that exceeded highest standards, should not be quantitatively accurate but qualitatively ok
+        - 5/24/25: Methods to tackle this:
+            - 1. Could take these measurements at face value and see what the ratios look like?
+                - Would note that this is just the limitations of the machine we used
+            - 2. Throw out all the ones that exceed limit and rerun
+            - 3. Could take quartiles of the data and assign quartile numbers for both leachate and extract and do ratio of the quartile values?
+                  - Lose a ton of resolution, but get around quantitative uncertainty
+                  - Non-parametric values of means
+            - Could try all these different ways and hope that we get the same answer and report the actual measurements (if we get the same answer) and just note that we tried these methods, see this supplement. Otherwise if different answers, use the most conservative approach
     - Test lavaan stuff with factoring categorical variables
-    - Better documentation of what output means
+    - Better documentation of what lavaan SEM output means
     
 5/24/25:
 - To sidestep dried soil issue with soluble / leachate N, just use ratio of soluble to leachate per sample and compare those ratios between samples / treatment groups.
@@ -391,3 +402,6 @@ TO DOs:
             - water_absorbed_soil - calculated weight of CaCl2 water the soil absorbed (grams)
             - water_leachate - calculated weight of Cacl2 water leached / dripped out of the soil that ended up in the flask (grams)
             
+- EA data needs an additional `run_order` column that could be added within the `clean_ea_data.R` function. This column would take the raw data files and specify the run order as follows:
+    - Run date, run # (i.e. plate #), run order
+    - This is to account for the wonky EA data in which sometimes the standards drifted throughout the run and we don't know how to handle the samples between those standards
