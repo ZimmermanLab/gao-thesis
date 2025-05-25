@@ -53,7 +53,9 @@ source("code/functions/collapse_tech_reps.R")
 
 ## Total CN EA Data
 
-The following chunk reads and cleans Total CN data from the ThermoFisher EA runs, specifically percentage CN and ratio C:N in separate data files. Due to the finickiness of the EA machine, there were several runs that were labelled as SRM or sample numbers that had a value of 0. These are omitted, but all blanks (i.e. system blanks with no capsules, blanks that were just a tin capsule, and blanks that were just a silver capsule) are retained. 
+The following chunk reads and cleans Total CN data from the ThermoFisher EA runs, specifically percentage CN and ratio C:N in separate data files. Due to the finickiness of the EA machine, there were several runs that were labelled as SRM or sample numbers that had a value of 0. These are omitted, but all blanks (i.e. system blanks with no capsules, blanks that were just a tin capsule, and blanks that were just a silver capsule) are retained.
+
+It's possible that there are SRM standards that were off that were run simultaneously with samples, so the accuracy of those samples' values may be questionable.
 
 ```{r ea-data}
 # This code chunk reads in the raw EA total CN data and cleans it
@@ -75,7 +77,9 @@ cn_all_clean <- clean_ea_data(files_percent, files_ratio)
 
 ## qPCR DNA Data
 
-Here, raw qPCR fungal and bacterial DNA data is read and cleaned. All blank (i.e. water technical controls) runs are retained as well, which may result in NAs for `tech_rep_number` and even `value` values (Cq). There are some non-blank sample wells where Cq values were NA due to unknown reasons. In fungal samples, these included the water-only samples (32, 42, 78, 97, 119) but there were also some samples that had a stray replicate that was NA when other replicates amplified.
+Here, raw qPCR fungal and bacterial DNA data is read and cleaned. All blank (i.e. water technical controls) runs are retained as well, which may result in NAs for `tech_rep_number` (technical replicate number) and even `value` values (Cq). There are some non-blank sample wells where Cq values were NA due to unknown reasons. In fungal samples, these included the sample jars that did not contain soil but only contained water as a control microcosm (32, 42, 78, 97, 119) but there were also some samples that had a stray replicate that was NA when other replicates of that same sample amplified.
+
+In some cases, I probably re-ran samples that had stray NA replicates on a different plate, so there may be some samples with more than 5 replicates in the data.
 ```{r qpcr-dna}
 # Get clean qPCR data
 clean_qpcr <- clean_qpcr_data("data/raw_data/qPCR/")
@@ -146,7 +150,24 @@ kcl_weights_wet$sample_id <- str_pad(kcl_weights_wet$sample_id, width = 3,
 
 ```
 
-Note that for this portion of data, ideally I wanted to be able to compare leachate and extraction data across days. However, the amount of dried soil used per sample was not consistent across the different days and different treatments. I neglected to take the weight of the dried soil of each sample during the experiment and tried to do so from KCl tubes after the experiment by drying the tubes out in an oven and taking the dried soil weights. Some samples are missing this data, namely samples earlier on in the experiment. The plan was to take these dried soil weights to be able to normalize the leachate and extraction concentration data across the experiment. However, this work is unfinished as of 4/11/25.
+Load sample ID master list that shows which cover crop treatment, drying treatment, and sampling point each jar was assigned to. Note that for the "pre_post_wet" column, the codes are as follows:
+* cw = constantly kept watered until sampled
+* initial = sampled at the very beginning of the experiment as the baseline
+* pre = sampled before rewetting point
+* post = sampled after rewetting point
+* all_dry = never rewet, i.e. dried throughout the entire experiment.
+
+```{r load-sample-ids}
+id_assignments <- clean_ids(
+  jar_assignments_file =
+    "output/2022/initial_experiment_setup/jar_assignments/master_list.csv",
+  sampling_dates_file =
+    "output/2022/initial_experiment_setup/jar_assignments/sampling_dates.csv",
+  need_recoding = "yes")
+```
+
+Note that for this following portion of data, ideally I wanted to be able to compare leachate and extraction data across days. However, the amount of dried soil used per sample was not consistent across the different days and different treatments. I neglected to take the weight of the dried soil of each sample during the experiment and tried to do so from KCl tubes after the experiment by drying the tubes out in an oven and taking the dried soil weights. Some samples are missing this data, namely samples earlier on in the experiment. The plan was to take these dried soil weights to be able to normalize the leachate and extraction concentration data across the experiment. However, this work is unfinished as of 4/11/25.
+
 ```{r inorg-n-dry-soil}
 # Bring in dried soil weights from KCl tubes
 kcl_weights_dried <- read_csv(
@@ -234,21 +255,7 @@ co2_data_clean <- clean_co2_data(input_file)
 ```
 
 ## Bringing It All Together
-
-Load sample ID master list that shows which cover crop treatment, drying treatment, and sampling point each jar was assigned to. Note that for the "pre_post_wet" column, the codes are as follows:
-* cw = constantly kept watered until sampled
-* initial = sampled at the very beginning of the experiment as the baseline
-* pre = sampled before rewetting point
-* post = sampled after rewetting point
-* all_dry = never rewet, i.e. dried throughout the entire experiment.
-```{r load-sample-ids}
-id_assignments <- clean_ids(
-  jar_assignments_file =
-    "output/2022/initial_experiment_setup/jar_assignments/master_list.csv",
-  sampling_dates_file =
-    "output/2022/initial_experiment_setup/jar_assignments/sampling_dates.csv",
-  need_recoding = "yes")
-```
+We opted to keep non-CO2 data and CO2 datasets separate since CO2 data spans 
 
 ```{r compile-data-non-co2}
 non_co2_data <- merge_datasets(ea_data = cn_all_clean,
