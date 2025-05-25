@@ -378,3 +378,16 @@ TO DOs:
     - Document SmartChem samples that exceeded highest standards, should not be quantitatively accurate but qualitatively ok
     - Test lavaan stuff with factoring categorical variables
     - Better documentation of what output means
+    
+5/24/25:
+- To sidestep dried soil issue with soluble / leachate N, just use ratio of soluble to leachate per sample and compare those ratios between samples / treatment groups.
+    - Extracts: ~5g of soil with 40mL of 2M KCl
+    - Leachate: ~15g of soil with 25mL of 0.01M CaCl2
+        - Leachate column names from `data/raw_data/data_sheets` files:
+            - n_leachate_glassware_pre - how much the glassware weighed (in grams) prior to adding soil or water
+            - n_leachate_soil_mass_pre - how much soil was added (wet weight, grams) from the sample jars to each glassware set
+            - n_leachate_soil_glassware_post - how much the glassware + wet soil weighed AFTER the 25mL of 0.01M CaCl2 was poured over (grams)
+            - n_leachate_soil_mass_post - calculated weight of soil after 25mL of 0.01M CaCl2 was poured over (grams)
+            - water_absorbed_soil - calculated weight of CaCl2 water the soil absorbed (grams)
+            - water_leachate - calculated weight of Cacl2 water leached / dripped out of the soil that ended up in the flask (grams)
+            
