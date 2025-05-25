@@ -255,7 +255,7 @@ co2_data_clean <- clean_co2_data(input_file)
 ```
 
 ## Bringing It All Together
-We opted to keep non-CO2 data and CO2 datasets separate since CO2 data spans 
+We opted to keep non-CO2 data and CO2 datasets separate since CO2 data tracks over multiple days instead of a single sampling point. We could use CO2 data in a secondary analysis that analyses rewetting on CO2 and microbial growth.
 
 ```{r compile-data-non-co2}
 non_co2_data <- merge_datasets(ea_data = cn_all_clean,
